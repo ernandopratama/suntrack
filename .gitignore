@@ -1,0 +1,45 @@
+# Local environment files
+.env
+.env.*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/storage/logs/*
+
+# Laravel generated files
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/public/storage
+/storage/*.key
+/storage/framework/*
+!/storage/framework/.gitignore
+/bootstrap/cache/*.php
+
+# IDE / editor folders
+/.idea/
+/.vscode/
+/.phpstorm.meta.php
+/.phpunit.cache
+/.phpunit.result.cache
+/.codex/
+/.cursor/
+/.zed/
+/.nova/
+
+# Composer / PHP tools
+/auth.json
+.phpactor.json
+_ide_helper.php
+
+# Custom helper/scripts folder
+/tools/
+
+# Optional local files
+Homestead.json
+Homestead.yaml

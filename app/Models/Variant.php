@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Variant extends Model
+{
+    use HasFactory, HasUuids;
+
+    protected $fillable = [
+        'product_id',
+        'code',
+        'sku',
+        'name',
+        'normal_price',
+        'bottom_price',
+        'current_stock',
+        'status',
+    ];
+
+    protected $casts = [
+        'normal_price'  => 'decimal:2',
+        'bottom_price'  => 'decimal:2',
+        'current_stock' => 'integer',
+    ];
+
+    // =========================================================
+    // Relationships
+    // =========================================================
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Promotions this variant is mapped to, with full pivot pricing snapshot.
+     */
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'promotion_variant')
+            ->withPivot([
+                'id',
+                'campaign_price',
+                'bottom_price',
+                'normal_price_snapshot',
+                'discount_price',
+                'promotion_stock',
+                'purchase_limit',
+                'approval_status',
+                'rejection_notes',
+                'notes',
+            ])
+            ->withTimestamps();
+    }
+
+    public function activityLogs()
+    {
+        return $this->morphMany(ActivityLog::class, 'loggable');
+    }
+}
+

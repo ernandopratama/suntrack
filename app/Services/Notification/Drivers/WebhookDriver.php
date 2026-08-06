@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Services\Notification\Drivers;
+
+use App\Contracts\Notification\NotificationDriverInterface;
+use App\Services\ActivityLogger;
+use Illuminate\Support\Facades\Log;
+
+class WebhookDriver implements NotificationDriverInterface
+{
+    public function send(string $recipient, string $message, array $metadata = []): bool
+    {
+        $payload = array_merge([
+            'channel'           => 'webhook',
+            'recipient'         => $recipient,
+            'subject'           => $metadata['subject'] ?? 'Webhook Dispatch',
+            'message'           => $message,
+            'status'            => 'sent_log_mode',
+            'sent_at'           => now()->toIso8601String(),
+            'related_entity'    => $metadata['related_entity'] ?? null,
+            'related_entity_id' => $metadata['related_entity_id'] ?? null,
+        ], $metadata);
+
+        Log::info(" [Notification:Webhook] URL: {$recipient} | Payload: {$message}", $payload);
+
+        ActivityLogger::log(
+            action: 'Notification:Webhook',
+            description: "Webhook notification dispatched to {$recipient} [Log Mode]",
+            actorType: 'System',
+            actorName: 'NotificationService',
+            properties: $payload
+        );
+
+        return true;
+    }
+
+    public function getDriverName(): string
+    {
+        return 'webhook';
+    }
+}
