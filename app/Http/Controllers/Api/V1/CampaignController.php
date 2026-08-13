@@ -27,8 +27,10 @@ class CampaignController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $campaigns = $this->repository->getFilteredPaginated(
-            companyId: (int) $request->user()->company_id,
+            companyId: $user->hasRole('Super Admin') ? null : $user->company_id,
             filters: $request->only(["search", "status"]),
             perPage: (int) $request->get("per_page", 15)
         );
@@ -100,7 +102,7 @@ class CampaignController extends Controller
      */
     public function update(UpdateCampaignRequest $request, Campaign $campaign): JsonResponse
     {
-        if ($campaign->brand?->company_id !== request()->user()->company_id) {
+        if (! request()->user()->hasRole('Super Admin') && $campaign->brand?->company_id !== request()->user()->company_id) {
             return $this->error("Unauthorized.", [], 403);
         }
 

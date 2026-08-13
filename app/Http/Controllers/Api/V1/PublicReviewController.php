@@ -565,4 +565,48 @@ class PublicReviewController extends Controller
             'data' => new TaskResource($task->fresh()),
         ]);
     }
+
+    public function updateStatus(Request $request, string $token)
+    {
+        $request->validate([
+            'status' => [
+                'required',
+                'string',
+                'in:Draft,Active,Approved,Partially Approved,Rejected,Completed',
+            ],
+        ]);
+
+        $link = $this->getSecureLink($token);
+        if (!($link instanceof SecureLink)) {
+            return $link;
+        }
+
+        $entity = $link->linkable;
+        $oldStatus = $entity->status;
+        $newStatus = $request->status;
+
+        $entity->update(['status' => $newStatus]);
+
+        ActivityLogger::log(
+            'Status Changed',
+            "Status {$entity->name} diubah dari '{$oldStatus}' menjadi '{$newStatus}' oleh reviewer publik.",
+            'Brand',
+            'Public Reviewer',
+            $entity,
+            null,
+            null,
+            [
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status berhasil diperbarui.',
+            'status' => $entity->status,
+        ]);
+    }
 }

@@ -153,6 +153,10 @@ Route::prefix('v1')->group(function () {
     // ------------------------------------------
     Route::get('/health', [\App\Http\Controllers\Api\V1\HealthController::class, 'check']);
     Route::get('/public/settings', [\App\Http\Controllers\Api\V1\SystemSettingController::class, 'publicSettings']);
+    Route::patch(
+        '/public/reviews/{token}/status',
+        [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'updateStatus']
+    );
 
     Route::prefix('public/review/{token}')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'show']);

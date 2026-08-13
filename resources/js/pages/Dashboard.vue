@@ -1,511 +1,1246 @@
 <template>
     <div class="space-y-8 pb-12">
-        <!-- HERO SECTION & COMMAND CENTER ACTIONS -->
+
+        <!-- HERO SECTION & COMMAND CENTER -->
         <div
-            class="bg-gradient-to-r from-gray-900 via-blue-950 to-gray-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-gray-800 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+    class="relative overflow-visible rounded-2xl bg-gray-950 border border-gray-800 shadow-xl"
         >
-            <div class="space-y-2 max-w-2xl">
-                <div class="flex items-center space-x-2.5">
-                    <span
-                        class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-mono text-xs font-bold border border-blue-500/30 uppercase tracking-wider"
+            <!-- Decorative Background -->
+            <div
+                class="absolute -top-32 -right-24 w-80 h-80 rounded-full bg-blue-600/10 blur-3xl pointer-events-none"
+            ></div>
+
+            <div
+                class="absolute -bottom-32 left-1/3 w-72 h-72 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none"
+            ></div>
+
+            <!-- Subtle Grid -->
+            <div
+                class="absolute inset-0 opacity-[0.035] pointer-events-none"
+                style="
+                    background-image:
+                        linear-gradient(rgba(255,255,255,.8) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,.8) 1px, transparent 1px);
+                    background-size: 32px 32px;
+                "
+            ></div>
+
+            <div
+                class="relative z-10 p-5 sm:p-6 lg:p-7"
+            >
+                <div
+                    class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6"
+                >
+
+                    <!-- ================================================= -->
+                    <!-- LEFT: COMMAND CENTER INTRO -->
+                    <!-- ================================================= -->
+                    <div class="min-w-0 max-w-2xl">
+
+                        <!-- Status Row -->
+                        <div
+                            class="flex flex-wrap items-center gap-2.5 mb-4"
+                        >
+                            <span
+                                class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-400/20 text-blue-300 text-[10px] font-extrabold uppercase tracking-wider"
+                            >
+                                <span
+                                    class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"
+                                ></span>
+
+                                Operational Command Center
+                            </span>
+
+                            <span
+                                class="inline-flex items-center gap-1.5 text-[10px] text-gray-500 font-mono"
+                            >
+                                <i class="fa-regular fa-clock text-[9px]"></i>
+
+                                {{ formatTime(lastRefreshed) }}
+                            </span>
+                        </div>
+
+                        <!-- Title -->
+                        <h1
+                            class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight"
+                        >
+                            Selamat Datang, Admin SunTrack
+                        </h1>
+
+                        <!-- Description -->
+                        <p
+                            class="text-sm text-gray-400 leading-relaxed mt-3 max-w-xl"
+                        >
+                            Pantau progres kampanye, persetujuan promosi,
+                            tenggat waktu kritis, aktivitas operasional,
+                            serta laporan sistem dari satu pusat kendali.
+                        </p>
+
+                        <!-- System Status -->
+                        <div
+                            class="flex flex-wrap items-center gap-3 mt-5"
+                        >
+                            <div
+                                class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400"
+                            >
+                                <span
+                                    class="w-2 h-2 rounded-full bg-emerald-400"
+                                ></span>
+
+                                Sistem Operasional
+                            </div>
+
+                            <span class="text-gray-700">•</span>
+
+                            <div
+                                class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400"
+                            >
+                                <i class="fa-solid fa-chart-line text-blue-400"></i>
+
+                                Real-time Monitoring
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- RIGHT: COMMAND ACTIONS -->
+                    <!-- ================================================= -->
+                    <div
+                        class="flex flex-col sm:flex-row xl:flex-col 2xl:flex-row gap-2.5 xl:min-w-[420px] 2xl:min-w-0"
                     >
-                        Operational Command Center
-                    </span>
-                    <span class="text-xs text-gray-400 font-mono">
-                        {{ formatTime(lastRefreshed) }}
-                    </span>
+
+                        <!-- ============================================= -->
+                        <!-- EXPORT REPORT -->
+                        <!-- ============================================= -->
+                        <div class="relative group flex-1 z-50">
+
+                            <button
+                                type="button"
+                                @click.stop="exportDropdownOpen = !exportDropdownOpen"
+                                class="w-full px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white transition flex items-center justify-between gap-3"
+                            >
+                                <span
+                                    class="flex items-center gap-2.5"
+                                >
+                                    <span
+                                        class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center"
+                                    >
+                                        <i
+                                            class="fa-solid fa-file-export text-xs text-gray-300"
+                                        ></i>
+                                    </span>
+
+                                    <span class="text-left">
+                                        <span
+                                            class="block text-[9px] font-extrabold uppercase tracking-wide text-gray-500"
+                                        >
+                                            Export Report
+                                        </span>
+
+                                        <span
+                                            class="block text-xs font-bold text-gray-200 mt-0.5"
+                                        >
+                                            Format:
+                                            {{ selectedFormat.toUpperCase() }}
+                                        </span>
+                                    </span>
+                                </span>
+
+                                <i
+                                    class="fa-solid fa-chevron-down text-[9px] text-gray-500 transition"
+                                    :class="{ 'rotate-180 text-white': exportDropdownOpen }"
+                                ></i>
+                            </button>
+
+
+                            <!-- Export Dropdown -->
+                            <div
+                                v-if="exportDropdownOpen"
+                                @click.stop
+                                class="absolute right-0 top-full mt-2 w-full sm:w-72 bg-white rounded-xl shadow-2xl border border-gray-200 p-2 z-[9999] text-gray-800"
+                            >
+
+                                <!-- Format Selector -->
+                                <div
+                                    class="p-1 bg-gray-100 rounded-lg flex items-center gap-1 mb-2"
+                                >
+                                    <button
+                                        @click.stop="selectedFormat = 'csv'"
+                                        :class="
+                                            selectedFormat === 'csv'
+                                                ? 'bg-blue-600 text-white shadow-sm'
+                                                : 'text-gray-500 hover:text-gray-800'
+                                        "
+                                        class="flex-1 px-2 py-1.5 rounded-md text-[10px] font-extrabold transition"
+                                    >
+                                        CSV
+                                    </button>
+
+                                    <button
+                                        @click.stop="selectedFormat = 'excel'"
+                                        :class="
+                                            selectedFormat === 'excel'
+                                                ? 'bg-emerald-600 text-white shadow-sm'
+                                                : 'text-gray-500 hover:text-gray-800'
+                                        "
+                                        class="flex-1 px-2 py-1.5 rounded-md text-[10px] font-extrabold transition"
+                                    >
+                                        EXCEL
+                                    </button>
+
+                                    <button
+                                        @click.stop="selectedFormat = 'pdf'"
+                                        :class="
+                                            selectedFormat === 'pdf'
+                                                ? 'bg-rose-600 text-white shadow-sm'
+                                                : 'text-gray-500 hover:text-gray-800'
+                                        "
+                                        class="flex-1 px-2 py-1.5 rounded-md text-[10px] font-extrabold transition"
+                                    >
+                                        PDF
+                                    </button>
+                                </div>
+
+                                <!-- Dropdown Label -->
+                                <div
+                                    class="px-2 py-1.5 text-[9px] font-extrabold uppercase tracking-wider text-gray-400"
+                                >
+                                    Pilih laporan
+                                </div>
+
+                                <!-- Campaign -->
+                                <button
+                                    @click="exportReport('campaign', selectedFormat); exportDropdownOpen = false"
+                                    class="w-full px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-3 text-left"
+                                >
+                                    <span
+                                        class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0"
+                                    >
+                                        <i class="fa-solid fa-bullhorn text-[10px]"></i>
+                                    </span>
+
+                                    <span class="flex-1">
+                                        <span
+                                            class="block text-xs font-bold"
+                                        >
+                                            Laporan Campaign
+                                        </span>
+
+                                        <span
+                                            class="block text-[9px] text-gray-400 mt-0.5"
+                                        >
+                                            Data kampanye operasional
+                                        </span>
+                                    </span>
+
+                                    <span
+                                        class="text-[9px] font-mono font-bold text-gray-400"
+                                    >
+                                        {{ selectedFormat.toUpperCase() }}
+                                    </span>
+                                </button>
+
+                                <!-- Promotion -->
+                                <button
+                                    @click="exportReport('promotion', selectedFormat); exportDropdownOpen = false"
+                                    class="w-full px-3 py-2.5 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition flex items-center gap-3 text-left"
+                                >
+                                    <span
+                                        class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0"
+                                    >
+                                        <i class="fa-solid fa-tag text-[10px]"></i>
+                                    </span>
+
+                                    <span class="flex-1">
+                                        <span
+                                            class="block text-xs font-bold"
+                                        >
+                                            Laporan Promotion
+                                        </span>
+
+                                        <span
+                                            class="block text-[9px] text-gray-400 mt-0.5"
+                                        >
+                                            Data promosi dan status
+                                        </span>
+                                    </span>
+
+                                    <span
+                                        class="text-[9px] font-mono font-bold text-gray-400"
+                                    >
+                                        {{ selectedFormat.toUpperCase() }}
+                                    </span>
+                                </button>
+
+                                <!-- Approval -->
+                                <button
+                                    @click="exportReport('approval', selectedFormat); exportDropdownOpen = false"
+                                    class="w-full px-3 py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition flex items-center gap-3 text-left"
+                                >
+                                    <span
+                                        class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0"
+                                    >
+                                        <i class="fa-solid fa-signature text-[10px]"></i>
+                                    </span>
+
+                                    <span class="flex-1">
+                                        <span
+                                            class="block text-xs font-bold"
+                                        >
+                                            Brand Approval
+                                        </span>
+
+                                        <span
+                                            class="block text-[9px] text-gray-400 mt-0.5"
+                                        >
+                                            Persetujuan dari brand
+                                        </span>
+                                    </span>
+
+                                    <span
+                                        class="text-[9px] font-mono font-bold text-gray-400"
+                                    >
+                                        {{ selectedFormat.toUpperCase() }}
+                                    </span>
+                                </button>
+
+                                <!-- Product -->
+                                <button
+                                    @click="exportReport('product', selectedFormat); exportDropdownOpen = false"
+                                    class="w-full px-3 py-2.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center gap-3 text-left"
+                                >
+                                    <span
+                                        class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0"
+                                    >
+                                        <i class="fa-solid fa-box text-[10px]"></i>
+                                    </span>
+
+                                    <span class="flex-1">
+                                        <span
+                                            class="block text-xs font-bold"
+                                        >
+                                            Master Katalog
+                                        </span>
+
+                                        <span
+                                            class="block text-[9px] text-gray-400 mt-0.5"
+                                        >
+                                            Produk dan varian
+                                        </span>
+                                    </span>
+
+                                    <span
+                                        class="text-[9px] font-mono font-bold text-gray-400"
+                                    >
+                                        {{ selectedFormat.toUpperCase() }}
+                                    </span>
+                                </button>
+
+                                <!-- Activity -->
+                                <button
+                                    @click="exportReport('activity', selectedFormat); exportDropdownOpen = false"
+                                    class="w-full px-3 py-2.5 rounded-lg hover:bg-gray-100 transition flex items-center gap-3 text-left border-t border-gray-100 mt-1 pt-3"
+                                >
+                                    <span
+                                        class="w-7 h-7 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center flex-shrink-0"
+                                    >
+                                        <i class="fa-solid fa-list-check text-[10px]"></i>
+                                    </span>
+
+                                    <span class="flex-1">
+                                        <span
+                                            class="block text-xs font-bold"
+                                        >
+                                            Audit Log
+                                        </span>
+
+                                        <span
+                                            class="block text-[9px] text-gray-400 mt-0.5"
+                                        >
+                                            Aktivitas dan jejak sistem
+                                        </span>
+                                    </span>
+
+                                    <span
+                                        class="text-[9px] font-mono font-bold text-gray-400"
+                                    >
+                                        {{ selectedFormat.toUpperCase() }}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <!-- ============================================= -->
+                        <!-- REFRESH -->
+                        <!-- ============================================= -->
+                        <button
+                            @click="fetchStats"
+                            :disabled="loading"
+                            class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-bold text-xs shadow-lg shadow-blue-950/30 transition flex items-center justify-center gap-2"
+                        >
+                            <i
+                                class="fa-solid fa-arrows-rotate text-[10px]"
+                                :class="{ 'animate-spin': loading }"
+                            ></i>
+
+                            <span>
+                                {{ loading ? "Memuat..." : "Segarkan Data" }}
+                            </span>
+                        </button>
+
+
+                        <!-- ============================================= -->
+                        <!-- CREATE CAMPAIGN -->
+                        <!-- ============================================= -->
+                        <router-link
+                            to="/campaigns"
+                            class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-950/30 transition flex items-center justify-center gap-2 whitespace-nowrap"
+                        >
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+
+                            <span>Buat Campaign</span>
+                        </router-link>
+                    </div>
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                    Selamat Datang, Admin SunTrack! 👋
-                </h1>
-                <p class="text-sm text-gray-300 leading-relaxed">
-                    Pantau seluruh progres kampanye promosi, persetujuan harga
-                    dari Brand eksternal, tenggat waktu kritis, serta unduh
-                    laporan operasional secara real-time.
-                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- LOADING STATE -->
+        <!-- ============================================================= -->
+        <div
+            v-if="loading && !stats"
+            class="space-y-5"
+        >
+            <!-- KPI Skeleton -->
+            <div
+                class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
+            >
+                <div
+                    v-for="i in 4"
+                    :key="i"
+                    class="h-36 bg-gray-200 rounded-2xl animate-pulse"
+                ></div>
             </div>
 
-            <!-- Quick Action Buttons & Refresh Controls (Refinement #2 & #6) -->
+            <!-- Workspace Skeleton -->
             <div
-                class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                class="grid grid-cols-1 xl:grid-cols-3 gap-5"
             >
-                <!-- Export Reports Dropdown -->
-                <div class="relative group">
-                    <button
-                        class="w-full sm:w-auto px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/10 transition flex items-center justify-center space-x-2"
-                    >
-                        <span
-                            >📊 Unduh Laporan ({{
-                                selectedFormat.toUpperCase()
-                            }}) ▾</span
-                        >
-                    </button>
+                <div
+                    class="h-[430px] bg-gray-200 rounded-2xl animate-pulse xl:col-span-2"
+                ></div>
+
+                <div
+                    class="h-[430px] bg-gray-200 rounded-2xl animate-pulse"
+                ></div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- ERROR STATE -->
+        <!-- ============================================================= -->
+        <div
+            v-else-if="error"
+            class="rounded-2xl border border-rose-200 bg-rose-50 overflow-hidden"
+        >
+            <div
+                class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+                <div class="flex items-start gap-3">
+
                     <div
-                        class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 p-2 hidden group-hover:block z-50 text-gray-800 text-xs font-medium space-y-1"
+                        class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0"
                     >
-                        <div
-                            class="flex items-center justify-between p-1 bg-gray-100 rounded-lg mb-2"
+                        <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                    </div>
+
+                    <div>
+                        <h4
+                            class="text-sm font-extrabold text-rose-900"
                         >
-                            <button
-                                @click.stop="selectedFormat = 'csv'"
-                                :class="
-                                    selectedFormat === 'csv'
-                                        ? 'bg-blue-600 text-white shadow'
-                                        : 'text-gray-600 hover:text-black'
-                                "
-                                class="px-2 py-1 rounded-md font-bold text-2xs transition flex-1 text-center"
-                            >
-                                CSV
-                            </button>
-                            <button
-                                @click.stop="selectedFormat = 'excel'"
-                                :class="
-                                    selectedFormat === 'excel'
-                                        ? 'bg-emerald-600 text-white shadow'
-                                        : 'text-gray-600 hover:text-black'
-                                "
-                                class="px-2 py-1 rounded-md font-bold text-2xs transition flex-1 text-center"
-                            >
-                                EXCEL
-                            </button>
-                            <button
-                                @click.stop="selectedFormat = 'pdf'"
-                                :class="
-                                    selectedFormat === 'pdf'
-                                        ? 'bg-rose-600 text-white shadow'
-                                        : 'text-gray-600 hover:text-black'
-                                "
-                                class="px-2 py-1 rounded-md font-bold text-2xs transition flex-1 text-center"
-                            >
-                                PDF
-                            </button>
-                        </div>
-                        <button
-                            @click="exportReport('campaign', selectedFormat)"
-                            class="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between font-bold"
+                            Gagal Memuat Statistik Dashboard
+                        </h4>
+
+                        <p
+                            class="text-xs text-rose-700 mt-1"
                         >
-                            <span>📋 Laporan Campaign</span>
-                            <span class="text-2xs font-mono text-gray-400">{{
-                                selectedFormat.toUpperCase()
-                            }}</span>
-                        </button>
-                        <button
-                            @click="exportReport('promotion', selectedFormat)"
-                            class="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between font-bold"
-                        >
-                            <span>🏷️ Laporan Promotion</span>
-                            <span class="text-2xs font-mono text-gray-400">{{
-                                selectedFormat.toUpperCase()
-                            }}</span>
-                        </button>
-                        <button
-                            @click="exportReport('approval', selectedFormat)"
-                            class="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between font-bold"
-                        >
-                            <span>✍️ Laporan Brand Approval</span>
-                            <span class="text-2xs font-mono text-gray-400">{{
-                                selectedFormat.toUpperCase()
-                            }}</span>
-                        </button>
-                        <button
-                            @click="exportReport('product', selectedFormat)"
-                            class="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between font-bold"
-                        >
-                            <span>📦 Laporan Master Katalog</span>
-                            <span class="text-2xs font-mono text-gray-400">{{
-                                selectedFormat.toUpperCase()
-                            }}</span>
-                        </button>
-                        <button
-                            @click="exportReport('activity', selectedFormat)"
-                            class="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between font-bold border-t border-gray-100 pt-2 mt-1"
-                        >
-                            <span>📜 Laporan Audit Log</span>
-                            <span class="text-2xs font-mono text-gray-400">{{
-                                selectedFormat.toUpperCase()
-                            }}</span>
-                        </button>
+                            {{ error }}
+                        </p>
                     </div>
                 </div>
 
                 <button
                     @click="fetchStats"
-                    :disabled="loading"
-                    class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center justify-center space-x-2"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition"
                 >
-                    <span :class="{ 'animate-spin': loading }">🔄</span>
-                    <span>{{ loading ? "Memuat..." : "Segarkan Data" }}</span>
+                    <i class="fa-solid fa-rotate-right text-[10px]"></i>
+
+                    Coba Lagi
                 </button>
-
-                <router-link
-                    to="/campaigns"
-                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center justify-center space-x-2 whitespace-nowrap"
-                >
-                    <span>✨</span>
-                    <span>Buat Campaign Baru</span>
-                </router-link>
             </div>
-        </div>
-
-        <!-- LOADING & ERROR STATES -->
-        <div v-if="loading && !stats" class="space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div
-                    v-for="i in 4"
-                    :key="i"
-                    class="h-32 bg-gray-200 rounded-2xl animate-pulse"
-                ></div>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div
-                    class="h-96 bg-gray-200 rounded-2xl animate-pulse lg:col-span-2"
-                ></div>
-                <div class="h-96 bg-gray-200 rounded-2xl animate-pulse"></div>
-            </div>
-        </div>
-
-        <div
-            v-else-if="error"
-            class="bg-rose-50 border border-rose-200 p-6 rounded-2xl text-rose-800 flex items-center justify-between"
-        >
-            <div>
-                <h4 class="font-bold">Gagal Memuat Statistik Dashboard</h4>
-                <p class="text-sm mt-1">{{ error }}</p>
-            </div>
-            <button
-                @click="fetchStats"
-                class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition"
-            >
-                Coba Lagi
-            </button>
         </div>
 
         <div v-else-if="stats" class="space-y-8">
-            <!-- 1. PRIMARY CLICKABLE KPI CARDS (Big 4 - Refinement #1) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- 1. PRIMARY KPI CARDS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+                <!-- Active Campaigns -->
                 <div
                     @click="navigateTo('/campaigns')"
-                    class="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-blue-500/50 cursor-pointer transition group"
+                    class="group relative overflow-hidden bg-white rounded-2xl border border-gray-200 p-5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-300"
                 >
-                    <div class="flex items-center justify-between mb-3">
-                        <span
-                            class="text-xs font-extrabold uppercase tracking-wider text-gray-400 group-hover:text-blue-600 transition"
-                            >Active Campaigns</span
+                    <!-- Decorative Background -->
+                    <div
+                        class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-blue-50 opacity-60 group-hover:scale-125 transition-transform duration-300"
+                    ></div>
+
+                    <div class="relative">
+
+                        <!-- Header -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-rocket text-sm"></i>
+                                </div>
+
+                                <div>
+                                    <p
+                                        class="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 group-hover:text-blue-600 transition"
+                                    >
+                                        Active Campaigns
+                                    </p>
+
+                                    <p class="text-[10px] text-gray-400 mt-0.5">
+                                        Kampanye berjalan
+                                    </p>
+                                </div>
+                            </div>
+
+                            <i
+                                class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-blue-500 transition"
+                            ></i>
+                        </div>
+
+                        <!-- Value -->
+                        <div class="flex items-baseline gap-2 mt-5">
+                            <span
+                                class="text-3xl font-black tracking-tight text-gray-900"
+                            >
+                                {{ stats.kpi.campaigns.active }}
+                            </span>
+
+                            <span
+                                class="text-xs font-medium text-gray-400"
+                            >
+                                / {{ stats.kpi.campaigns.total }} total
+                            </span>
+                        </div>
+
+                        <!-- Footer -->
+                        <div
+                            class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100"
                         >
-                        <span
-                            class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm"
-                            >🚀</span
-                        >
+                            <span
+                                class="text-[10px] font-bold text-blue-600"
+                            >
+                                Kelola kampanye
+                            </span>
+
+                            <span
+                                class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"
+                            >
+                                <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                            </span>
+                        </div>
                     </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-3xl font-black text-gray-900">{{
-                            stats.kpi.campaigns.active
-                        }}</span>
-                        <span class="text-xs text-gray-400 font-medium"
-                            >/ {{ stats.kpi.campaigns.total }} total</span
-                        >
-                    </div>
-                    <p
-                        class="text-2xs text-blue-600 font-bold mt-3 flex items-center space-x-1"
-                    >
-                        <span>Kelola Kampanye Berjalan ➔</span>
-                    </p>
                 </div>
 
+
+                <!-- Active Promotions -->
                 <div
                     @click="navigateTo('/promotions')"
-                    class="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-emerald-500/50 cursor-pointer transition group"
+                    class="group relative overflow-hidden bg-white rounded-2xl border border-gray-200 p-5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-emerald-300"
                 >
-                    <div class="flex items-center justify-between mb-3">
-                        <span
-                            class="text-xs font-extrabold uppercase tracking-wider text-gray-400 group-hover:text-emerald-600 transition"
-                            >Active Promotions</span
+                    <!-- Decorative Background -->
+                    <div
+                        class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-emerald-50 opacity-60 group-hover:scale-125 transition-transform duration-300"
+                    ></div>
+
+                    <div class="relative">
+
+                        <!-- Header -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-tag text-sm"></i>
+                                </div>
+
+                                <div>
+                                    <p
+                                        class="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 group-hover:text-emerald-600 transition"
+                                    >
+                                        Active Promotions
+                                    </p>
+
+                                    <p class="text-[10px] text-gray-400 mt-0.5">
+                                        Promosi sedang aktif
+                                    </p>
+                                </div>
+                            </div>
+
+                            <i
+                                class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-emerald-500 transition"
+                            ></i>
+                        </div>
+
+                        <!-- Value -->
+                        <div class="flex items-baseline gap-2 mt-5">
+                            <span
+                                class="text-3xl font-black tracking-tight text-gray-900"
+                            >
+                                {{ stats.kpi.promotions.active }}
+                            </span>
+
+                            <span
+                                class="text-xs font-medium text-gray-400"
+                            >
+                                / {{ stats.kpi.promotions.total }} total
+                            </span>
+                        </div>
+
+                        <!-- Footer -->
+                        <div
+                            class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100"
                         >
-                        <span
-                            class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm"
-                            >🏷️</span
-                        >
+                            <span
+                                class="text-[10px] font-bold text-emerald-600"
+                            >
+                                Lihat promosi aktif
+                            </span>
+
+                            <span
+                                class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition"
+                            >
+                                <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                            </span>
+                        </div>
                     </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-3xl font-black text-gray-900">{{
-                            stats.kpi.promotions.active
-                        }}</span>
-                        <span class="text-xs text-gray-400 font-medium"
-                            >/ {{ stats.kpi.promotions.total }} total</span
-                        >
-                    </div>
-                    <p
-                        class="text-2xs text-emerald-600 font-bold mt-3 flex items-center space-x-1"
-                    >
-                        <span>Lihat Promosi Aktif ➔</span>
-                    </p>
                 </div>
 
+
+                <!-- Pending Approvals -->
                 <div
                     @click="navigateTo('/promotions')"
-                    class="bg-white rounded-2xl border border-amber-200/80 p-6 shadow-xs hover:shadow-md hover:border-amber-500 cursor-pointer transition group bg-gradient-to-br from-white to-amber-50/30"
+                    class="group relative overflow-hidden bg-white rounded-2xl border border-amber-200 p-5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-amber-400 bg-gradient-to-br from-white to-amber-50/40"
                 >
-                    <div class="flex items-center justify-between mb-3">
-                        <span
-                            class="text-xs font-extrabold uppercase tracking-wider text-amber-600"
-                            >Pending Approvals</span
+                    <!-- Decorative Background -->
+                    <div
+                        class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-amber-100/70 group-hover:scale-125 transition-transform duration-300"
+                    ></div>
+
+                    <div class="relative">
+
+                        <!-- Header -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="relative w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-hourglass-half text-sm"></i>
+
+                                    <span
+                                        v-if="stats.kpi.promotions.pending > 0"
+                                        class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-500 border-2 border-white animate-pulse"
+                                    ></span>
+                                </div>
+
+                                <div>
+                                    <p
+                                        class="text-[10px] font-extrabold uppercase tracking-wider text-amber-600"
+                                    >
+                                        Pending Approvals
+                                    </p>
+
+                                    <p class="text-[10px] text-amber-600/70 mt-0.5">
+                                        Menunggu persetujuan
+                                    </p>
+                                </div>
+                            </div>
+
+                            <i
+                                class="fa-solid fa-arrow-up-right-from-square text-[10px] text-amber-300 group-hover:text-amber-600 transition"
+                            ></i>
+                        </div>
+
+                        <!-- Value -->
+                        <div class="flex items-baseline gap-2 mt-5">
+                            <span
+                                class="text-3xl font-black tracking-tight text-amber-900"
+                            >
+                                {{ stats.kpi.promotions.pending }}
+                            </span>
+
+                            <span
+                                class="text-xs font-medium text-amber-600"
+                            >
+                                promosi menunggu
+                            </span>
+                        </div>
+
+                        <!-- Footer -->
+                        <div
+                            class="flex items-center justify-between mt-4 pt-3 border-t border-amber-100"
                         >
-                        <span
-                            class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm animate-bounce"
-                            >⏳</span
-                        >
+                            <span
+                                class="text-[10px] font-bold text-amber-700"
+                            >
+                                Tinjau respons brand
+                            </span>
+
+                            <span
+                                class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition"
+                            >
+                                <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                            </span>
+                        </div>
                     </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-3xl font-black text-amber-900">{{
-                            stats.kpi.promotions.pending
-                        }}</span>
-                        <span class="text-xs text-amber-600 font-medium"
-                            >promosi menunggu</span
-                        >
-                    </div>
-                    <p
-                        class="text-2xs text-amber-700 font-bold mt-3 flex items-center space-x-1"
-                    >
-                        <span>Tinjau Respons Brand Sekarang ➔</span>
-                    </p>
                 </div>
 
+
+                <!-- Deadlines Today -->
                 <div
                     @click="activeDeadlineTab = 'today'"
-                    class="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs hover:shadow-md hover:border-rose-500/50 cursor-pointer transition group"
+                    class="group relative overflow-hidden bg-white rounded-2xl border border-gray-200 p-5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-rose-300"
                 >
-                    <div class="flex items-center justify-between mb-3">
-                        <span
-                            class="text-xs font-extrabold uppercase tracking-wider text-gray-400 group-hover:text-rose-600 transition"
-                            >Deadlines Today</span
+                    <!-- Decorative Background -->
+                    <div
+                        class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-rose-50 opacity-60 group-hover:scale-125 transition-transform duration-300"
+                    ></div>
+
+                    <div class="relative">
+
+                        <!-- Header -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-clock text-sm"></i>
+                                </div>
+
+                                <div>
+                                    <p
+                                        class="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 group-hover:text-rose-600 transition"
+                                    >
+                                        Deadlines Today
+                                    </p>
+
+                                    <p class="text-[10px] text-gray-400 mt-0.5">
+                                        Berakhir hari ini
+                                    </p>
+                                </div>
+                            </div>
+
+                            <i
+                                class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-rose-500 transition"
+                            ></i>
+                        </div>
+
+                        <!-- Value -->
+                        <div class="flex items-baseline gap-2 mt-5">
+                            <span
+                                class="text-3xl font-black tracking-tight"
+                                :class="
+                                    (stats.deadlines?.today?.length ?? 0) > 0
+                                        ? 'text-rose-600'
+                                        : 'text-gray-900'
+                                "
+                            >
+                                {{ stats.deadlines?.today?.length ?? 0 }}
+                            </span>
+
+                            <span
+                                class="text-xs font-medium text-gray-400"
+                            >
+                                item berakhir
+                            </span>
+                        </div>
+
+                        <!-- Status -->
+                        <div
+                            class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100"
                         >
-                        <span
-                            class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-sm"
-                            >⏰</span
-                        >
+                            <span
+                                class="inline-flex items-center gap-1.5 text-[10px] font-bold"
+                                :class="
+                                    (stats.deadlines?.today?.length ?? 0) > 0
+                                        ? 'text-rose-600'
+                                        : 'text-emerald-600'
+                                "
+                            >
+                                <span
+                                    class="w-1.5 h-1.5 rounded-full"
+                                    :class="
+                                        (stats.deadlines?.today?.length ?? 0) > 0
+                                            ? 'bg-rose-500'
+                                            : 'bg-emerald-500'
+                                    "
+                                ></span>
+
+                                {{
+                                    (stats.deadlines?.today?.length ?? 0) > 0
+                                        ? "Perlu perhatian"
+                                        : "Tidak ada deadline"
+                                }}
+                            </span>
+
+                            <span
+                                class="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition"
+                            >
+                                <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                            </span>
+                        </div>
                     </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span
-                            class="text-3xl font-black"
-                            :class="
-                                (stats.deadlines?.today?.length ?? 0) > 0
-                                    ? 'text-rose-600'
-                                    : 'text-gray-900'
-                            "
-                            >{{ stats.deadlines?.today?.length ?? 0 }}</span
-                        >
-                        <span class="text-xs text-gray-400 font-medium"
-                            >item berakhir hari ini</span
-                        >
-                    </div>
-                    <p
-                        class="text-2xs text-rose-600 font-bold mt-3 flex items-center space-x-1"
-                    >
-                        <span>Periksa di Monitor Tenggat ➔</span>
-                    </p>
                 </div>
             </div>
 
-            <!-- 2. SECONDARY CLICKABLE MINI KPI CARDS & EXTENSIBLE METRICS (Refinement #1 & #3) -->
+            <!-- 2. SECONDARY KPI AGGREGATION -->
             <div
-                class="bg-gray-50/80 rounded-2xl p-6 border border-gray-200/80"
+                class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden"
             >
-                <div class="flex items-center justify-between mb-4">
-                    <h3
-                        class="text-xs font-extrabold uppercase tracking-wider text-gray-500"
-                    >
-                        📊 Rincian Agregasi Operasional & Kolaborasi Brand
-                    </h3>
-                    <span
-                        class="text-2xs font-bold bg-gray-200/80 px-2.5 py-0.5 rounded-full text-gray-600"
-                        >Extensible KPI Architecture</span
-                    >
-                </div>
+                <!-- Section Header -->
                 <div
-                    class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4"
+                    class="px-5 py-4 border-b border-gray-100 bg-gray-50/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                 >
-                    <div
-                        @click="navigateTo('/campaigns')"
-                        class="bg-white p-3.5 rounded-xl border border-gray-200/80 hover:border-gray-400 cursor-pointer transition text-center"
-                    >
-                        <span
-                            class="block text-xs font-bold uppercase text-gray-400"
-                            >Completed Camp.</span
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0"
                         >
-                        <span
-                            class="text-lg font-black text-gray-800 mt-1 block"
-                            >{{ stats.kpi?.campaigns?.completed ?? 0 }}</span
-                        >
+                            <i class="fa-solid fa-chart-column text-sm"></i>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-extrabold text-gray-900">
+                                Rincian Agregasi Operasional & Kolaborasi Brand
+                            </h3>
+                            <p class="text-2xs text-gray-500 mt-0.5">
+                                Ringkasan aktivitas dan data operasional SunTrack
+                            </p>
+                        </div>
                     </div>
-                    <div
-                        @click="navigateTo('/promotions')"
-                        class="bg-white p-3.5 rounded-xl border border-gray-200/80 hover:border-emerald-400 cursor-pointer transition text-center"
+
+                    <span
+                        class="inline-flex items-center self-start sm:self-auto gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 border border-gray-200 text-2xs font-bold text-gray-500"
                     >
-                        <span
-                            class="block text-xs font-bold uppercase text-gray-400"
-                            >Approved Promo</span
-                        >
-                        <span
-                            class="text-lg font-black text-emerald-600 mt-1 block"
-                            >{{ stats.kpi?.promotions?.approved ?? 0 }}</span
-                        >
-                    </div>
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        KPI Overview
+                    </span>
+                </div>
+
+                <!-- KPI Grid -->
+                <div class="p-4 sm:p-5">
                     <div
-                        @click="navigateTo('/promotions')"
-                        class="bg-white p-3.5 rounded-xl border border-gray-200/80 hover:border-amber-400 cursor-pointer transition text-center"
+                        class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3"
                     >
-                        <span
-                            class="block text-xs font-bold uppercase text-gray-400"
-                            >Partially Approved</span
+                        <!-- Completed Campaign -->
+                        <div
+                            @click="navigateTo('/campaigns')"
+                            class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
                         >
-                        <span
-                            class="text-lg font-black text-amber-600 mt-1 block"
-                            >{{
-                                stats.kpi?.promotions?.partially_approved ?? 0
-                            }}</span
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-check text-xs"></i>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-blue-500 transition"
+                                ></i>
+                            </div>
+
+                            <p
+                                class="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 leading-tight"
+                            >
+                                Completed Campaign
+                            </p>
+
+                            <p
+                                class="text-2xl font-black text-gray-900 mt-1"
+                            >
+                                {{ stats.kpi?.campaigns?.completed ?? 0 }}
+                            </p>
+                        </div>
+
+                        <!-- Approved Promotion -->
+                        <div
+                            @click="navigateTo('/promotions')"
+                            class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
                         >
-                    </div>
-                    <div
-                        @click="navigateTo('/promotions')"
-                        class="bg-white p-3.5 rounded-xl border border-gray-200/80 hover:border-rose-400 cursor-pointer transition text-center"
-                    >
-                        <span
-                            class="block text-xs font-bold uppercase text-gray-400"
-                            >Rejected Promo</span
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-circle-check text-xs"></i>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-emerald-500 transition"
+                                ></i>
+                            </div>
+
+                            <p
+                                class="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 leading-tight"
+                            >
+                                Approved Promo
+                            </p>
+
+                            <p
+                                class="text-2xl font-black text-emerald-600 mt-1"
+                            >
+                                {{ stats.kpi?.promotions?.approved ?? 0 }}
+                            </p>
+                        </div>
+
+                        <!-- Partially Approved -->
+                        <div
+                            @click="navigateTo('/promotions')"
+                            class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md"
                         >
-                        <span
-                            class="text-lg font-black text-rose-600 mt-1 block"
-                            >{{ stats.kpi?.promotions?.rejected ?? 0 }}</span
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-hourglass-half text-xs"></i>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-amber-500 transition"
+                                ></i>
+                            </div>
+
+                            <p
+                                class="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 leading-tight"
+                            >
+                                Partially Approved
+                            </p>
+
+                            <p
+                                class="text-2xl font-black text-amber-600 mt-1"
+                            >
+                                {{ stats.kpi?.promotions?.partially_approved ?? 0 }}
+                            </p>
+                        </div>
+
+                        <!-- Rejected Promotion -->
+                        <div
+                            @click="navigateTo('/promotions')"
+                            class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-md"
                         >
-                    </div>
-                    <div
-                        @click="navigateTo('/products')"
-                        class="bg-white p-3.5 rounded-xl border border-gray-200/80 hover:border-blue-400 cursor-pointer transition text-center"
-                    >
-                        <span
-                            class="block text-xs font-bold uppercase text-gray-400"
-                            >Master Products</span
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-rose-500 transition"
+                                ></i>
+                            </div>
+
+                            <p
+                                class="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 leading-tight"
+                            >
+                                Rejected Promo
+                            </p>
+
+                            <p
+                                class="text-2xl font-black text-rose-600 mt-1"
+                            >
+                                {{ stats.kpi?.promotions?.rejected ?? 0 }}
+                            </p>
+                        </div>
+
+                        <!-- Master Products -->
+                        <div
+                            @click="navigateTo('/products')"
+                            class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
                         >
-                        <span
-                            class="text-lg font-black text-gray-800 mt-1 block"
-                            >{{ stats.kpi?.catalog?.total_products ?? 0 }}</span
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-box text-xs"></i>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-sky-500 transition"
+                                ></i>
+                            </div>
+
+                            <p
+                                class="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 leading-tight"
+                            >
+                                Master Products
+                            </p>
+
+                            <p
+                                class="text-2xl font-black text-gray-900 mt-1"
+                            >
+                                {{ stats.kpi?.catalog?.total_products ?? 0 }}
+                            </p>
+                        </div>
+
+                        <!-- Master Variants -->
+                        <div
+                            @click="navigateTo('/products')"
+                            class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
                         >
-                    </div>
-                    <div
-                        @click="navigateTo('/products')"
-                        class="bg-white p-3.5 rounded-xl border border-gray-200/80 hover:border-blue-400 cursor-pointer transition text-center"
-                    >
-                        <span
-                            class="block text-xs font-bold uppercase text-gray-400"
-                            >Master Variants</span
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-layer-group text-xs"></i>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-indigo-500 transition"
+                                ></i>
+                            </div>
+
+                            <p
+                                class="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 leading-tight"
+                            >
+                                Master Variants
+                            </p>
+
+                            <p
+                                class="text-2xl font-black text-gray-900 mt-1"
+                            >
+                                {{ stats.kpi?.catalog?.total_variants ?? 0 }}
+                            </p>
+                        </div>
+
+                        <!-- Secure Links -->
+                        <div
+                            @click="navigateTo('/promotions')"
+                            class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md"
                         >
-                        <span
-                            class="text-lg font-black text-gray-800 mt-1 block"
-                            >{{ stats.kpi?.catalog?.total_variants ?? 0 }}</span
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-link text-xs"></i>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-violet-500 transition"
+                                ></i>
+                            </div>
+
+                            <p
+                                class="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 leading-tight"
+                            >
+                                Secure Links
+                            </p>
+
+                            <p
+                                class="text-2xl font-black text-violet-600 mt-1"
+                            >
+                                {{ stats.kpi?.catalog?.total_secure_links ?? 0 }}
+                            </p>
+                        </div>
+
+                        <!-- Brand Reviews -->
+                        <div
+                            class="group rounded-xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-purple-300 hover:shadow-md"
                         >
-                    </div>
-                    <div
-                        @click="navigateTo('/promotions')"
-                        class="bg-white p-3.5 rounded-xl border border-gray-200/80 hover:border-indigo-400 cursor-pointer transition text-center"
-                    >
-                        <span
-                            class="block text-xs font-bold uppercase text-gray-400"
-                            >Secure Links</span
-                        >
-                        <span
-                            class="text-lg font-black text-indigo-600 mt-1 block"
-                            >{{
-                                stats.kpi?.catalog?.total_secure_links ?? 0
-                            }}</span
-                        >
-                    </div>
-                    <div
-                        class="bg-white p-3.5 rounded-xl border border-gray-200/80 text-center"
-                    >
-                        <span
-                            class="block text-xs font-bold uppercase text-gray-400"
-                            title="Brand Review Decisions"
-                            >Brand Reviews</span
-                        >
-                        <span
-                            class="text-lg font-black text-purple-600 mt-1 block"
-                            >{{ stats.kpi?.catalog?.total_brand_reviews ?? 0 }}
-                            <span class="text-3xs font-normal text-gray-400"
-                                >({{ stats.kpi?.extended?.approval_rate ?? 0 }}%
-                                rate)</span
-                            ></span
-                        >
+                            <div class="flex items-center justify-between mb-4">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center"
+                                >
+                                    <i class="fa-solid fa-star text-xs"></i>
+                                </div>
+
+                                <span
+                                    class="text-[9px] font-bold uppercase tracking-wide text-gray-400"
+                                >
+                                    Rate
+                                </span>
+                            </div>
+
+                            <p
+                                class="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 leading-tight"
+                            >
+                                Brand Reviews
+                            </p>
+
+                            <div class="flex items-baseline gap-1 mt-1">
+                                <p
+                                    class="text-2xl font-black text-purple-600"
+                                >
+                                    {{ stats.kpi?.catalog?.total_brand_reviews ?? 0 }}
+                                </p>
+
+                                <span class="text-[10px] font-bold text-gray-400">
+                                    ({{ stats.kpi?.extended?.approval_rate ?? 0 }}%)
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- 3. WORKSPACE GRID: DEADLINE MONITORING & RECENT ACTIVITIES -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <!-- LEFT 2 COLUMNS: DEADLINE MONITORING WIDGET (Refinement #4) -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+
+                <!-- ========================================================= -->
+                <!-- LEFT: DEADLINE MONITORING -->
+                <!-- ========================================================= -->
                 <div
-                    class="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden lg:col-span-2"
+                    class="xl:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden"
                 >
+
+                    <!-- Header -->
                     <div
-                        class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50"
+                        class="px-5 py-4 border-b border-gray-100 bg-gray-50/60"
                     >
-                        <div>
-                            <h3
-                                class="text-lg font-bold text-gray-900 flex items-center space-x-2"
-                            >
-                                <span>⏰</span>
-                                <span
-                                    >Pusat Pemantauan Tenggat Waktu (Deadline
-                                    Monitoring)</span
-                                >
-                            </h3>
-                            <p class="text-xs text-gray-500 mt-0.5">
-                                Pantau kampanye dan tautan promosi yang
-                                mendekati batas waktu atau mengalami
-                                keterlambatan.
-                            </p>
-                        </div>
-                        <!-- Auto Refresh Toggle (Refinement #2) -->
                         <div
-                            class="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-xl border border-gray-200 text-xs"
+                            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
                         >
-                            <input
-                                type="checkbox"
-                                id="autoRef"
-                                v-model="autoRefreshActive"
-                                @change="toggleAutoRefresh"
-                                class="rounded text-blue-600 focus:ring-blue-500"
-                            />
+                            <!-- Title -->
+                            <div class="flex items-start gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0"
+                                >
+                                    <i class="fa-solid fa-clock text-sm"></i>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3
+                                            class="text-sm sm:text-base font-extrabold text-gray-900"
+                                        >
+                                            Pusat Pemantauan Tenggat Waktu
+                                        </h3>
+
+                                        <span
+                                            class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200 text-[9px] font-bold text-gray-500 uppercase tracking-wide"
+                                        >
+                                            Deadline Monitor
+                                        </span>
+                                    </div>
+
+                                    <p
+                                        class="text-xs text-gray-500 mt-1 leading-relaxed"
+                                    >
+                                        Pantau kampanye dan tautan promosi yang mendekati
+                                        deadline atau mengalami keterlambatan.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Auto Refresh -->
                             <label
                                 for="autoRef"
-                                class="font-bold text-gray-700 cursor-pointer select-none"
-                                >⚡ Auto Refresh (60s)</label
+                                class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition select-none"
                             >
+                                <span
+                                    class="flex items-center justify-center w-6 h-6 rounded-lg"
+                                    :class="
+                                        autoRefreshActive
+                                            ? 'bg-blue-100 text-blue-600'
+                                            : 'bg-gray-100 text-gray-400'
+                                    "
+                                >
+                                    <i
+                                        class="fa-solid fa-arrows-rotate text-[10px]"
+                                        :class="{ 'animate-spin': loading }"
+                                    ></i>
+                                </span>
+
+                                <span>
+                                    <span
+                                        class="block text-[10px] font-extrabold uppercase tracking-wide text-gray-400"
+                                    >
+                                        Auto Refresh
+                                    </span>
+
+                                    <span
+                                        class="block text-xs font-bold"
+                                        :class="
+                                            autoRefreshActive
+                                                ? 'text-blue-600'
+                                                : 'text-gray-600'
+                                        "
+                                    >
+                                        {{ autoRefreshActive ? "Aktif · 60s" : "Nonaktif" }}
+                                    </span>
+                                </span>
+
+                                <input
+                                    type="checkbox"
+                                    id="autoRef"
+                                    v-model="autoRefreshActive"
+                                    @change="toggleAutoRefresh"
+                                    class="sr-only"
+                                />
+
+                                <span
+                                    class="relative w-9 h-5 rounded-full transition-colors"
+                                    :class="
+                                        autoRefreshActive
+                                            ? 'bg-blue-600'
+                                            : 'bg-gray-300'
+                                    "
+                                >
+                                    <span
+                                        class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform"
+                                        :class="
+                                            autoRefreshActive
+                                                ? 'translate-x-4'
+                                                : 'translate-x-0'
+                                        "
+                                    ></span>
+                                </span>
+                            </label>
                         </div>
                     </div>
 
-                    <!-- Interactive Tabs -->
+                    <!-- Deadline Tabs -->
                     <div
-                        class="border-b border-gray-200 px-6 bg-white overflow-x-auto"
+                        class="border-b border-gray-100 bg-white overflow-x-auto"
                     >
-                        <nav class="flex space-x-6 -mb-px text-xs font-bold">
+                        <nav
+                            class="flex items-center gap-1 px-4 sm:px-5 min-w-max"
+                        >
                             <button
                                 v-for="tab in deadlineTabs"
                                 :key="tab.id"
                                 @click="activeDeadlineTab = tab.id"
                                 :class="[
                                     activeDeadlineTab === tab.id
-                                        ? 'border-blue-600 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                                    'py-3.5 border-b-2 whitespace-nowrap transition flex items-center space-x-1.5',
+                                        ? 'text-blue-600 border-blue-600 bg-blue-50/60'
+                                        : 'text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-50',
+                                    'relative flex items-center gap-2 px-3 py-3 text-xs font-bold border-b-2 transition whitespace-nowrap',
                                 ]"
                             >
                                 <span>{{ tab.name }}</span>
+
                                 <span
-                                    class="px-2 py-0.5 rounded-full text-2xs"
+                                    class="min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-extrabold"
                                     :class="
                                         activeDeadlineTab === tab.id
-                                            ? 'bg-blue-100 text-blue-800'
-                                            : 'bg-gray-100 text-gray-600'
+                                            ? 'bg-blue-100 text-blue-700'
+                                            : 'bg-gray-100 text-gray-500'
                                     "
                                 >
                                     {{ getDeadlineCount(tab.id) }}
@@ -514,163 +1249,340 @@
                         </nav>
                     </div>
 
-                    <!-- Tab List Items with Visual Indicators & Shortcuts (Refinement #4) -->
+                    <!-- Deadline List -->
                     <div
-                        class="p-6 divide-y divide-gray-100 min-h-[340px] max-h-[480px] overflow-y-auto"
+                        class="p-4 sm:p-5 min-h-[360px] max-h-[500px] overflow-y-auto"
                     >
+                        <!-- Items -->
                         <div
                             v-for="(item, index) in currentDeadlineItems"
                             :key="`${item?.type ?? 'item'}-${item?.id ?? index}`"
-                            class="py-4 first:pt-0 last:pb-0 flex items-center justify-between gap-4 group hover:bg-gray-50/60 px-2 -mx-2 rounded-xl transition"
+                            class="group relative mb-3 last:mb-0 rounded-xl border border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/20 hover:shadow-sm transition-all duration-200"
                         >
-                            <div class="flex items-start space-x-3.5">
-                                <!-- Visual Status Indicator Badge (Refinement #4) -->
-                                <span
-                                    class="mt-1 w-3 h-3 rounded-full flex-shrink-0 shadow-2xs"
-                                    :class="getIndicatorClass(item.status_code)"
-                                    :title="
-                                        item.status_code === 'red'
-                                            ? 'Terlambat (Overdue)'
-                                            : item.status_code === 'yellow'
-                                              ? 'Mendekati Deadline / Hari Ini'
-                                              : 'Aman'
-                                    "
-                                ></span>
-                                <div>
-                                    <div class="flex items-center space-x-2">
-                                        <span
-                                            class="text-2xs font-extrabold uppercase px-2 py-0.5 rounded border"
-                                            :class="
-                                                String(
-                                                    item?.type || '',
-                                                ).includes('Secure Link')
-                                                    ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
-                                                    : item?.type === 'Campaign'
-                                                      ? 'bg-blue-50 border-blue-100 text-blue-700'
-                                                      : 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                                            "
-                                        >
-                                            {{ item?.type || "Unknown" }}
-                                        </span>
-                                        <span
-                                            class="text-xs font-bold text-gray-800"
-                                            >{{ item?.status || "-" }}</span
-                                        >
-                                    </div>
-                                    <h4
-                                        class="text-sm font-extrabold text-gray-900 mt-1"
-                                    >
-                                        {{ item?.title || "-" }}
-                                    </h4>
-                                    <p class="text-xs text-gray-500 mt-0.5">
-                                        {{ item?.subtitle || "-" }} •
-                                        <span
-                                            class="font-mono text-gray-700 font-semibold"
-                                            >Deadline:
-                                            {{ item?.deadline || "-" }}</span
-                                        >
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Shortcut Button (Refinement #4) -->
-                            <button
-                                @click="navigateTo(item.url)"
-                                class="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-900 hover:text-white text-gray-700 font-bold text-xs rounded-lg transition whitespace-nowrap flex items-center space-x-1 shadow-2xs"
+                            <div
+                                class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                             >
-                                <span>Buka Detail</span>
-                                <span>↗</span>
-                            </button>
+
+                                <!-- Left Content -->
+                                <div class="flex items-start gap-3 min-w-0">
+
+                                    <!-- Status Indicator -->
+                                    <div class="pt-1 flex-shrink-0">
+                                        <span
+                                            class="block w-3 h-3 rounded-full shadow-sm"
+                                            :class="getIndicatorClass(item.status_code)"
+                                            :title="
+                                                item.status_code === 'red'
+                                                    ? 'Terlambat (Overdue)'
+                                                    : item.status_code === 'yellow'
+                                                    ? 'Mendekati Deadline / Hari Ini'
+                                                    : 'Aman'
+                                            "
+                                        ></span>
+                                    </div>
+
+                                    <div class="min-w-0 flex-1">
+
+                                        <!-- Type & Status -->
+                                        <div class="flex flex-wrap items-center gap-2 mb-1.5">
+
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded-md border text-[9px] font-extrabold uppercase tracking-wide"
+                                                :class="
+                                                    String(item?.type || '').includes(
+                                                        'Secure Link',
+                                                    )
+                                                        ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
+                                                        : item?.type === 'Campaign'
+                                                        ? 'bg-blue-50 border-blue-100 text-blue-700'
+                                                        : 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                                                "
+                                            >
+                                                {{ item?.type || "Unknown" }}
+                                            </span>
+
+                                            <span
+                                                class="inline-flex items-center gap-1 text-[10px] font-bold"
+                                                :class="
+                                                    item.status_code === 'red'
+                                                        ? 'text-rose-600'
+                                                        : item.status_code === 'yellow'
+                                                        ? 'text-amber-600'
+                                                        : 'text-emerald-600'
+                                                "
+                                            >
+                                                <span
+                                                    class="w-1.5 h-1.5 rounded-full"
+                                                    :class="getIndicatorClass(item.status_code)"
+                                                ></span>
+
+                                                {{ item?.status || "-" }}
+                                            </span>
+                                        </div>
+
+                                        <!-- Title -->
+                                        <h4
+                                            class="text-sm font-extrabold text-gray-900 truncate group-hover:text-blue-700 transition"
+                                        >
+                                            {{ item?.title || "-" }}
+                                        </h4>
+
+                                        <!-- Subtitle -->
+                                        <p
+                                            class="text-xs text-gray-500 mt-1 truncate"
+                                        >
+                                            {{ item?.subtitle || "-" }}
+                                        </p>
+
+                                        <!-- Deadline -->
+                                        <div
+                                            class="flex items-center gap-1.5 mt-2 text-[10px]"
+                                        >
+                                            <i
+                                                class="fa-regular fa-clock text-gray-400"
+                                            ></i>
+
+                                            <span class="text-gray-400">
+                                                Deadline
+                                            </span>
+
+                                            <span
+                                                class="font-mono font-bold"
+                                                :class="
+                                                    item.status_code === 'red'
+                                                        ? 'text-rose-600'
+                                                        : item.status_code === 'yellow'
+                                                        ? 'text-amber-600'
+                                                        : 'text-gray-700'
+                                                "
+                                            >
+                                                {{ item?.deadline || "-" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action -->
+                                <button
+                                    @click="navigateTo(item.url)"
+                                    class="w-full sm:w-auto flex-shrink-0 inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-gray-100 hover:bg-gray-900 text-gray-700 hover:text-white text-xs font-bold transition"
+                                >
+                                    <span>Buka Detail</span>
+
+                                    <i
+                                        class="fa-solid fa-arrow-up-right-from-square text-[10px]"
+                                    ></i>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Empty State -->
                         <div
                             v-if="currentDeadlineItems.length === 0"
-                            class="py-12 text-center text-gray-400 text-sm"
+                            class="min-h-[300px] flex flex-col items-center justify-center text-center px-6"
                         >
-                            <span class="text-2xl block mb-2">🎉</span>
-                            Tidak ada item pada kategori tenggat waktu ini.
-                            Seluruh operasional berjalan aman!
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center mb-4"
+                            >
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+
+                            <h4
+                                class="text-sm font-extrabold text-gray-800"
+                            >
+                                Tidak Ada Deadline
+                            </h4>
+
+                            <p
+                                class="text-xs text-gray-400 mt-1 max-w-sm"
+                            >
+                                Tidak ada item pada kategori tenggat waktu ini.
+                                Seluruh operasional berjalan aman.
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: RECENT ACTIVITIES FEED (Refinement #5) -->
+
+                <!-- ========================================================= -->
+                <!-- RIGHT: RECENT ACTIVITIES -->
+                <!-- ========================================================= -->
                 <div
-                    class="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden flex flex-col"
+                    class="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden"
                 >
+
+                    <!-- Header -->
                     <div
-                        class="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between"
+                        class="px-5 py-4 border-b border-gray-100 bg-gray-50/60"
                     >
-                        <div>
-                            <h3
-                                class="text-lg font-bold text-gray-900 flex items-center space-x-2"
+                        <div class="flex items-center justify-between gap-3">
+
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0"
+                                >
+                                    <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+                                </div>
+
+                                <div>
+                                    <h3
+                                        class="text-sm sm:text-base font-extrabold text-gray-900"
+                                    >
+                                        Aktivitas Terbaru
+                                    </h3>
+
+                                    <p
+                                        class="text-xs text-gray-500 mt-0.5"
+                                    >
+                                        Jejak aktivitas Admin & Brand.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[10px] font-extrabold text-emerald-700"
                             >
-                                <span>📜</span>
-                                <span>Aktivitas Terbaru</span>
-                            </h3>
-                            <p class="text-xs text-gray-500 mt-0.5">
-                                Jejak audit real-time Admin & Brand.
-                            </p>
+                                <span
+                                    class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
+                                ></span>
+
+                                Live
+                            </span>
                         </div>
-                        <span
-                            class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-extrabold text-xs"
-                            >Live Feed</span
-                        >
                     </div>
 
                     <!-- Activity List -->
                     <div
-                        class="p-5 divide-y divide-gray-100 max-h-[530px] overflow-y-auto space-y-3.5"
+                        class="p-5 max-h-[500px] overflow-y-auto"
                     >
                         <div
-                            v-for="log in stats.recent_activities || []"
+                            v-for="(log, index) in stats.recent_activities || []"
                             :key="log.id"
-                            class="pt-3.5 first:pt-0 text-xs"
+                            class="relative flex gap-3 pb-5 last:pb-0"
                         >
-                            <div class="flex items-center justify-between mb-1">
-                                <div class="flex items-center space-x-1.5">
-                                    <span
-                                        class="px-1.5 py-0.5 rounded text-3xs font-extrabold uppercase text-white"
+
+                            <!-- Timeline -->
+                            <div
+                                class="relative flex flex-col items-center flex-shrink-0"
+                            >
+                                <div
+                                    class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[10px] shadow-sm"
+                                    :class="
+                                        log.actor_type === 'Admin'
+                                            ? 'bg-blue-600'
+                                            : log.actor_type === 'Brand'
+                                            ? 'bg-amber-500'
+                                            : 'bg-gray-500'
+                                    "
+                                >
+                                    <i
                                         :class="
                                             log.actor_type === 'Admin'
-                                                ? 'bg-blue-600'
+                                                ? 'fa-solid fa-user-shield'
                                                 : log.actor_type === 'Brand'
-                                                  ? 'bg-amber-500'
-                                                  : 'bg-gray-500'
+                                                ? 'fa-solid fa-store'
+                                                : 'fa-solid fa-gear'
                                         "
-                                    >
-                                        {{ log.actor_type || "System" }}
-                                    </span>
-                                    <span class="font-bold text-gray-800">{{
-                                        log.actor_name
-                                    }}</span>
+                                    ></i>
                                 </div>
+
                                 <span
-                                    class="text-3xs text-gray-400 font-mono"
-                                    >{{ log.time_ago }}</span
-                                >
+                                    v-if="index < (stats.recent_activities?.length ?? 0) - 1"
+                                    class="absolute top-9 bottom-0 w-px bg-gray-200"
+                                ></span>
                             </div>
-                            <p class="text-gray-700 font-medium leading-normal">
-                                {{ log.description }}
-                            </p>
-                            <div
-                                class="mt-1 flex items-center space-x-2 text-3xs text-gray-400"
-                            >
-                                <span>⚡ {{ log.action }}</span>
-                                <span v-if="log.target_type"
-                                    >● Target: {{ log.target_type }} #{{
-                                        log.target_id?.slice(0, 8)
-                                    }}</span
+
+                            <!-- Content -->
+                            <div class="min-w-0 flex-1">
+
+                                <!-- Actor & Time -->
+                                <div
+                                    class="flex items-start justify-between gap-2"
                                 >
+                                    <div class="min-w-0">
+                                        <div
+                                            class="flex flex-wrap items-center gap-1.5"
+                                        >
+                                            <span
+                                                class="text-xs font-extrabold text-gray-800 truncate"
+                                            >
+                                                {{ log.actor_name || "System" }}
+                                            </span>
+
+                                            <span
+                                                class="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase text-white"
+                                                :class="
+                                                    log.actor_type === 'Admin'
+                                                        ? 'bg-blue-600'
+                                                        : log.actor_type === 'Brand'
+                                                        ? 'bg-amber-500'
+                                                        : 'bg-gray-500'
+                                                "
+                                            >
+                                                {{ log.actor_type || "System" }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <span
+                                        class="text-[9px] text-gray-400 font-mono whitespace-nowrap flex-shrink-0"
+                                    >
+                                        {{ log.time_ago }}
+                                    </span>
+                                </div>
+
+                                <!-- Description -->
+                                <p
+                                    class="text-xs text-gray-600 leading-relaxed mt-1.5"
+                                >
+                                    {{ log.description }}
+                                </p>
+
+                                <!-- Metadata -->
+                                <div
+                                    class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[9px] text-gray-400"
+                                >
+                                    <span
+                                        class="inline-flex items-center gap-1"
+                                    >
+                                        <i class="fa-solid fa-bolt text-amber-500"></i>
+                                        {{ log.action }}
+                                    </span>
+
+                                    <span
+                                        v-if="log.target_type"
+                                        class="inline-flex items-center gap-1"
+                                    >
+                                        <i class="fa-solid fa-bullseye text-gray-400"></i>
+                                        {{ log.target_type }}
+                                        #{{ log.target_id?.slice(0, 8) }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Empty State -->
                         <div
                             v-if="(stats.recent_activities?.length ?? 0) === 0"
-                            class="py-12 text-center text-gray-400 text-sm"
+                            class="min-h-[300px] flex flex-col items-center justify-center text-center"
                         >
-                            Belum ada aktivitas tercatat pada sistem.
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mb-4"
+                            >
+                                <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+                            </div>
+
+                            <h4
+                                class="text-sm font-extrabold text-gray-800"
+                            >
+                                Belum Ada Aktivitas
+                            </h4>
+
+                            <p
+                                class="text-xs text-gray-400 mt-1"
+                            >
+                                Belum ada aktivitas yang tercatat pada sistem.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -680,7 +1592,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useDashboard } from "../composables/useDashboard";
 
@@ -699,6 +1611,7 @@ const {
 const activeDeadlineTab = ref("today");
 const autoRefreshActive = ref(false);
 const selectedFormat = ref("csv");
+const exportDropdownOpen = ref(false);
 
 const deadlineTabs = [
     { id: "today", name: "Hari Ini" },
@@ -708,8 +1621,17 @@ const deadlineTabs = [
     { id: "expiring_links", name: "🔗 Tautan Akan Habis" },
 ];
 
+const closeExportDropdown = () => {
+    exportDropdownOpen.value = false;
+};
+
 onMounted(async () => {
     await fetchStats();
+    window.addEventListener("click", closeExportDropdown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("click", closeExportDropdown);
 });
 
 const toggleAutoRefresh = () => {

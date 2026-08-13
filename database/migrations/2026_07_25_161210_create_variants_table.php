@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('stock')->default(0);
             $table->unique(['product_id', 'code']);
             $table->timestamps();
-
+            $table->softDeletes();
         });
     }
 
@@ -27,4 +27,3 @@ return new class extends Migration
         Schema::dropIfExists('variants');
     }
 };
-

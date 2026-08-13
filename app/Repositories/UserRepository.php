@@ -11,10 +11,10 @@ class UserRepository extends BaseRepository
         return User::class;
     }
 
-    public function getFilteredPaginated(int $companyId, array $filters = [], int $perPage = 15)
+    public function getFilteredPaginated(?string $companyId = null, array $filters = [], int $perPage = 15)
     {
         $query = $this->newQuery()
-            ->where('company_id', $companyId);
+            ->when($companyId !== null, fn($q) => $q->where('company_id', $companyId));
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];

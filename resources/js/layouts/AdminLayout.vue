@@ -1,153 +1,464 @@
+```vue
 <template>
-  <div class="h-screen flex overflow-hidden bg-gray-50">
+  <div class="h-screen flex overflow-hidden bg-slate-50">
+
+    <!-- Mobile Backdrop -->
+    <div
+      v-if="sidebarOpen"
+      @click="sidebarOpen = false"
+      class="fixed inset-0 z-30 bg-[#293681]/20 backdrop-blur-[3px] md:hidden"
+    ></div>
 
     <!-- Floating Toggle -->
     <button
       @click="sidebarOpen = !sidebarOpen"
-      class="hidden md:flex fixed top-5 z-50 h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all duration-300 hover:bg-blue-700"
-      :style="{ left: sidebarOpen ? '240px' : '60px' }"
+      class="fixed top-5 z-50 hidden h-10 w-10 items-center justify-center rounded-full text-white shadow-lg transition-all duration-300 hover:scale-105 md:flex"
+      :style="{
+        left: sidebarOpen ? '240px' : '60px',
+        background: '#4274D9',
+        boxShadow: '0 8px 20px rgba(66, 116, 217, 0.25)'
+      }"
     >
       <i
-        :class="sidebarOpen ? 'fa-solid fa-chevron-left' : 'fa-solid fa-chevron-right'"
+        :class="
+          sidebarOpen
+            ? 'fa-solid fa-chevron-left'
+            : 'fa-solid fa-chevron-right'
+        "
       ></i>
     </button>
 
     <!-- Sidebar -->
     <aside
-      class="fixed inset-y-0 left-0 z-40 flex flex-col border-r border-gray-200 bg-white transition-all duration-300"
-      :class="sidebarOpen ? 'w-64' : 'w-20'"
+      class="fixed inset-y-0 left-0 z-40 flex flex-col border-r border-slate-200 bg-white transition-all duration-300"
+      :class="
+        sidebarOpen
+          ? 'w-64 translate-x-0'
+          : 'w-20 -translate-x-full md:translate-x-0'
+      "
     >
+
       <!-- Logo -->
       <div
-        class="flex h-16 items-center border-b border-gray-200 px-6 flex-shrink-0"
+        class="relative flex h-16 flex-shrink-0 items-center border-b border-slate-100 px-5"
       >
+        <!-- Logo Accent -->
+        <div
+          v-if="sidebarOpen"
+          class="mr-3 flex h-9 w-9 items-center justify-center rounded-xl"
+          style="background: #d0e7e6"
+        >
+          <img
+            src="/favicon.png"
+            alt="SunTrack"
+            class="h-6 w-6 object-contain"
+          />
+        </div>
+
         <span
           v-if="sidebarOpen"
-          class="text-xl font-bold tracking-tight text-gray-900 whitespace-nowrap"
+          class="text-xl font-bold tracking-tight whitespace-nowrap"
+          style="color: #293681"
         >
           SunTrack
         </span>
 
-        <i
+        <img
           v-else
-          class="fa-solid fa-sun text-2xl text-amber-500 mx-auto"
-        ></i>
+          src="/favicon.png"
+          alt="SunTrack"
+          class="mx-auto h-8 w-8 object-contain"
+        />
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto px-3 py-5 space-y-1">
+      <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-5">
 
+        <!-- Main Navigation -->
+        <p
+          v-if="sidebarOpen"
+          class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400"
+        >
+          Main Menu
+        </p>
+
+        <!-- Dashboard -->
         <router-link
           to="/dashboard"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition"
-          :class="$route.path === '/dashboard'
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path === '/dashboard'
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path === '/dashboard'
+              ? {
+                  background: '#D0E7E6',
+                  color: '#293681'
+                }
+              : {}
+          "
         >
-          <i class="fa-solid fa-chart-line w-5 text-center"></i>
-          <span v-if="sidebarOpen" class="ml-3">Dashboard</span>
+          <i
+            class="fa-solid fa-chart-line w-5 text-center transition"
+            :style="
+              $route.path === '/dashboard'
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
+          <span v-if="sidebarOpen" class="ml-3">
+            Dashboard
+          </span>
+
+          <span
+            v-if="$route.path === '/dashboard' && sidebarOpen"
+            class="ml-auto h-2 w-2 rounded-full"
+            style="background: #4274d9"
+          ></span>
         </router-link>
 
+        <!-- Users -->
         <router-link
           to="/users"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition"
-          :class="$route.path.startsWith('/users')
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/users')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/users')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-users w-5 text-center"></i>
+          <i
+            class="fa-solid fa-users w-5 text-center"
+            :style="
+              $route.path.startsWith('/users')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
           <span v-if="sidebarOpen" class="ml-3">Users</span>
+
+          <span
+            v-if="$route.path.startsWith('/users') && sidebarOpen"
+            class="ml-auto h-2 w-2 rounded-full"
+            style="background: #4274d9"
+          ></span>
         </router-link>
 
+        <!-- Companies -->
         <router-link
           to="/companies"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition"
-          :class="$route.path.startsWith('/companies')
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/companies')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/companies')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-building w-5 text-center"></i>
+          <i
+            class="fa-solid fa-building w-5 text-center"
+            :style="
+              $route.path.startsWith('/companies')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
           <span v-if="sidebarOpen" class="ml-3">Companies</span>
+
+          <span
+            v-if="$route.path.startsWith('/companies') && sidebarOpen"
+            class="ml-auto h-2 w-2 rounded-full"
+            style="background: #4274d9"
+          ></span>
         </router-link>
 
+        <!-- Brands -->
         <router-link
           to="/brands"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition"
-          :class="$route.path.startsWith('/brands')
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/brands')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/brands')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-tag w-5 text-center"></i>
+          <i
+            class="fa-solid fa-tag w-5 text-center"
+            :style="
+              $route.path.startsWith('/brands')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
           <span v-if="sidebarOpen" class="ml-3">Brands</span>
+
+          <span
+            v-if="$route.path.startsWith('/brands') && sidebarOpen"
+            class="ml-auto h-2 w-2 rounded-full"
+            style="background: #4274d9"
+          ></span>
         </router-link>
 
+        <!-- Campaigns -->
         <router-link
           to="/campaigns"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition"
-          :class="$route.path.startsWith('/campaigns')
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/campaigns')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/campaigns')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-bullhorn w-5 text-center"></i>
+          <i
+            class="fa-solid fa-bullhorn w-5 text-center"
+            :style="
+              $route.path.startsWith('/campaigns')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
           <span v-if="sidebarOpen" class="ml-3">Campaigns</span>
+
+          <span
+            v-if="$route.path.startsWith('/campaigns') && sidebarOpen"
+            class="ml-auto h-2 w-2 rounded-full"
+            style="background: #4274d9"
+          ></span>
         </router-link>
 
+        <!-- Promotions -->
         <router-link
           to="/promotions"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition"
-          :class="$route.path.startsWith('/promotions')
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/promotions')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/promotions')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-tags w-5 text-center"></i>
+          <i
+            class="fa-solid fa-tags w-5 text-center"
+            :style="
+              $route.path.startsWith('/promotions')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
           <span v-if="sidebarOpen" class="ml-3">Promotions</span>
+
+          <span
+            v-if="$route.path.startsWith('/promotions') && sidebarOpen"
+            class="ml-auto h-2 w-2 rounded-full"
+            style="background: #4274d9"
+          ></span>
         </router-link>
 
+        <!-- Tasks -->
         <router-link
           to="/tasks"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition"
-          :class="$route.path.startsWith('/tasks')
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/tasks')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/tasks')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-list-check w-5 text-center"></i>
+          <i
+            class="fa-solid fa-list-check w-5 text-center"
+            :style="
+              $route.path.startsWith('/tasks')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
           <span v-if="sidebarOpen" class="ml-3">Tasks</span>
+
+          <span
+            v-if="$route.path.startsWith('/tasks') && sidebarOpen"
+            class="ml-auto h-2 w-2 rounded-full"
+            style="background: #4274d9"
+          ></span>
         </router-link>
-        
+
+        <!-- Products -->
         <router-link
           to="/products"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition"
-          :class="$route.path.startsWith('/products')
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/products')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/products')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-box w-5 text-center"></i>
+          <i
+            class="fa-solid fa-box w-5 text-center"
+            :style="
+              $route.path.startsWith('/products')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
           <span v-if="sidebarOpen" class="ml-3">Products</span>
+
+          <span
+            v-if="$route.path.startsWith('/products') && sidebarOpen"
+            class="ml-auto h-2 w-2 rounded-full"
+            style="background: #4274d9"
+          ></span>
         </router-link>
 
-        <div class="my-4 border-t border-gray-200"></div>
+        <!-- Divider -->
+        <div class="my-5 flex items-center gap-3 px-3">
+          <div class="h-px flex-1 bg-slate-100"></div>
 
+          <span
+            v-if="sidebarOpen"
+            class="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400"
+          >
+            System
+          </span>
+
+          <div
+            v-else
+            class="h-px flex-1 bg-slate-100"
+          ></div>
+        </div>
+
+        <!-- Activity -->
         <router-link
           to="/activity"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/activity')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/activity')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-file-lines w-5 text-center"></i>
-          <span v-if="sidebarOpen" class="ml-3">Activity Logs</span>
+          <i
+            class="fa-solid fa-file-lines w-5 text-center"
+            :style="
+              $route.path.startsWith('/activity')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
+          <span v-if="sidebarOpen" class="ml-3">
+            Activity Logs
+          </span>
         </router-link>
 
+        <!-- Export -->
         <router-link
           to="/export"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/export')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/export')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-download w-5 text-center"></i>
+          <i
+            class="fa-solid fa-download w-5 text-center"
+            :style="
+              $route.path.startsWith('/export')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
           <span v-if="sidebarOpen" class="ml-3">Export</span>
         </router-link>
 
+        <!-- Settings -->
         <router-link
           to="/settings"
-          class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/settings')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/settings')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
         >
-          <i class="fa-solid fa-gear w-5 text-center"></i>
+          <i
+            class="fa-solid fa-gear w-5 text-center transition-transform duration-300 group-hover:rotate-45"
+            :style="
+              $route.path.startsWith('/settings')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
           <span v-if="sidebarOpen" class="ml-3">Settings</span>
         </router-link>
 
@@ -156,31 +467,48 @@
       <!-- User -->
       <div
         v-if="sidebarOpen"
-        class="border-t border-gray-200 p-4 flex-shrink-0"
+        class="flex-shrink-0 border-t border-slate-100 p-4"
       >
-        <div class="flex items-center">
+        <div
+          class="rounded-2xl p-3"
+          style="background: #f4fafa"
+        >
+          <div class="flex items-center">
 
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100"
-          >
-            <span class="font-semibold text-blue-700">
-              {{ (authStore.user?.name || 'A').charAt(0) }}
-            </span>
-          </div>
-
-          <div class="ml-3 flex-1 overflow-hidden">
-            <p class="truncate text-sm font-semibold text-gray-800">
-              {{ authStore.user?.name || 'Administrator' }}
-            </p>
-
-            <button
-              @click="handleLogout"
-              class="text-xs text-red-500 hover:text-red-600"
+            <!-- Avatar -->
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+              style="background: #d0e7e6"
             >
-              Logout
-            </button>
-          </div>
+              <span
+                class="font-bold"
+                style="color: #293681"
+              >
+                {{ (authStore.user?.name || 'A').charAt(0) }}
+              </span>
+            </div>
 
+            <!-- User Info -->
+            <div class="ml-3 min-w-0 flex-1 overflow-hidden">
+              <p
+                class="truncate text-sm font-semibold"
+                style="color: #293681"
+              >
+                {{ authStore.user?.name || 'Administrator' }}
+              </p>
+
+              <button
+                @click="handleLogout"
+                class="mt-0.5 text-xs font-medium text-slate-400 transition hover:text-red-500"
+              >
+                Logout
+              </button>
+            </div>
+
+            <i
+              class="fa-solid fa-ellipsis text-slate-300"
+            ></i>
+          </div>
         </div>
       </div>
 
@@ -194,22 +522,38 @@
 
       <!-- Mobile Header -->
       <header
-        class="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-5 md:hidden"
+        class="flex h-16 flex-shrink-0 items-center justify-between border-b border-slate-100 bg-white px-5 md:hidden"
       >
-        <h1 class="text-lg font-bold">
-          SunTrack
-        </h1>
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-xl"
+            style="background: #d0e7e6"
+          >
+            <img
+              src="/favicon.png"
+              alt="SunTrack"
+              class="h-6 w-6 object-contain"
+            />
+          </div>
+
+          <span
+            class="font-bold"
+            style="color: #293681"
+          >
+            SunTrack
+          </span>
+        </div>
 
         <button
-          @click="sidebarOpen = true"
-          class="rounded-lg p-2 hover:bg-gray-100"
+          @click="sidebarOpen = !sidebarOpen"
+          class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-50"
         >
           <i class="fa-solid fa-bars"></i>
         </button>
       </header>
 
       <!-- Content -->
-      <main class="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
+      <main class="flex-1 overflow-y-auto bg-slate-50 p-5 lg:p-7">
         <router-view />
       </main>
 
@@ -219,14 +563,37 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 
 const authStore = useAuthStore();
 const router = useRouter();
 
-const sidebarOpen = ref(true);
+const sidebarOpen = ref(window.innerWidth >= 768);
+
+const handleResize = () => {
+    if (window.innerWidth >= 768) {
+        if (!sidebarOpen.value) sidebarOpen.value = true;
+    } else {
+        sidebarOpen.value = false;
+    }
+};
+
+onMounted(() => {
+    window.addEventListener("resize", handleResize);
+    handleResize();
+});
+
+onUnmounted(() => {
+    window.removeEventListener("resize", handleResize);
+});
+
+const closeOnMobile = () => {
+    if (window.innerWidth < 768) {
+        sidebarOpen.value = false;
+    }
+};
 
 const handleLogout = async () => {
     await authStore.logout();

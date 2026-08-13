@@ -1,134 +1,637 @@
 <template>
   <div class="space-y-6">
     <!-- Top Metrics Summary Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
-        <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Total Variants</span>
-        <span class="mt-2 block text-2xl font-bold text-gray-900">{{ variants.length }} <span class="text-xs font-normal text-gray-400">items</span></span>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Total Variants -->
+      <div
+        class="rounded-2xl border border-[#D0E7E6] bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md"
+      >
+        <div class="flex items-start justify-between">
+          <div>
+            <span
+              class="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+            >
+              Total Variants
+            </span>
+
+            <span
+              class="mt-2 block text-2xl font-extrabold text-[#293681]"
+            >
+              {{ variants.length }}
+
+              <span class="text-xs font-medium text-gray-400">
+                items
+              </span>
+            </span>
+          </div>
+
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D0E7E6] text-[#293681]"
+          >
+            <i class="fa-solid fa-boxes-stacked text-sm"></i>
+          </div>
+        </div>
       </div>
-      <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
-        <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Total Promo Stock</span>
-        <span class="mt-2 block text-2xl font-bold text-blue-600">{{ totalStock }} <span class="text-xs font-normal text-gray-400">units</span></span>
+
+      <!-- Total Promo Stock -->
+      <div
+        class="rounded-2xl border border-[#D0E7E6] bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md"
+      >
+        <div class="flex items-start justify-between">
+          <div>
+            <span
+              class="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+            >
+              Total Promo Stock
+            </span>
+
+            <span
+              class="mt-2 block text-2xl font-extrabold text-[#4274D9]"
+            >
+              {{ totalStock }}
+
+              <span class="text-xs font-medium text-gray-400">
+                units
+              </span>
+            </span>
+          </div>
+
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D0E7E6] text-[#4274D9]"
+          >
+            <i class="fa-solid fa-layer-group text-sm"></i>
+          </div>
+        </div>
       </div>
-      <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
-        <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Est. Promotion Value</span>
-        <span class="mt-2 block text-2xl font-bold text-emerald-600">{{ formatCurrency(totalEstimatedValue) }}</span>
+
+      <!-- Estimated Promotion Value -->
+      <div
+        class="rounded-2xl border border-[#D0E7E6] bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md"
+      >
+        <div class="flex items-start justify-between">
+          <div class="min-w-0">
+            <span
+              class="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+            >
+              Est. Promotion Value
+            </span>
+
+            <span
+              class="mt-2 block truncate text-xl font-extrabold text-[#293681]"
+              :title="formatCurrency(totalEstimatedValue)"
+            >
+              {{ formatCurrency(totalEstimatedValue) }}
+            </span>
+          </div>
+
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D0E7E6] text-[#293681]"
+          >
+            <i class="fa-solid fa-money-bill-wave text-sm"></i>
+          </div>
+        </div>
       </div>
-      <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
-        <span class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Total Customer Savings</span>
-        <span class="mt-2 block text-2xl font-bold text-purple-600">{{ formatCurrency(totalSavings) }}</span>
+
+      <!-- Total Customer Savings -->
+      <div
+        class="rounded-2xl border border-[#D0E7E6] bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md"
+      >
+        <div class="flex items-start justify-between">
+          <div class="min-w-0">
+            <span
+              class="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+            >
+              Total Customer Savings
+            </span>
+
+            <span
+              class="mt-2 block truncate text-xl font-extrabold text-[#4274D9]"
+              :title="formatCurrency(totalSavings)"
+            >
+              {{ formatCurrency(totalSavings) }}
+            </span>
+          </div>
+
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D0E7E6] text-[#4274D9]"
+          >
+            <i class="fa-solid fa-piggy-bank text-sm"></i>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Pricing Analysis & Rules Table -->
-    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-      <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+    <div
+      class="overflow-hidden rounded-2xl border border-[#D0E7E6] bg-white shadow-sm"
+    >
+      <!-- Table Header -->
+      <div
+        class="flex flex-col gap-3 border-b border-[#D0E7E6] bg-[#D0E7E6]/30 p-5 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div>
-          <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Promotion Pricing Snapshot & Rules</h3>
-          <p class="text-xs text-gray-500 mt-0.5">All campaign prices are historical snapshots and do not alter master variant records.</p>
+          <div class="flex items-center gap-2">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4274D9] text-white"
+            >
+              <i class="fa-solid fa-tags text-xs"></i>
+            </span>
+
+            <h3
+              class="text-sm font-extrabold uppercase tracking-wider text-[#293681]"
+            >
+              Promotion Pricing Snapshot & Rules
+            </h3>
+          </div>
+
+          <p class="mt-2 text-xs leading-relaxed text-gray-500">
+            All campaign prices are historical snapshots and do not alter
+            master variant records.
+          </p>
         </div>
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+
+        <span
+          class="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#D0E7E6] px-3 py-1.5 text-[10px] font-extrabold text-[#293681]"
+        >
+          <span
+            class="h-1.5 w-1.5 rounded-full bg-[#4274D9]"
+          ></span>
+
           Strict Floor Enforcement Active
         </span>
       </div>
 
-      <div v-if="loading" class="p-6 text-sm text-gray-400 text-center">Loading pricing data...</div>
+      <!-- Loading -->
+      <div
+        v-if="loading"
+        class="flex items-center justify-center px-6 py-12"
+      >
+        <div class="flex items-center gap-3">
+          <span
+            class="h-5 w-5 animate-spin rounded-full border-2 border-[#D0E7E6] border-t-[#4274D9]"
+          ></span>
 
-      <EmptyState v-else-if="!variants.length"
+          <span class="text-sm font-medium text-gray-500">
+            Loading pricing data...
+          </span>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <EmptyState
+        v-else-if="!variants.length"
         title="No pricing data available"
         description="Switch to the Products tab to map product variants to this promotion first."
       />
 
-      <table v-else class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          <tr>
-            <th class="px-4 py-3">Variant</th>
-            <th class="px-4 py-3">Master Normal (Snapshot)</th>
-            <th class="px-4 py-3">Master Bottom Floor</th>
-            <th class="px-4 py-3">Campaign Price</th>
-            <th class="px-4 py-3">Discount Price</th>
-            <th class="px-4 py-3">Margin Protection</th>
-            <th class="px-4 py-3 text-right">Action</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200 text-sm">
-          <tr v-for="v in variants" :key="v.id" class="hover:bg-gray-50 transition-colors">
-            <td class="px-4 py-3">
-              <div class="font-medium text-gray-900">{{ v.name }}</div>
-              <div class="text-xs text-gray-400 font-mono">{{ v.code }}</div>
-            </td>
-            <td class="px-4 py-3 text-gray-600 font-medium">
-              {{ formatCurrency(v.promotion_pricing?.normal_price_snapshot) }}
-            </td>
-            <td class="px-4 py-3 text-amber-700 font-medium">
-              {{ formatCurrency(v.promotion_pricing?.bottom_price) }}
-            </td>
-            <td class="px-4 py-3 font-bold text-blue-600">
-              {{ formatCurrency(v.promotion_pricing?.campaign_price) }}
-            </td>
-            <td class="px-4 py-3 font-semibold text-purple-600">
-              {{ formatCurrency(v.promotion_pricing?.discount_price) }}
-            </td>
-            <td class="px-4 py-3">
-              <span v-if="v.promotion_pricing?.campaign_price >= v.promotion_pricing?.bottom_price" class="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
-                ✓ Above Floor
-              </span>
-              <span v-else class="inline-flex items-center text-xs font-semibold text-red-700 bg-red-50 px-2 py-1 rounded">
-                ⚠ Below Floor
-              </span>
-            </td>
-            <td class="px-4 py-3 text-right">
-              <button @click="openEditPricing(v)" class="text-blue-600 hover:text-blue-900 font-medium text-xs bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded transition-colors">
-                Adjust Pricing
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Table -->
+      <div
+        v-else
+        class="overflow-x-auto"
+      >
+        <table class="min-w-full divide-y divide-gray-100">
+          <thead class="bg-gray-50/70">
+            <tr>
+              <th
+                class="whitespace-nowrap px-5 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+              >
+                Variant
+              </th>
+
+              <th
+                class="whitespace-nowrap px-5 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+              >
+                Master Normal
+              </th>
+
+              <th
+                class="whitespace-nowrap px-5 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+              >
+                Master Bottom Floor
+              </th>
+
+              <th
+                class="whitespace-nowrap px-5 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+              >
+                Campaign Price
+              </th>
+
+              <th
+                class="whitespace-nowrap px-5 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+              >
+                Discount Price
+              </th>
+
+              <th
+                class="whitespace-nowrap px-5 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+              >
+                Margin Protection
+              </th>
+
+              <th
+                class="whitespace-nowrap px-5 py-3.5 text-right text-[10px] font-extrabold uppercase tracking-wider text-gray-500"
+              >
+                Action
+              </th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-100 bg-white">
+            <tr
+              v-for="v in variants"
+              :key="v.id"
+              class="group transition-colors duration-150 hover:bg-[#D0E7E6]/20"
+            >
+              <!-- Variant -->
+              <td class="px-5 py-4">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D0E7E6] text-[#293681] transition-colors group-hover:bg-[#95CCDD]"
+                  >
+                    <i class="fa-solid fa-box text-xs"></i>
+                  </div>
+
+                  <div class="min-w-0">
+                    <div
+                      class="truncate text-sm font-bold text-gray-900"
+                    >
+                      {{ v.name }}
+                    </div>
+
+                    <div class="mt-0.5">
+                      <span
+                        class="rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-gray-500"
+                      >
+                        {{ v.code }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Master Normal -->
+              <td class="whitespace-nowrap px-5 py-4">
+                <span class="text-sm font-semibold text-gray-600">
+                  {{ formatCurrency(v.promotion_pricing?.normal_price_snapshot) }}
+                </span>
+              </td>
+
+              <!-- Master Bottom Floor -->
+              <td class="whitespace-nowrap px-5 py-4">
+                <span
+                  class="inline-flex rounded-lg bg-amber-50 px-2.5 py-1.5 text-sm font-bold text-amber-700"
+                >
+                  {{ formatCurrency(v.promotion_pricing?.bottom_price) }}
+                </span>
+              </td>
+
+              <!-- Campaign Price -->
+              <td class="whitespace-nowrap px-5 py-4">
+                <span
+                  class="inline-flex rounded-lg bg-[#D0E7E6]/60 px-2.5 py-1.5 text-sm font-extrabold text-[#293681]"
+                >
+                  {{ formatCurrency(v.promotion_pricing?.campaign_price) }}
+                </span>
+              </td>
+
+              <!-- Discount Price -->
+              <td class="whitespace-nowrap px-5 py-4">
+                <span
+                  class="inline-flex rounded-lg bg-[#95CCDD]/30 px-2.5 py-1.5 text-sm font-extrabold text-[#4274D9]"
+                >
+                  {{ formatCurrency(v.promotion_pricing?.discount_price) }}
+                </span>
+              </td>
+
+              <!-- Margin Protection -->
+              <td class="px-5 py-4">
+                <span
+                  v-if="
+                    v.promotion_pricing?.campaign_price >=
+                    v.promotion_pricing?.bottom_price
+                  "
+                  class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1.5 text-[10px] font-extrabold text-emerald-700"
+                >
+                  <span
+                    class="h-1.5 w-1.5 rounded-full bg-emerald-500"
+                  ></span>
+
+                  Above Floor
+                </span>
+
+                <span
+                  v-else
+                  class="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1.5 text-[10px] font-extrabold text-rose-700"
+                >
+                  <span
+                    class="h-1.5 w-1.5 rounded-full bg-rose-500"
+                  ></span>
+
+                  Below Floor
+                </span>
+              </td>
+
+              <!-- Action -->
+              <td class="px-5 py-4 text-right">
+                <button
+                  @click="openEditPricing(v)"
+                  type="button"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-[#95CCDD]/60 bg-white px-3 py-2 text-xs font-bold text-[#4274D9] transition-all duration-200 hover:border-[#4274D9] hover:bg-[#D0E7E6]/40 hover:text-[#293681]"
+                >
+                  <i class="fa-solid fa-sliders text-[10px]"></i>
+                  Adjust Pricing
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Edit Pricing Modal -->
-    <ModalForm :is-open="isModalOpen" title="Adjust Promotion Pricing" @close="isModalOpen = false">
-      <form id="promo-pricing-form" @submit.prevent="submitPricing" class="space-y-4 mt-2">
-        <div v-if="typeof error === 'object' && error" class="bg-red-50 border border-red-200 p-3 rounded-md text-sm text-red-700">
-          <div v-for="(msgs, field) in error" :key="field">{{ msgs[0] }}</div>
-        </div>
-        <div v-if="typeof error === 'string' && error" class="bg-red-50 border border-red-200 p-3 rounded-md text-sm text-red-700">{{ error }}</div>
+    <ModalForm
+      :is-open="isModalOpen"
+      title="Adjust Promotion Pricing"
+      @close="isModalOpen = false"
+    >
+      <form
+        id="promo-pricing-form"
+        @submit.prevent="submitPricing"
+        class="space-y-5"
+      >
+        <!-- Validation Error -->
+        <div
+          v-if="typeof error === 'object' && error"
+          class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+        >
+          <div
+            v-for="(msgs, field) in error"
+            :key="field"
+            class="flex items-start gap-2"
+          >
+            <i
+              class="fa-solid fa-circle-exclamation mt-0.5 text-xs"
+            ></i>
 
-        <div class="bg-gray-50 p-3 rounded-md border border-gray-200 text-xs text-gray-600 space-y-1">
-          <div><strong class="text-gray-800">Variant:</strong> {{ selectedVariant?.code }} - {{ selectedVariant?.name }}</div>
-          <div><strong class="text-gray-800">Master Normal Price:</strong> {{ formatCurrency(selectedVariant?.promotion_pricing?.normal_price_snapshot) }}</div>
-          <div><strong class="text-gray-800">Master Bottom Floor:</strong> {{ formatCurrency(selectedVariant?.promotion_pricing?.bottom_price) }}</div>
-          <div><strong class="text-gray-800">Available Current Stock:</strong> {{ selectedVariant?.current_stock }} units</div>
+            <span>{{ msgs[0] }}</span>
+          </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Campaign Price <span class="text-red-500">*</span></label>
-            <input type="number" min="0" step="1" v-model="form.campaign_price" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm font-semibold text-blue-600">
+        <!-- String Error -->
+        <div
+          v-if="typeof error === 'string' && error"
+          class="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+        >
+          <i
+            class="fa-solid fa-circle-exclamation mt-0.5 text-xs"
+          ></i>
+
+          <span>{{ error }}</span>
+        </div>
+
+        <!-- Selected Variant Info -->
+        <div
+          class="rounded-2xl border border-[#D0E7E6] bg-[#D0E7E6]/30 p-4"
+        >
+          <div class="mb-3 flex items-center gap-2">
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4274D9] text-white"
+            >
+              <i class="fa-solid fa-box text-xs"></i>
+            </div>
+
+            <div>
+              <p
+                class="text-xs font-extrabold uppercase tracking-wider text-[#293681]"
+              >
+                Selected Variant
+              </p>
+
+              <p class="text-[11px] text-gray-500">
+                Current master pricing information
+              </p>
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Discount Price <span class="text-red-500">*</span></label>
-            <input type="number" min="0" step="1" v-model="form.discount_price" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm font-semibold text-purple-600">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Promotion Stock <span class="text-red-500">*</span></label>
-            <input type="number" min="0" v-model="form.promotion_stock" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Purchase Limit</label>
-            <input type="number" min="0" v-model="form.purchase_limit" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between gap-4">
+              <span class="font-medium text-gray-500">
+                Variant
+              </span>
+
+              <span class="text-right font-bold text-gray-800">
+                {{ selectedVariant?.code }} -
+                {{ selectedVariant?.name }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between gap-4">
+              <span class="font-medium text-gray-500">
+                Master Normal Price
+              </span>
+
+              <span class="font-bold text-[#293681]">
+                {{
+                  formatCurrency(
+                    selectedVariant?.promotion_pricing
+                      ?.normal_price_snapshot
+                  )
+                }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between gap-4">
+              <span class="font-medium text-gray-500">
+                Master Bottom Floor
+              </span>
+
+              <span class="font-bold text-amber-700">
+                {{
+                  formatCurrency(
+                    selectedVariant?.promotion_pricing
+                      ?.bottom_price
+                  )
+                }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between gap-4">
+              <span class="font-medium text-gray-500">
+                Available Current Stock
+              </span>
+
+              <span class="font-bold text-gray-800">
+                {{ selectedVariant?.current_stock ?? 0 }} units
+              </span>
+            </div>
           </div>
         </div>
+
+        <!-- Pricing -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Notes</label>
-          <textarea v-model="form.notes" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"></textarea>
+          <div class="mb-3 flex items-center gap-2">
+            <span
+              class="h-5 w-1 rounded-full bg-[#4274D9]"
+            ></span>
+
+            <h4
+              class="text-xs font-extrabold uppercase tracking-wider text-[#293681]"
+            >
+              Pricing & Stock
+            </h4>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <!-- Campaign Price -->
+            <div>
+              <label
+                class="mb-1.5 block text-xs font-bold text-gray-600"
+              >
+                Campaign Price
+                <span class="text-rose-500">*</span>
+              </label>
+
+              <div class="relative">
+                <span
+                  class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-sm font-bold text-[#4274D9]"
+                >
+                  Rp.
+                </span>
+
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  :value="formatPriceInput(form.campaign_price)"
+                  @input="
+                    updatePriceField(
+                      'campaign_price',
+                      $event
+                    )
+                  "
+                  required
+                  class="block w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-12 pr-3.5 text-sm font-bold text-[#4274D9] shadow-sm outline-none transition-all placeholder:text-gray-400 hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#95CCDD]/30"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <!-- Discount Price -->
+            <div>
+              <label
+                class="mb-1.5 block text-xs font-bold text-gray-600"
+              >
+                Discount Price
+                <span class="text-rose-500">*</span>
+              </label>
+
+              <div class="relative">
+                <span
+                  class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-sm font-bold text-[#4274D9]"
+                >
+                  Rp.
+                </span>
+
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  :value="formatPriceInput(form.discount_price)"
+                  @input="
+                    updatePriceField(
+                      'discount_price',
+                      $event
+                    )
+                  "
+                  required
+                  class="block w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-12 pr-3.5 text-sm font-bold text-[#4274D9] shadow-sm outline-none transition-all placeholder:text-gray-400 hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#95CCDD]/30"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <!-- Promotion Stock -->
+            <div>
+              <label
+                class="mb-1.5 block text-xs font-bold text-gray-600"
+              >
+                Promotion Stock
+                <span class="text-rose-500">*</span>
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                v-model="form.promotion_stock"
+                required
+                class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#95CCDD]/30"
+              />
+            </div>
+
+            <!-- Purchase Limit -->
+            <div>
+              <label
+                class="mb-1.5 block text-xs font-bold text-gray-600"
+              >
+                Purchase Limit
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                v-model="form.purchase_limit"
+                class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#95CCDD]/30"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label
+            class="mb-1.5 block text-xs font-extrabold text-[#293681]"
+          >
+            Notes
+          </label>
+
+          <textarea
+            v-model="form.notes"
+            rows="3"
+            placeholder="Add additional notes..."
+            class="block w-full resize-none rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all placeholder:text-gray-400 hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#95CCDD]/30"
+          ></textarea>
         </div>
       </form>
+
+      <!-- Modal Footer -->
       <template #footer>
-        <div class="mt-5 sm:flex sm:flex-row-reverse w-full">
-          <button type="submit" form="promo-pricing-form" :disabled="saving" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 sm:ml-3 sm:w-auto transition-colors">{{ saving ? 'Saving...' : 'Update Pricing' }}</button>
-          <button type="button" @click="isModalOpen = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 sm:mt-0 sm:w-auto transition-colors">Cancel</button>
+        <div
+          class="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end"
+        >
+          <button
+            type="button"
+            @click="isModalOpen = false"
+            class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-extrabold text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            form="promo-pricing-form"
+            :disabled="saving"
+            class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4274D9] px-5 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#293681] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <i
+              v-if="saving"
+              class="fa-solid fa-spinner animate-spin text-[10px]"
+            ></i>
+
+            <i
+              v-else
+              class="fa-solid fa-floppy-disk text-[10px]"
+            ></i>
+
+            {{ saving ? 'Saving...' : 'Update Pricing' }}
+          </button>
         </div>
       </template>
     </ModalForm>
@@ -142,11 +645,20 @@ import ModalForm from './ModalForm.vue';
 import { useProducts } from '../composables/useProducts';
 
 const props = defineProps({
-  promotionId: { type: String, required: true },
+  promotionId: {
+    type: String,
+    required: true,
+  },
 });
+
 const emit = defineEmits(['updated']);
 
-const { variants, loading, fetchPromotionVariants, addVariantToPromotion } = useProducts();
+const {
+  variants,
+  loading,
+  fetchPromotionVariants,
+  addVariantToPromotion,
+} = useProducts();
 
 const isModalOpen = ref(false);
 const saving = ref(false);
@@ -163,49 +675,281 @@ const form = ref({
   notes: '',
 });
 
+/*
+|--------------------------------------------------------------------------
+| Currency Helpers
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * Format number for display.
+ *
+ * Example:
+ * 100000 -> Rp. 100.000
+ * 1500000 -> Rp. 1.500.000
+ */
 const formatCurrency = (val) => {
-  if (val == null) return '—';
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+  if (val === null || val === undefined || val === '') {
+    return '—';
+  }
+
+  const number = Number(val);
+
+  if (Number.isNaN(number)) {
+    return '—';
+  }
+
+  return `Rp. ${new Intl.NumberFormat('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(number)}`;
 };
 
-const totalStock = computed(() => variants.value.reduce((acc, v) => acc + (v.promotion_pricing?.promotion_stock || 0), 0));
-const totalEstimatedValue = computed(() => variants.value.reduce((acc, v) => acc + ((v.promotion_pricing?.campaign_price || 0) * (v.promotion_pricing?.promotion_stock || 0)), 0));
-const totalSavings = computed(() => variants.value.reduce((acc, v) => {
-  const normal = v.promotion_pricing?.normal_price_snapshot || 0;
-  const camp = v.promotion_pricing?.campaign_price || 0;
-  const diff = Math.max(0, normal - camp);
-  return acc + (diff * (v.promotion_pricing?.promotion_stock || 0));
-}, 0));
+/**
+ * Format price input without currency prefix.
+ *
+ * Example:
+ * 100000 -> 100.000
+ * 1500000 -> 1.500.000
+ */
+const formatPriceInput = (value) => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
+  ) {
+    return '';
+  }
 
-onMounted(() => fetchPromotionVariants(props.promotionId));
+  const number = Number(
+    String(value).replace(/\D/g, '')
+  );
+
+  if (!number) {
+    return '';
+  }
+
+  return new Intl.NumberFormat('id-ID', {
+    maximumFractionDigits: 0,
+  }).format(number);
+};
+
+/**
+ * Convert formatted input back to integer.
+ *
+ * Example:
+ * "100.000" -> 100000
+ * "1.500.000" -> 1500000
+ */
+const parsePriceInput = (value) => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
+  ) {
+    return 0;
+  }
+
+  const numericValue = String(value).replace(/\D/g, '');
+
+  return Number(numericValue) || 0;
+};
+
+/**
+ * Update price field while keeping
+ * the Vue state as a numeric value.
+ */
+const updatePriceField = (field, event) => {
+  const numericValue = parsePriceInput(
+    event.target.value
+  );
+
+  form.value[field] = numericValue;
+
+  event.target.value =
+    numericValue > 0
+      ? formatPriceInput(numericValue)
+      : '';
+};
+
+/*
+|--------------------------------------------------------------------------
+| Metrics
+|--------------------------------------------------------------------------
+*/
+
+const totalStock = computed(() => {
+  return variants.value.reduce(
+    (acc, v) =>
+      acc +
+      Number(
+        v.promotion_pricing?.promotion_stock || 0
+      ),
+    0
+  );
+});
+
+const totalEstimatedValue = computed(() => {
+  return variants.value.reduce((acc, v) => {
+    const campaignPrice = Number(
+      v.promotion_pricing?.campaign_price || 0
+    );
+
+    const stock = Number(
+      v.promotion_pricing?.promotion_stock || 0
+    );
+
+    return acc + campaignPrice * stock;
+  }, 0);
+});
+
+const totalSavings = computed(() => {
+  return variants.value.reduce((acc, v) => {
+    const normal = Number(
+      v.promotion_pricing?.normal_price_snapshot || 0
+    );
+
+    const campaign = Number(
+      v.promotion_pricing?.campaign_price || 0
+    );
+
+    const stock = Number(
+      v.promotion_pricing?.promotion_stock || 0
+    );
+
+    const diff = Math.max(
+      0,
+      normal - campaign
+    );
+
+    return acc + diff * stock;
+  }, 0);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Load Data
+|--------------------------------------------------------------------------
+*/
+
+onMounted(() => {
+  fetchPromotionVariants(props.promotionId);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Edit Pricing
+|--------------------------------------------------------------------------
+*/
 
 const openEditPricing = (v) => {
   selectedVariant.value = v;
+
   form.value = {
     variant_id: v.id,
-    campaign_price: v.promotion_pricing?.campaign_price || 0,
-    bottom_price: v.promotion_pricing?.bottom_price || 0,
-    discount_price: v.promotion_pricing?.discount_price || 0,
-    promotion_stock: v.promotion_pricing?.promotion_stock || 0,
-    purchase_limit: v.promotion_pricing?.purchase_limit || 0,
-    notes: v.promotion_pricing?.notes || '',
+
+    campaign_price:
+      Number(
+        v.promotion_pricing?.campaign_price || 0
+      ),
+
+    bottom_price:
+      Number(
+        v.promotion_pricing?.bottom_price || 0
+      ),
+
+    discount_price:
+      Number(
+        v.promotion_pricing?.discount_price || 0
+      ),
+
+    promotion_stock:
+      Number(
+        v.promotion_pricing?.promotion_stock || 0
+      ),
+
+    purchase_limit:
+      Number(
+        v.promotion_pricing?.purchase_limit || 0
+      ),
+
+    notes:
+      v.promotion_pricing?.notes || '',
   };
+
   error.value = null;
   isModalOpen.value = true;
 };
 
+/*
+|--------------------------------------------------------------------------
+| Submit Pricing
+|--------------------------------------------------------------------------
+*/
+
 const submitPricing = async () => {
   saving.value = true;
   error.value = null;
-  const res = await addVariantToPromotion(props.promotionId, form.value);
-  if (res) {
-    isModalOpen.value = false;
-    await fetchPromotionVariants(props.promotionId);
-    emit('updated');
-  } else {
-    const { error: err } = useProducts();
-    error.value = err.value || 'Failed to update pricing.';
+
+  try {
+    const payload = {
+      ...form.value,
+
+      campaign_price: Number(
+        form.value.campaign_price || 0
+      ),
+
+      bottom_price: Number(
+        form.value.bottom_price || 0
+      ),
+
+      discount_price: Number(
+        form.value.discount_price || 0
+      ),
+
+      promotion_stock: Number(
+        form.value.promotion_stock || 0
+      ),
+
+      purchase_limit: Number(
+        form.value.purchase_limit || 0
+      ),
+    };
+
+    const res =
+      await addVariantToPromotion(
+        props.promotionId,
+        payload
+      );
+
+    if (res) {
+      isModalOpen.value = false;
+
+      await fetchPromotionVariants(
+        props.promotionId
+      );
+
+      emit('updated');
+    } else {
+      const { error: err } =
+        useProducts();
+
+      error.value =
+        err.value ||
+        'Failed to update pricing.';
+    }
+  } catch (e) {
+    console.error(
+      'Failed to update pricing:',
+      e
+    );
+
+    error.value =
+      e?.response?.data?.message ||
+      e?.message ||
+      'Failed to update pricing.';
+  } finally {
+    saving.value = false;
   }
-  saving.value = false;
 };
 </script>

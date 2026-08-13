@@ -19,10 +19,8 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
+            $table->unique('email');
         });
-
-        // Index untuk email nullable
-        DB::statement('ALTER TABLE users ADD UNIQUE INDEX users_email_unique (email)');
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

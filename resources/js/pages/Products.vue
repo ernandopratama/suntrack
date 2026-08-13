@@ -1,193 +1,921 @@
 <template>
-  <div>
-    <div class="mb-6 flex justify-between items-center">
+  <div class="min-h-screen">
+    <!-- Page Header -->
+    <div class="mb-7 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Products</h1>
-        <p class="mt-1 text-sm text-gray-500">Manage your product catalog and variants.</p>
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-11 w-11 items-center justify-center rounded-xl shadow-sm"
+            style="background-color: #d0e7e6;"
+          >
+            <svg
+              class="h-6 w-6"
+              style="color: #293681;"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
+            </svg>
+          </div>
+
+          <div>
+            <h1
+              class="text-2xl font-bold tracking-tight"
+              style="color: #293681;"
+            >
+              Products
+            </h1>
+            <p class="mt-0.5 text-sm text-gray-500">
+              Manage your product catalog and variants.
+            </p>
+          </div>
+        </div>
       </div>
-      <div class="flex items-center space-x-3">
-        <button @click="openImportModal" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-          <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <!-- Import -->
+        <button
+          @click="openImportModal"
+          class="inline-flex items-center justify-center rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+          style="border-color: #95ccdd; color: #293681;"
+        >
+          <svg
+            class="-ml-1 mr-2 h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
           Import Excel
         </button>
-        <button @click="openCreate" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-          <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+
+        <!-- New Product -->
+        <button
+          @click="openCreate"
+          class="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+          style="background-color: #293681;"
+        >
+          <svg
+            class="-ml-1 mr-2 h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
           New Product
         </button>
       </div>
     </div>
 
-    <!-- Errors -->
-    <div v-if="pageError" class="mb-4 bg-red-50 border border-red-200 p-4 rounded-md">
-      <div class="flex">
-        <div class="flex-shrink-0"><svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
-        <div class="ml-3"><p class="text-sm text-red-700">{{ pageError }}</p></div>
+    <!-- Page Error -->
+    <div
+      v-if="pageError"
+      class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm"
+    >
+      <div class="flex items-start">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-5 w-5 text-red-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+
+        <div class="ml-3">
+          <p class="text-sm font-medium text-red-700">
+            {{ pageError }}
+          </p>
+        </div>
       </div>
     </div>
 
-    <DataTable :columns="columns" :data="products" :loading="loading" @search="handleSearch">
-      <template #actions>
-        <select v-model="filters.brand_id" @change="handleBrandFilter" class="block pl-3 pr-10 py-2 text-base border-gray-300 sm:text-sm rounded-md">
-            <option value="">All Brands</option>
-            <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
-          </select>
-          <select v-model="filters.status" @change="fetchData" class="block pl-3 pr-10 py-2 text-base border-gray-300 sm:text-sm rounded-md">
-            <option value="">All Statuses</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-          <button v-if="selectedIds.length > 0" @click="confirmBulkDelete" class="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 transition-colors">
-            Delete Selected ({{ selectedIds.length }})
-          </button>
-      </template>
-      
-      <template #head-checkbox>
-        <input type="checkbox" :checked="selectedIds.length === products.length && products.length > 0" @change="toggleSelectAll" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-      </template>
-      <template #cell-checkbox="{ row }">
-        <input type="checkbox" :checked="selectedIds.includes(row.id)" @change="toggleSelect(row.id)" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-      </template>
-      <template #cell-no="{ idx }">
-        <span class="text-sm text-gray-500">{{ pagination.current_page > 1 ? (pagination.current_page - 1) * pagination.per_page + idx + 1 : idx + 1 }}</span>
-      </template>
-      <template #cell-code="{ row }">
-        <span class="font-mono text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded">{{ row.code }}</span>
-      </template>
-      <template #cell-name="{ row }">
-        <div class="font-medium text-gray-900">{{ row.name }}</div>
-        <div class="text-xs text-gray-400">{{ row.sku || 'No SKU' }}</div>
-      </template>
-      <template #cell-brand_name="{ row }">
-        <span class="text-sm text-gray-700">{{ row.brand?.name || "\u2014" }}</span>
-      </template>
-      <template #cell-current_price="{ row }">
-        <span class="text-sm font-medium text-gray-900">{{ row.current_price ? formatCurrency(row.current_price) : '—' }}</span>
-      </template>
-      <template #cell-variants_count="{ row }">
-        <span class="text-sm text-gray-700">{{ row.variants_count }} variant{{ row.variants_count !== 1 ? 's' : '' }}</span>
-      </template>
-      <template #cell-status="{ row }">
-        <StatusBadge :status="row.status" />
-      </template>
-      <template #cell-actions="{ row }">
-        <div class="flex space-x-3 text-sm">
-          <router-link :to="`/products/${row.id}`" class="text-blue-600 hover:text-blue-900 font-medium transition-colors">View</router-link>
-          <button @click="openEdit(row)" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Edit</button>
-          <button @click="confirmDelete(row)" class="text-red-600 hover:text-red-900 font-medium transition-colors">Delete</button>
-        </div>
-      </template>
-      <template #pagination>
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <p class="text-sm text-gray-700">Page <span class="font-medium">{{ pagination.current_page }}</span> of <span class="font-medium">{{ pagination.last_page }}</span> ({{ pagination.total }} results)</p>
-          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-            <button @click="changePage(-1)" :disabled="pagination.current_page === 1" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-40">&larr; Prev</button>
-            <button @click="changePage(1)" :disabled="pagination.current_page === pagination.last_page" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-40">Next &rarr;</button>
-          </nav>
-        </div>
-      </template>
-    </DataTable>
+    <!-- Products Table -->
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <DataTable
+        :columns="columns"
+        :data="products"
+        :loading="loading"
+        @search="handleSearch"
+      >
+        <!-- Toolbar -->
+        <template #actions>
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <!-- Brand Filter -->
+            <div class="relative">
+              <select
+                v-model="filters.brand_id"
+                @change="handleBrandFilter"
+                class="block w-full appearance-none rounded-xl border bg-white py-2.5 pl-3 pr-10 text-sm font-medium shadow-sm outline-none transition-all focus:ring-2 sm:w-44"
+                style="
+                  border-color: #d0e7e6;
+                  color: #293681;
+                  --tw-ring-color: #95ccdd;
+                "
+              >
+                <option value="">All Brands</option>
+                <option
+                  v-for="b in brands"
+                  :key="b.id"
+                  :value="b.id"
+                >
+                  {{ b.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="relative">
+              <select
+                v-model="filters.status"
+                @change="fetchData"
+                class="block w-full appearance-none rounded-xl border bg-white py-2.5 pl-3 pr-10 text-sm font-medium shadow-sm outline-none transition-all focus:ring-2 sm:w-40"
+                style="
+                  border-color: #d0e7e6;
+                  color: #293681;
+                  --tw-ring-color: #95ccdd;
+                "
+              >
+                <option value="">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <!-- Bulk Delete -->
+            <button
+              v-if="selectedIds.length > 0"
+              @click="confirmBulkDelete"
+              class="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm font-semibold text-red-600 transition-all duration-200 hover:bg-red-100"
+            >
+              <svg
+                class="mr-1.5 h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              Delete Selected ({{ selectedIds.length }})
+            </button>
+          </div>
+        </template>
+
+        <!-- Checkbox Header -->
+        <template #head-checkbox>
+          <input
+            type="checkbox"
+            :checked="
+              selectedIds.length === products.length &&
+              products.length > 0
+            "
+            @change="toggleSelectAll"
+            class="h-4 w-4 rounded border-gray-300 focus:ring-2"
+            style="
+              accent-color: #293681;
+              --tw-ring-color: #95ccdd;
+            "
+          />
+        </template>
+
+        <!-- Checkbox -->
+        <template #cell-checkbox="{ row }">
+          <input
+            type="checkbox"
+            :checked="selectedIds.includes(row.id)"
+            @change="toggleSelect(row.id)"
+            class="h-4 w-4 rounded border-gray-300 focus:ring-2"
+            style="
+              accent-color: #293681;
+              --tw-ring-color: #95ccdd;
+            "
+          />
+        </template>
+
+        <!-- Number -->
+        <template #cell-no="{ idx }">
+          <span class="text-sm font-medium text-gray-400">
+            {{
+              pagination.current_page > 1
+                ? (pagination.current_page - 1) *
+                    pagination.per_page +
+                  idx +
+                  1
+                : idx + 1
+            }}
+          </span>
+        </template>
+
+        <!-- Code -->
+        <template #cell-code="{ row }">
+          <span
+            class="inline-flex items-center rounded-lg px-2.5 py-1 font-mono text-xs font-semibold"
+            style="
+              background-color: #d0e7e6;
+              color: #293681;
+            "
+          >
+            {{ row.code }}
+          </span>
+        </template>
+
+        <!-- Product Name -->
+        <template #cell-name="{ row }">
+          <div class="min-w-0">
+            <div class="truncate font-semibold text-gray-800">
+              {{ row.name }}
+            </div>
+
+            <div class="mt-0.5 flex items-center gap-1.5 text-xs text-gray-400">
+              <svg
+                class="h-3.5 w-3.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M7 7h10M7 11h10M7 15h6"
+                />
+              </svg>
+              {{ row.sku || 'No SKU' }}
+            </div>
+          </div>
+        </template>
+
+        <!-- Brand -->
+        <template #cell-brand_name="{ row }">
+          <span
+            v-if="row.brand?.name"
+            class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+            style="
+              background-color: #eaf5f5;
+              color: #293681;
+            "
+          >
+            {{ row.brand.name }}
+          </span>
+
+          <span v-else class="text-sm text-gray-400">
+            —
+          </span>
+        </template>
+
+        <!-- Price -->
+        <template #cell-current_price="{ row }">
+          <span
+            class="text-sm font-bold"
+            style="color: #293681;"
+          >
+            {{
+              row.current_price
+                ? formatCurrency(row.current_price)
+                : '—'
+            }}
+          </span>
+        </template>
+
+        <!-- Variants -->
+        <template #cell-variants_count="{ row }">
+          <span
+            class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600"
+          >
+            <span
+              class="flex h-6 w-6 items-center justify-center rounded-lg"
+              style="background-color: #d0e7e6; color: #293681;"
+            >
+              {{ row.variants_count }}
+            </span>
+
+            variant{{ row.variants_count !== 1 ? 's' : '' }}
+          </span>
+        </template>
+
+        <!-- Status -->
+        <template #cell-status="{ row }">
+          <StatusBadge :status="row.status" />
+        </template>
+
+        <!-- Actions -->
+        <template #cell-actions="{ row }">
+          <div class="flex items-center gap-1">
+            <!-- View -->
+            <router-link
+              :to="`/products/${row.id}`"
+              class="group inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+              style="color: #4274d9;"
+              title="View Product"
+            >
+              <svg
+                class="h-4 w-4 transition-transform group-hover:scale-110"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+            </router-link>
+
+            <!-- Edit -->
+            <button
+              @click="openEdit(row)"
+              class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+              title="Edit Product"
+            >
+              <svg
+                class="h-4 w-4 transition-transform group-hover:scale-110"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                />
+              </svg>
+            </button>
+
+            <!-- Delete -->
+            <button
+              @click="confirmDelete(row)"
+              class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
+              title="Delete Product"
+            >
+              <svg
+                class="h-4 w-4 transition-transform group-hover:scale-110"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </template>
+
+        <!-- Pagination -->
+        <template #pagination>
+          <div
+            class="flex flex-col gap-4 border-t border-gray-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <p class="text-sm text-gray-500">
+              Page
+              <span class="font-semibold" style="color: #293681;">
+                {{ pagination.current_page }}
+              </span>
+              of
+              <span class="font-semibold" style="color: #293681;">
+                {{ pagination.last_page }}
+              </span>
+              <span class="mx-1 text-gray-300">•</span>
+              {{ pagination.total }} results
+            </p>
+
+            <nav class="flex items-center gap-2">
+              <button
+                @click="changePage(-1)"
+                :disabled="pagination.current_page === 1"
+                class="inline-flex items-center rounded-lg border bg-white px-3.5 py-2 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40"
+                style="border-color: #d0e7e6; color: #293681;"
+              >
+                <svg
+                  class="mr-1.5 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+                Prev
+              </button>
+
+              <button
+                @click="changePage(1)"
+                :disabled="
+                  pagination.current_page === pagination.last_page
+                "
+                class="inline-flex items-center rounded-lg px-3.5 py-2 text-sm font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"
+                style="background-color: #293681;"
+              >
+                Next
+                <svg
+                  class="ml-1.5 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </nav>
+          </div>
+        </template>
+      </DataTable>
+    </div>
 
     <!-- Create/Edit Modal -->
-    <ModalForm :is-open="isModalOpen" :title="selectedProduct ? 'Edit Product' : 'Create Product'" @close="isModalOpen = false">
-      <form id="product-form" @submit.prevent="submitForm" class="space-y-4 mt-2">
-        <div v-if="formError" class="bg-red-50 border border-red-200 p-3 rounded-md">
-          <p class="text-sm text-red-700">{{ formError }}</p>
+    <ModalForm
+      :is-open="isModalOpen"
+      :title="selectedProduct ? 'Edit Product' : 'Create Product'"
+      @close="isModalOpen = false"
+    >
+      <form
+        id="product-form"
+        @submit.prevent="submitForm"
+        class="mt-2 space-y-5"
+      >
+        <!-- Error -->
+        <div
+          v-if="formError"
+          class="rounded-xl border border-red-200 bg-red-50 p-3"
+        >
+          <p class="text-sm font-medium text-red-700">
+            {{ formError }}
+          </p>
         </div>
-        <div class="grid grid-cols-2 gap-4">
+
+        <!-- Code & SKU -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Product Code <span class="text-red-500">*</span></label>
-            <input type="text" v-model="form.code" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+            <label class="block text-sm font-semibold text-gray-700">
+              Product Code
+              <span class="text-red-500">*</span>
+            </label>
+
+            <input
+              type="text"
+              v-model="form.code"
+              required
+              class="mt-1.5 block w-full rounded-xl border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm shadow-sm outline-none transition-all focus:bg-white focus:ring-2"
+              style="--tw-ring-color: #95ccdd;"
+            />
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700">SKU</label>
-            <input type="text" v-model="form.sku" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+            <label class="block text-sm font-semibold text-gray-700">
+              SKU
+            </label>
+
+            <input
+              type="text"
+              v-model="form.sku"
+              class="mt-1.5 block w-full rounded-xl border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm shadow-sm outline-none transition-all focus:bg-white focus:ring-2"
+              style="--tw-ring-color: #95ccdd;"
+            />
           </div>
         </div>
+
+        <!-- Name -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Product Name <span class="text-red-500">*</span></label>
-          <input type="text" v-model="form.name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+          <label class="block text-sm font-semibold text-gray-700">
+            Product Name
+            <span class="text-red-500">*</span>
+          </label>
+
+          <input
+            type="text"
+            v-model="form.name"
+            required
+            class="mt-1.5 block w-full rounded-xl border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm shadow-sm outline-none transition-all focus:bg-white focus:ring-2"
+            style="--tw-ring-color: #95ccdd;"
+          />
         </div>
+
+        <!-- Description -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Description</label>
-          <textarea v-model="form.description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"></textarea>
+          <label class="block text-sm font-semibold text-gray-700">
+            Description
+          </label>
+
+          <textarea
+            v-model="form.description"
+            rows="3"
+            class="mt-1.5 block w-full resize-none rounded-xl border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm shadow-sm outline-none transition-all focus:bg-white focus:ring-2"
+            style="--tw-ring-color: #95ccdd;"
+          ></textarea>
         </div>
+
+        <!-- Price -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Current Price (Selling Price)</label>
-          <input type="number" min="0" step="0.01" v-model="form.current_price" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" placeholder="e.g. 150000">
+          <label class="block text-sm font-semibold text-gray-700">
+            Current Price
+            <span class="font-normal text-gray-400">
+              (Selling Price)
+            </span>
+          </label>
+
+          <div class="relative mt-1.5">
+            <span
+              class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold"
+              style="color: #293681;"
+            >
+              Rp
+            </span>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              v-model="form.current_price"
+              class="block w-full rounded-xl border-gray-200 bg-gray-50 py-2.5 pl-11 pr-3.5 text-sm shadow-sm outline-none transition-all focus:bg-white focus:ring-2"
+              style="--tw-ring-color: #95ccdd;"
+              placeholder="150000"
+            />
+          </div>
         </div>
+
+        <!-- Brand -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Brand <span class="text-red-500">*</span></label>
-          <select v-model="form.brand_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+          <label class="block text-sm font-semibold text-gray-700">
+            Brand
+            <span class="text-red-500">*</span>
+          </label>
+
+          <select
+            v-model="form.brand_id"
+            required
+            class="mt-1.5 block w-full rounded-xl border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm shadow-sm outline-none transition-all focus:bg-white focus:ring-2"
+            style="--tw-ring-color: #95ccdd;"
+          >
             <option value="">-- Select Brand --</option>
-            <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
+            <option
+              v-for="b in brands"
+              :key="b.id"
+              :value="b.id"
+            >
+              {{ b.name }}
+            </option>
           </select>
         </div>
+
+        <!-- Status -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Status</label>
-          <select v-model="form.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+          <label class="block text-sm font-semibold text-gray-700">
+            Status
+          </label>
+
+          <select
+            v-model="form.status"
+            class="mt-1.5 block w-full rounded-xl border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm shadow-sm outline-none transition-all focus:bg-white focus:ring-2"
+            style="--tw-ring-color: #95ccdd;"
+          >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
         </div>
       </form>
+
       <template #footer>
-        <div class="mt-5 sm:flex sm:flex-row-reverse w-full">
-          <button type="submit" form="product-form" :disabled="submitting" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 sm:ml-3 sm:w-auto transition-colors">{{ submitting ? 'Saving...' : (selectedProduct ? 'Update Product' : 'Save Product') }}</button>
-          <button type="button" @click="isModalOpen = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 sm:mt-0 sm:w-auto transition-colors">Cancel</button>
+        <div class="mt-5 flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            @click="isModalOpen = false"
+            class="inline-flex w-full justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 shadow-sm transition-colors hover:bg-gray-50 sm:w-auto"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            form="product-form"
+            :disabled="submitting"
+            class="inline-flex w-full justify-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            style="background-color: #293681;"
+          >
+            {{ submitting
+              ? 'Saving...'
+              : (selectedProduct ? 'Update Product' : 'Save Product')
+            }}
+          </button>
         </div>
       </template>
     </ModalForm>
 
     <!-- Import Modal -->
-    <ModalForm :is-open="isImportModalOpen" title="Import Products from Excel" @close="closeImportModal">
-      <form id="import-form" @submit.prevent="submitImport" class="space-y-5 mt-2">
-        <div v-if="importError" class="bg-red-50 border border-red-200 p-3 rounded-md">
-          <p class="text-sm text-red-700">{{ importError }}</p>
+    <ModalForm
+      :is-open="isImportModalOpen"
+      title="Import Products from Excel"
+      @close="closeImportModal"
+    >
+      <form
+        id="import-form"
+        @submit.prevent="submitImport"
+        class="mt-2 space-y-5"
+      >
+        <!-- Error -->
+        <div
+          v-if="importError"
+          class="rounded-xl border border-red-200 bg-red-50 p-3"
+        >
+          <p class="text-sm font-medium text-red-700">
+            {{ importError }}
+          </p>
         </div>
-        <div v-if="importResult" class="bg-green-50 border border-green-200 p-4 rounded-md space-y-1">
-          <p class="text-sm font-medium text-green-800">Import Completed!</p>
-          <p class="text-sm text-green-700">{{ importResult.imported }} product(s) imported</p>
-          <p v-if="importResult.updated > 0" class="text-sm text-blue-700">{{ importResult.updated }} product(s) updated</p>
-          <p v-if="importResult.skipped > 0" class="text-sm text-amber-700">{{ importResult.skipped }} row(s) skipped</p>
-          <div v-if="importResult.errors && importResult.errors.length" class="mt-2 max-h-32 overflow-y-auto">
-            <p v-for="(err, idx) in importResult.errors" :key="idx" class="text-xs text-red-600">⚠ {{ err }}</p>
+
+        <!-- Result -->
+        <div
+          v-if="importResult"
+          class="rounded-xl border p-4"
+          style="
+            background-color: #d0e7e6;
+            border-color: #95ccdd;
+          "
+        >
+          <div class="mb-3 flex items-center gap-2">
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-white"
+            >
+              <svg
+                class="h-5 w-5"
+                style="color: #293681;"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+
+            <p
+              class="text-sm font-bold"
+              style="color: #293681;"
+            >
+              Import Completed!
+            </p>
+          </div>
+
+          <div class="space-y-1.5 pl-10">
+            <p class="text-sm text-gray-700">
+              <span class="font-semibold">
+                {{ importResult.imported }}
+              </span>
+              product(s) imported
+            </p>
+
+            <p
+              v-if="importResult.updated > 0"
+              class="text-sm"
+              style="color: #4274d9;"
+            >
+              <span class="font-semibold">
+                {{ importResult.updated }}
+              </span>
+              product(s) updated
+            </p>
+
+            <p
+              v-if="importResult.skipped > 0"
+              class="text-sm text-amber-700"
+            >
+              <span class="font-semibold">
+                {{ importResult.skipped }}
+              </span>
+              row(s) skipped
+            </p>
+
+            <div
+              v-if="
+                importResult.errors &&
+                importResult.errors.length
+              "
+              class="mt-3 max-h-32 overflow-y-auto rounded-lg bg-white p-3"
+            >
+              <p
+                v-for="(err, idx) in importResult.errors"
+                :key="idx"
+                class="text-xs text-red-600"
+              >
+                ⚠ {{ err }}
+              </p>
+            </div>
           </div>
         </div>
 
         <div v-if="!importResult">
+          <!-- Brand -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Select Brand <span class="text-red-500">*</span></label>
-            <select v-model="importForm.brand_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+            <label class="block text-sm font-semibold text-gray-700">
+              Select Brand
+              <span class="text-red-500">*</span>
+            </label>
+
+            <select
+              v-model="importForm.brand_id"
+              required
+              class="mt-1.5 block w-full rounded-xl border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm shadow-sm outline-none transition-all focus:bg-white focus:ring-2"
+              style="--tw-ring-color: #95ccdd;"
+            >
               <option value="">-- Choose Brand --</option>
-              <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
+              <option
+                v-for="b in brands"
+                :key="b.id"
+                :value="b.id"
+              >
+                {{ b.name }}
+              </option>
             </select>
           </div>
-          <div class="mt-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Excel File <span class="text-red-500">*</span></label>
-            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition-colors cursor-pointer" @click="triggerFileInput">
-              <div class="space-y-1 text-center">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                <div class="flex text-sm text-gray-600">
-                  <label class="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500">
-                    <span>{{ importForm.file ? importForm.file.name : 'Upload an Excel file' }}</span>
-                    <input ref="fileInputRef" type="file" accept=".xlsx,.xls" class="sr-only" @change="onFileChange">
-                  </label>
-                </div>
-                <p class="text-xs text-gray-500">.xlsx or .xls up to 10MB</p>
+
+          <!-- File Upload -->
+          <div class="mt-5">
+            <label class="block text-sm font-semibold text-gray-700">
+              Excel File
+              <span class="text-red-500">*</span>
+            </label>
+
+            <div
+              class="mt-2 cursor-pointer rounded-2xl border-2 border-dashed p-7 text-center transition-all duration-200 hover:shadow-sm"
+              style="
+                border-color: #95ccdd;
+                background-color: #f7fbfb;
+              "
+              @click="triggerFileInput"
+            >
+              <div
+                class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl"
+                style="background-color: #d0e7e6;"
+              >
+                <svg
+                  class="h-7 w-7"
+                  style="color: #293681;"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.8"
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+              </div>
+
+              <div class="text-sm">
+                <span
+                  class="font-semibold"
+                  style="color: #4274d9;"
+                >
+                  {{
+                    importForm.file
+                      ? importForm.file.name
+                      : 'Upload an Excel file'
+                  }}
+                </span>
+              </div>
+
+              <p class="mt-1 text-xs text-gray-400">
+                .xlsx or .xls up to 10MB
+              </p>
+
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept=".xlsx,.xls"
+                class="sr-only"
+                @change="onFileChange"
+              />
+            </div>
+          </div>
+
+          <!-- Expected Columns -->
+          <div
+            class="mt-5 rounded-xl border p-4"
+            style="
+              background-color: #d0e7e6;
+              border-color: #95ccdd;
+            "
+          >
+            <div class="flex items-start gap-3">
+              <div
+                class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white"
+              >
+                <svg
+                  class="h-4 w-4"
+                  style="color: #293681;"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"
+                  />
+                </svg>
+              </div>
+
+              <div>
+                <h4
+                  class="text-xs font-bold uppercase tracking-wide"
+                  style="color: #293681;"
+                >
+                  Expected Excel Columns
+                </h4>
+
+                <p class="mt-1 text-xs leading-5 text-gray-600">
+                  Nama Produk, Kode Produk, Nama Variasi,
+                  Kode Variasi, Harga Awal, Harga Saat Ini,
+                  Stok Saat Ini
+                </p>
               </div>
             </div>
           </div>
-          <div class="mt-4 bg-blue-50 border border-blue-200 p-3 rounded-md">
-            <h4 class="text-xs font-semibold text-blue-800 uppercase mb-1">Expected Excel Columns</h4>
-            <p class="text-xs text-blue-700">Nama Produk, Kode Produk, Nama Variasi, Kode Variasi, Harga Awal, Harga Saat Ini, Stok Saat Ini</p>
-          </div>
         </div>
       </form>
+
       <template #footer>
-        <div class="flex w-full gap-2">
-          <button v-if="!importResult" type="submit" form="import-form" :disabled="importing" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">{{ importing ? 'Importing...' : 'Import' }}</button>
-          <button v-if="importResult" type="button" @click="closeImportModal" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">Done</button>
-          <button type="button" @click="closeImportModal" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">Cancel</button>
+        <div class="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            @click="closeImportModal"
+            class="inline-flex w-full justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 shadow-sm transition-colors hover:bg-gray-50 sm:w-auto"
+          >
+            {{ importResult ? 'Done' : 'Cancel' }}
+          </button>
+
+          <button
+            v-if="!importResult"
+            type="submit"
+            form="import-form"
+            :disabled="importing"
+            class="inline-flex w-full justify-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            style="background-color: #293681;"
+          >
+            {{ importing ? 'Importing...' : 'Import' }}
+          </button>
         </div>
       </template>
     </ModalForm>
@@ -219,7 +947,7 @@ const columns = [
   { key: 'actions', label: '', sortable: false },
 ];
 
-const filters = ref({ search: '', status: '' });
+const filters = ref({ search: '', status: '', brand_id: '' });
 const selectedIds = ref([]);
 const pageError = ref(null);
 const isModalOpen = ref(false);

@@ -16,10 +16,11 @@ export function useProducts() {
             const res = await api.get('/admin/products', { params });
             if (res.data.success) {
                 products.value = res.data.data.products.data;
+                const meta = res.data.data.products.meta || {};
                 pagination.value = {
-                    current_page: res.data.data.products.current_page,
-                    last_page: res.data.data.products.last_page,
-                    total: res.data.data.products.total,
+                    current_page: meta.current_page || 1,
+                    last_page: meta.last_page || 1,
+                    total: meta.total || 0,
                 };
             }
         } catch (e) {

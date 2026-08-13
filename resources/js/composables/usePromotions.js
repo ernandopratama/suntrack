@@ -15,10 +15,11 @@ export function usePromotions() {
             const response = await api.get('/admin/promotions', { params });
             if (response.data.success) {
                 promotions.value = response.data.data.promotions.data;
+                const meta = response.data.data.promotions.meta || {};
                 pagination.value = {
-                    current_page: response.data.data.promotions.current_page,
-                    last_page: response.data.data.promotions.last_page,
-                    total: response.data.data.promotions.total,
+                    current_page: meta.current_page || 1,
+                    last_page: meta.last_page || 1,
+                    total: meta.total || 0,
                 };
             }
         } catch (e) {

@@ -27,8 +27,10 @@ class BrandController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $brands = $this->repository->getFilteredPaginated(
-            companyId: (int) $request->user()->company_id,
+            companyId: $user->hasRole('Super Admin') ? null : $user->company_id,
             filters: $request->only(['search']),
             perPage: (int) $request->get('per_page', 15)
         );
@@ -72,7 +74,7 @@ class BrandController extends Controller
      */
     public function show(Brand $brand): JsonResponse
     {
-        if ($brand->company_id !== request()->user()->company_id) {
+        if (! request()->user()->hasRole('Super Admin') && $brand->company_id !== request()->user()->company_id) {
             return $this->error('Unauthorized.', [], 403);
         }
 
@@ -86,7 +88,7 @@ class BrandController extends Controller
      */
     public function update(UpdateBrandRequest $request, Brand $brand): JsonResponse
     {
-        if ($brand->company_id !== request()->user()->company_id) {
+        if (! request()->user()->hasRole('Super Admin') && $brand->company_id !== request()->user()->company_id) {
             return $this->error('Unauthorized.', [], 403);
         }
 
@@ -112,7 +114,7 @@ class BrandController extends Controller
      */
     public function destroy(Brand $brand): JsonResponse
     {
-        if ($brand->company_id !== request()->user()->company_id) {
+        if (! request()->user()->hasRole('Super Admin') && $brand->company_id !== request()->user()->company_id) {
             return $this->error('Unauthorized.', [], 403);
         }
 

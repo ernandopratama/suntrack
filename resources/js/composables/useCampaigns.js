@@ -15,10 +15,11 @@ export function useCampaigns() {
             const response = await api.get('/admin/campaigns', { params });
             if (response.data.success) {
                 campaigns.value = response.data.data.campaigns.data;
+                const meta = response.data.data.campaigns.meta || {};
                 pagination.value = {
-                    current_page: response.data.data.campaigns.current_page,
-                    last_page: response.data.data.campaigns.last_page,
-                    total: response.data.data.campaigns.total,
+                    current_page: meta.current_page || 1,
+                    last_page: meta.last_page || 1,
+                    total: meta.total || 0,
                 };
             }
         } catch (e) {

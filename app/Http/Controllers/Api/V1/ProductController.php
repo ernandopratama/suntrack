@@ -27,9 +27,11 @@ class ProductController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $products = $this->repository->getFilteredPaginated(
-            companyId: (int) $request->user()->company_id,
-            filters: $request->only(['search', 'status']),
+            companyId: $user->hasRole('Super Admin') ? null : $user->company_id,
+            filters: $request->only(['search', 'status', 'brand_id']),
             perPage: (int) $request->get('per_page', 15)
         );
 

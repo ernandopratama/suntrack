@@ -1,272 +1,1010 @@
-<template>  <PublicLayout>    <!-- Loading State -->    <div v-if="loading && !reviewData" class="flex flex-col items-center justify-center py-20">      <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin">
-</div>
-      <p class="mt-4 text-slate-500 font-medium">
-Memuat data peninjauan dan persetujuan...</p>
+<template>
+  <PublicLayout>
+    <!-- =========================================================
+         LOADING
+    ========================================================== -->
+    <div
+      v-if="loading && !reviewData"
+      class="min-h-[60vh] flex flex-col items-center justify-center px-4"
+    >
+      <div class="relative">
+        <div
+          class="w-14 h-14 rounded-full border-4 border-[#F7E49B]"
+        ></div>
+        <div
+          class="absolute inset-0 w-14 h-14 rounded-full border-4 border-transparent border-t-[#BA5A5A] animate-spin"
+        ></div>
+      </div>
+
+      <p class="mt-5 text-sm font-semibold text-[#52605E]">
+        Memuat data peninjauan dan persetujuan...
+      </p>
+
+      <p class="mt-1 text-xs text-[#899492]">
+        Mohon tunggu sebentar
+      </p>
     </div>
-    <!-- Expired / Revoked / Not Found Fallback (Refinement #2) -->    <div v-else-if="linkStatus !== 'Active'" class="max-w-2xl mx-auto py-12">      <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg text-center">        <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl mb-4"             :class="linkStatus === 'Expired' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'">
-          {{ linkStatus === 'Expired' ? '⏰' : '🔒' }}        </div>
-        <h2 class="text-2xl font-bold text-slate-900 mb-2">
-          {{ linkStatus === 'Expired' ? 'Tautan Sudah Kedaluwarsa' : (linkStatus === 'Revoked' ? 'Tautan Telah Dinonaktifkan' : 'Tautan Tidak Ditemukan') }}        </h2>
-        <p class="text-slate-600 mb-6 leading-relaxed">
-          {{ errorMessage || 'Tautan publik ini tidak lagi dapat diakses untuk peninjauan. Hal ini dapat terjadi karena masa berlaku tautan telah habis atau tautan telah ditarik kembali oleh Admin sistem.' }}        </p>
-        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80 text-sm text-slate-500 mb-6">          <p class="font-medium text-slate-700 mb-1">
-Bantuan & Tindak Lanjut:</p>
-          <p>
-Silakan hubungi kontak Admin SunTrack atau Brand Manager Anda untuk meminta pembuatan tautan peninjauan (Secure Public Link) yang baru.</p>
+
+    <!-- =========================================================
+         EXPIRED / REVOKED / NOT FOUND
+    ========================================================== -->
+    <div
+      v-else-if="linkStatus !== 'Active'"
+      class="max-w-2xl mx-auto py-12 px-4"
+    >
+      <div
+        class="bg-white rounded-[28px] p-8 sm:p-10 border border-[#E3E9E6] shadow-[0_20px_60px_rgba(41,51,49,0.08)] text-center"
+      >
+        <div
+          class="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-3xl mb-6"
+          :class="
+            linkStatus === 'Expired'
+              ? 'bg-[#F7E49B]/45 text-[#79651A]'
+              : 'bg-[#BA5A5A]/10 text-[#BA5A5A]'
+          "
+        >
+          {{ linkStatus === 'Expired' ? '⏰' : '🔒' }}
         </div>
-        <a href="mailto:admin@suntrack.app" class="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800 transition shadow-sm">
-          Hubungi Admin System        </a>
+
+        <span
+          class="inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] mb-3"
+          :class="
+            linkStatus === 'Expired'
+              ? 'bg-[#F7E49B]/40 text-[#79651A]'
+              : 'bg-[#BA5A5A]/10 text-[#BA5A5A]'
+          "
+        >
+          Secure Public Link
+        </span>
+
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-[#293331] mb-3">
+          {{
+            linkStatus === 'Expired'
+              ? 'Tautan Sudah Kedaluwarsa'
+              : linkStatus === 'Revoked'
+                ? 'Tautan Telah Dinonaktifkan'
+                : 'Tautan Tidak Ditemukan'
+          }}
+        </h2>
+
+        <p class="text-[#687572] mb-7 leading-relaxed text-sm sm:text-base">
+          {{
+            errorMessage ||
+              'Tautan publik ini tidak lagi dapat diakses untuk peninjauan. Hal ini dapat terjadi karena masa berlaku tautan telah habis atau tautan telah ditarik kembali oleh Admin sistem.'
+          }}
+        </p>
+
+        <div
+          class="bg-[#F8FAF9] rounded-2xl p-5 border border-[#E3E9E6] text-sm text-[#687572] mb-7 text-left"
+        >
+          <div class="flex gap-3">
+            <div
+              class="w-9 h-9 shrink-0 rounded-xl bg-[#86BCBD]/20 text-[#315F60] flex items-center justify-center"
+            >
+              ?
+            </div>
+
+            <div>
+              <p class="font-bold text-[#293331] mb-1">
+                Bantuan & Tindak Lanjut
+              </p>
+
+              <p class="leading-relaxed">
+                Silakan hubungi kontak Admin SunTrack atau Brand Manager Anda
+                untuk meminta pembuatan tautan peninjauan baru.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <a
+          href="mailto:admin@suntrack.app"
+          class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#BA5A5A] text-white font-bold text-sm hover:bg-[#A84F4F] transition shadow-lg shadow-[#BA5A5A]/20"
+        >
+          Hubungi Admin System
+        </a>
       </div>
     </div>
-    <!-- Main Public Review Content (Refinement #9 Order) -->    <div v-else-if="reviewData" class="space-y-8">            <!-- Top Bar: Reviewer Identity Status Badge -->      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-4 sm:p-6 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">        <div class="flex items-center space-x-3">          <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xl">👤</div>
-          <div>            <p class="text-xs text-slate-400 uppercase font-semibold tracking-wider">
-Reviewer Identity</p>
-            <p class="text-sm sm:text-base font-bold">
-              {{ isIdentified() ? `${reviewerIdentity.name} (${reviewerIdentity.position || 'Reviewer'})` : 'Belum Teridentifikasi' }}              <span v-if="reviewerIdentity.companyName" class="text-xs font-normal text-amber-300 ml-1.5">
-• {{ reviewerIdentity.companyName }}</span>
-            </p>
-          </div>
-        </div>
-        <button @click="openIdentityModal(true)" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold rounded-xl border border-white/15 transition flex items-center space-x-1.5">          <span>
-{{ isIdentified() ? 'Ubah Identitas' : 'Identifikasi Diri' }}</span>
-          <span>✏️</span>
-        </button>
-      </div>
-      <!-- 1. Informasi Promotion -->      <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-sm relative overflow-hidden">        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-amber-400/10 to-transparent rounded-bl-full pointer-events-none">
-</div>
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6 mb-6">          <div>            <div class="flex items-center space-x-3 mb-2">              <span v-if="reviewData.code" class="px-3 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-xs font-mono font-bold tracking-wider">
-                {{ reviewData.code }}              </span>
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold"                    :class="getStatusBadgeClass(reviewData.status)">
-                {{ reviewData.status }}              </span>
+
+    <!-- =========================================================
+         MAIN CONTENT
+    ========================================================== -->
+    <div
+      v-else-if="reviewData"
+      class="space-y-7 pb-10"
+    >
+      <!-- =======================================================
+           REVIEWER IDENTITY
+      ======================================================== -->
+      <div
+        class="relative overflow-hidden rounded-[24px] p-5 sm:p-6 text-white shadow-[0_16px_40px_rgba(41,51,49,0.12)]"
+        style="background: linear-gradient(135deg, #293331 0%, #3d4b48 100%)"
+      >
+        <div
+          class="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-[#86BCBD]/15"
+        ></div>
+
+        <div
+          class="absolute -right-5 -bottom-20 w-40 h-40 rounded-full bg-[#F7E49B]/10"
+        ></div>
+
+        <div
+          class="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5"
+        >
+          <div class="flex items-center gap-4 min-w-0">
+            <div
+              class="w-12 h-12 shrink-0 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-xl"
+            >
+              👤
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-{{ reviewData.name }}</h1>
-            <p v-if="reviewData.brand" class="text-sm font-semibold text-slate-500 mt-1">
-              Brand: <span class="text-slate-700">
-{{ reviewData.brand.name }}</span>
-            </p>
-          </div>
-          <div class="flex flex-wrap gap-4 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100">            <div>              <span class="block text-xs text-slate-400 font-medium">
-Periode Promosi</span>
-              <span class="font-semibold text-slate-800">
-{{ formatDate(reviewData.start_date) }}  -  {{ formatDate(reviewData.end_date) }}</span>
-            </div>
-          </div>
-        </div>
-        <div v-if="reviewData.description" class="text-slate-600 text-sm leading-relaxed">          <p class="font-semibold text-slate-800 text-xs uppercase tracking-wider mb-1">
-Deskripsi Promosi</p>
-          <p>
-{{ reviewData.description }}</p>
-        </div>
-      </div>
-      <!-- 2. Informasi Campaign -->      <div v-if="reviewData.campaign" class="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-2xl p-6 border border-blue-100/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">        <div class="flex items-center space-x-3">          <div class="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">[Target]</div>
-          <div>            <span class="text-xs font-bold uppercase tracking-wider text-blue-600">
-Terhubung ke Campaign</span>
-            <h3 class="text-lg font-bold text-slate-900">
-{{ reviewData.campaign.name }}</h3>
-          </div>
-        </div>
-        <div class="text-xs sm:text-sm text-slate-600 font-medium bg-white px-3.5 py-2 rounded-xl border border-blue-100 shadow-2xs">
-          Periode Campaign: <span class="font-bold text-slate-800">
-{{ formatDate(reviewData.campaign?.start_date) }} - {{ formatDate(reviewData.campaign?.end_date) }}</span>
-        </div>
-      </div>
-      <!-- 3. Ringkasan Approval (Summary Card - Refinement #5) -->      <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">          <div>            <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2">              
-        <span>📊</span>
-        <span>Ringkasan Persetujuan (Approval Summary)</span>
-            </h2>
-            <p class="text-xs text-slate-500 mt-0.5">
-Pantau status persetujuan untuk seluruh wujud produk dalam promosi ini</p>
-          </div>
-          <div class="flex items-center space-x-4 text-xs text-slate-500 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-100">            <div>              <span class="block text-slate-400">
-Terakhir Diperbarui:</span>
-              <span class="font-semibold text-slate-700">
-{{ formatDateTime(reviewData.approval_summary.last_updated) }}</span>
-            </div>
-            <div v-if="reviewData.approval_summary.last_reviewer" class="border-l border-slate-200 pl-4">              <span class="block text-slate-400">
-Reviewer Terakhir:</span>
-              <span class="font-semibold text-slate-700">
-{{ reviewData.approval_summary.last_reviewer.name }}</span>
+
+            <div class="min-w-0">
+              <p
+                class="text-[10px] uppercase font-bold tracking-[0.18em] text-[#86BCBD]"
+              >
+                Reviewer Identity
+              </p>
+
+              <p class="text-sm sm:text-base font-bold mt-1 truncate">
+                {{
+                  isIdentified()
+                    ? `${reviewerIdentity.name} (${reviewerIdentity.position || 'Reviewer'})`
+                    : 'Belum Teridentifikasi'
+                }}
+              </p>
+
+              <p
+                v-if="reviewerIdentity.companyName"
+                class="text-xs text-[#F7E49B] mt-0.5"
+              >
+                {{ reviewerIdentity.companyName }}
+              </p>
             </div>
           </div>
-        </div>
-        <!-- Metric Grid -->        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">          <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 text-center">            <span class="block text-2xl sm:text-3xl font-extrabold text-slate-800">
-{{ reviewData.approval_summary.total_variants }}</span>
-            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1 block">
-Total Variant</span>
-          </div>
-          <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 text-center">            <span class="block text-2xl sm:text-3xl font-extrabold text-emerald-600">
-{{ reviewData.approval_summary.approved }}</span>
-            <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider mt-1 block">
-Approved</span>
-          </div>
-          <div class="bg-amber-50 rounded-xl p-4 border border-amber-100 text-center">            <span class="block text-2xl sm:text-3xl font-extrabold text-amber-600">
-{{ reviewData.approval_summary.pending }}</span>
-            <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider mt-1 block">
-Pending</span>
-          </div>
-          <div class="bg-rose-50 rounded-xl p-4 border border-rose-100 text-center">            <span class="block text-2xl sm:text-3xl font-extrabold text-rose-600">
-{{ reviewData.approval_summary.rejected }}</span>
-            <span class="text-xs font-semibold text-rose-600 uppercase tracking-wider mt-1 block">
-Rejected</span>
-          </div>
-        </div>
-        <!-- Progress Bar -->        <div>          <div class="flex items-center justify-between text-xs font-bold text-slate-700 mb-1.5">            <span>
-Tingkat Penyelesaian Review (Completion Rate)</span>
+
+          <button
+            @click="openIdentityModal(true)"
+            class="relative px-4 py-2.5 bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-bold rounded-xl border border-white/15 transition flex items-center gap-2"
+          >
             <span>
-{{ reviewData.approval_summary.completion_percentage }}%</span>
-          </div>
-          <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">            <div class="bg-emerald-500 h-full transition-all duration-500"                 :style="{ width: `${(reviewData.approval_summary.approved / Math.max(reviewData.approval_summary.total_variants, 1)) * 100}%` }"                 title="Approved">
-</div>
-            <div class="bg-rose-500 h-full transition-all duration-500"                 :style="{ width: `${(reviewData.approval_summary.rejected / Math.max(reviewData.approval_summary.total_variants, 1)) * 100}%` }"                 title="Rejected">
-</div>
-          </div>
-        </div>
-      </div>
-      <!-- 4. Daftar Variant & Approval Workflow -->      <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">          <div>            <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2">              <span>🛍️</span>
-              <span>
-Daftar Produk & Wujud Variant (Approval per Variant &amp; Batch)</span>
-            </h2>
-            <p class="text-xs text-slate-500 mt-0.5">
-Tinjau harga dan berikan persetujuan atau penolakan per item maupun secara batch.</p>
-          </div>
-          <button @click="showHistoryModal = true" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition flex items-center space-x-1.5">            <span>📜</span>
+              {{ isIdentified() ? 'Ubah Identitas' : 'Identifikasi Diri' }}
+            </span>
             <span>
-Riwayat Approval ({{ reviewData.approval_histories?.length || 0 }})</span>
+              <img
+                src="/images/pencil.webp"
+                alt="Statistics"
+                class="w-6 h-6 object-contain"
+              />
+            </span>
           </button>
         </div>
-        <!-- Batch Action Toolbar -->          <div>        <div v-if="reviewData.variants && reviewData.variants.length >
- 0" class="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl mb-4">          <div class="flex items-center space-x-2 text-xs font-bold text-slate-700">            <span>
-Pilih Variant: {{ selectedVariantIds.length }} dari {{ reviewData.variants.length }} terpilih</span>
-            <button v-if="selectedVariantIds.length >
- 0" @click="selectedVariantIds = []" class="text-blue-600 hover:underline text-2xs">
-(ResetPilihan)</button>
+      </div>
+
+      <!-- =======================================================
+           PROMOTION INFORMATION
+      ======================================================== -->
+      <div
+        class="relative overflow-hidden bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+      >
+        <div
+          class="absolute -right-20 -top-20 w-64 h-64 rounded-full bg-[#F7E49B]/20"
+        ></div>
+
+        <div
+          class="relative flex flex-col md:flex-row md:items-center justify-between gap-5 border-b border-[#EDF1EF] pb-6 mb-6"
+        >
+          <div>
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <span
+                v-if="reviewData.code"
+                class="px-3 py-1.5 rounded-lg bg-[#86BCBD]/15 text-[#315F60] border border-[#86BCBD]/30 text-xs font-mono font-bold tracking-wider"
+              >
+                {{ reviewData.code }}
+              </span>
+
+              <div class="relative">
+                <select
+                  v-if="reviewData"
+                  :value="reviewData.status"
+                  @change="handleStatusChange"
+                  :disabled="loading"
+                  class="appearance-none min-w-[180px] pl-4 pr-10 py-2 rounded-full text-[11px] font-bold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  :class="getStatusBadgeClass(reviewData.status)"
+                >
+                  <option
+                    v-for="status in availableStatusOptions"
+                    :key="status"
+                    :value="status"
+                  >
+                    {{ status }}
+                  </option>
+                </select>
+
+                <svg
+                  class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+
+            </div>
+
+            <h1
+              class="text-2xl sm:text-3xl font-extrabold text-[#293331] tracking-tight"
+            >
+              {{ reviewData.name }}
+            </h1>
+
+            <p
+              v-if="reviewData.brand"
+              class="text-sm text-[#788480] mt-2"
+            >
+              Brand:
+              <span class="font-bold text-[#293331]">
+                {{ reviewData.brand.name }}
+              </span>
+            </p>
           </div>
-          <div class="flex flex-wrap items-center gap-2">            <button @click="handleBatchAction('approve_selected')" :disabled="selectedVariantIds.length === 0 || batchLoading"                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg shadow-xs transition flex items-center space-x-1">              <span>
-✓ Setujui Terpilih ({{ selectedVariantIds.length }})</span>
+
+          <div
+            class="bg-[#F8FAF9] px-5 py-4 rounded-2xl border border-[#E3E9E6] min-w-fit"
+          >
+            <span
+              class="block text-[10px] uppercase tracking-wider font-bold text-[#899492] mb-1"
+            >
+              Periode Promosi
+            </span>
+
+            <span class="font-bold text-sm text-[#293331]">
+              {{ formatDate(reviewData.start_date) }}
+              <span class="text-[#BA5A5A] mx-1">→</span>
+              {{ formatDate(reviewData.end_date) }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          v-if="reviewData.description"
+          class="text-[#687572] text-sm leading-relaxed"
+        >
+          <p
+            class="font-bold text-[#293331] text-[10px] uppercase tracking-wider mb-2"
+          >
+            Deskripsi Promosi
+          </p>
+
+          <p>{{ reviewData.description }}</p>
+        </div>
+      </div>
+
+      <!-- =======================================================
+           CAMPAIGN
+      ======================================================== -->
+      <div
+        v-if="reviewData.campaign"
+        class="rounded-[22px] p-5 border border-[#86BCBD]/30 bg-[#86BCBD]/10 shadow-sm"
+      >
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
+          <div class="flex items-center gap-4">
+            <div
+              class="w-11 h-11 rounded-xl bg-[#86BCBD] text-[#293331] flex items-center justify-center font-bold text-lg shadow-sm"
+            >
+              🎯
+            </div>
+
+            <div>
+              <span
+                class="text-[10px] font-extrabold uppercase tracking-wider text-[#315F60]"
+              >
+                Terhubung ke Campaign
+              </span>
+
+              <h3 class="text-lg font-extrabold text-[#293331] mt-0.5">
+                {{ reviewData.campaign.name }}
+              </h3>
+            </div>
+          </div>
+
+          <div
+            class="text-xs sm:text-sm text-[#52605E] font-medium bg-white px-4 py-2.5 rounded-xl border border-[#86BCBD]/30"
+          >
+            Periode:
+            <span class="font-bold text-[#293331]">
+              {{ formatDate(reviewData.campaign?.start_date) }}
+              -
+              {{ formatDate(reviewData.campaign?.end_date) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- =======================================================
+           APPROVAL SUMMARY
+      ======================================================== -->
+      <div
+        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+      >
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
+        >
+          <div>
+            <h2
+              class="text-lg font-extrabold text-[#293331] flex items-center gap-2"
+            >
+            <span
+              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+            >
+              <img
+                src="/images/stat.webp"
+                alt="Statistics"
+                class="w-6 h-6 object-contain"
+              />
+            </span>
+              <span>Ringkasan Persetujuan</span>
+            </h2>
+
+            <p class="text-xs text-[#899492] mt-1">
+              Pantau status persetujuan seluruh variant produk
+            </p>
+          </div>
+
+          <div
+            class="flex items-center gap-4 text-xs text-[#687572] bg-[#F8FAF9] px-4 py-2.5 rounded-xl border border-[#E3E9E6]"
+          >
+            <div>
+              <span class="block text-[#899492] mb-0.5">
+                Terakhir Diperbarui
+              </span>
+
+              <span class="font-bold text-[#293331]">
+                {{ formatDateTime(reviewData.approval_summary.last_updated) }}
+              </span>
+            </div>
+
+            <div
+              v-if="reviewData.approval_summary.last_reviewer"
+              class="border-l border-[#DDE4E1] pl-4"
+            >
+              <span class="block text-[#899492] mb-0.5">
+                Reviewer Terakhir
+              </span>
+
+              <span class="font-bold text-[#293331]">
+                {{ reviewData.approval_summary.last_reviewer.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
+          <div
+            class="rounded-2xl p-5 border border-[#E3E9E6] bg-[#F8FAF9] text-center"
+          >
+            <span
+              class="block text-2xl sm:text-3xl font-extrabold text-[#293331]"
+            >
+              {{ reviewData.approval_summary.total_variants }}
+            </span>
+
+            <span
+              class="text-[10px] font-bold text-[#899492] uppercase tracking-wider mt-1 block"
+            >
+              Total Variant
+            </span>
+          </div>
+
+          <div
+            class="rounded-2xl p-5 border border-[#A4CE8B]/40 bg-[#A4CE8B]/15 text-center"
+          >
+            <span
+              class="block text-2xl sm:text-3xl font-extrabold text-[#426332]"
+            >
+              {{ reviewData.approval_summary.approved }}
+            </span>
+
+            <span
+              class="text-[10px] font-bold text-[#527842] uppercase tracking-wider mt-1 block"
+            >
+              Approved
+            </span>
+          </div>
+
+          <div
+            class="rounded-2xl p-5 border border-[#F7E49B]/70 bg-[#F7E49B]/30 text-center"
+          >
+            <span
+              class="block text-2xl sm:text-3xl font-extrabold text-[#79651A]"
+            >
+              {{ reviewData.approval_summary.pending }}
+            </span>
+
+            <span
+              class="text-[10px] font-bold text-[#79651A] uppercase tracking-wider mt-1 block"
+            >
+              Pending
+            </span>
+          </div>
+
+          <div
+            class="rounded-2xl p-5 border border-[#BA5A5A]/20 bg-[#BA5A5A]/10 text-center"
+          >
+            <span
+              class="block text-2xl sm:text-3xl font-extrabold text-[#BA5A5A]"
+            >
+              {{ reviewData.approval_summary.rejected }}
+            </span>
+
+            <span
+              class="text-[10px] font-bold text-[#BA5A5A] uppercase tracking-wider mt-1 block"
+            >
+              Rejected
+            </span>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div>
+          <div
+            class="flex items-center justify-between text-xs font-bold text-[#52605E] mb-2"
+          >
+            <span>Tingkat Penyelesaian Review</span>
+
+            <span class="text-[#BA5A5A]">
+              {{ reviewData.approval_summary.completion_percentage }}%
+            </span>
+          </div>
+
+          <div
+            class="w-full h-3 bg-[#EEF2F0] rounded-full overflow-hidden flex"
+          >
+            <div
+              class="bg-[#A4CE8B] h-full transition-all duration-500"
+              :style="{
+                width: `${(reviewData.approval_summary.approved / Math.max(reviewData.approval_summary.total_variants, 1)) * 100}%`
+              }"
+            ></div>
+
+            <div
+              class="bg-[#BA5A5A] h-full transition-all duration-500"
+              :style="{
+                width: `${(reviewData.approval_summary.rejected / Math.max(reviewData.approval_summary.total_variants, 1)) * 100}%`
+              }"
+            ></div>
+          </div>
+
+          <div class="flex items-center gap-4 mt-3 text-[10px] font-semibold">
+            <span class="flex items-center gap-1.5 text-[#527842]">
+              <span class="w-2 h-2 rounded-full bg-[#A4CE8B]"></span>
+              Approved
+            </span>
+
+            <span class="flex items-center gap-1.5 text-[#BA5A5A]">
+              <span class="w-2 h-2 rounded-full bg-[#BA5A5A]"></span>
+              Rejected
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- =======================================================
+           VARIANTS & APPROVAL
+      ======================================================== -->
+      <div
+        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+      >
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
+        >
+          <div>
+            <h2
+              class="text-lg font-extrabold text-[#293331] flex items-center gap-2"
+            >
+            <span
+              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+            >
+              <img
+                src="/images/product.webp"
+                alt="Statistics"
+                class="w-6 h-6 object-contain"
+              />
+            </span>
+
+              <span>Daftar Produk & Variant</span>
+            </h2>
+
+            <p class="text-xs text-[#899492] mt-1">
+              Tinjau harga dan berikan persetujuan per item maupun batch.
+            </p>
+          </div>
+
+          <button
+            @click="showHistoryModal = true"
+            class="px-4 py-2.5 bg-[#F8FAF9] hover:bg-[#EEF2F0] text-[#52605E] font-bold rounded-xl text-xs transition flex items-center gap-2 border border-[#E3E9E6]"
+          >
+            <span>📜</span>
+            <span>
+              Riwayat Approval
+              ({{ reviewData.approval_histories?.length || 0 }})
+            </span>
+          </button>
+        </div>
+
+        <!-- Batch Toolbar -->
+        <div
+          v-if="reviewData.variants && reviewData.variants.length > 0"
+          class="flex flex-wrap items-center justify-between gap-4 p-4 bg-[#86BCBD]/10 border border-[#86BCBD]/25 rounded-2xl mb-5"
+        >
+          <div class="flex items-center gap-2 text-xs font-bold text-[#52605E]">
+            <span>
+              {{ selectedVariantIds.length }} dari
+              {{ reviewData.variants.length }} variant terpilih
+            </span>
+
+            <button
+              v-if="selectedVariantIds.length > 0"
+              @click="selectedVariantIds = []"
+              class="text-[#BA5A5A] hover:underline text-[10px]"
+            >
+              Reset
             </button>
-            <button @click="handleBatchAction('reject_selected')" :disabled="selectedVariantIds.length === 0 || batchLoading"                    class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-lg shadow-xs transition flex items-center space-x-1">              <span>
-✕ Tolak Terpilih ({{ selectedVariantIds.length }})</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              @click="handleBatchAction('approve_selected')"
+              :disabled="selectedVariantIds.length === 0 || batchLoading"
+              class="px-3.5 py-2 bg-[#A4CE8B] hover:bg-[#94C27A] disabled:bg-[#DDE4E1] text-[#304A27] font-bold text-xs rounded-xl transition"
+            >
+              ✓ Setujui Terpilih ({{ selectedVariantIds.length }})
             </button>
-            <span class="text-slate-300">|</span>
-            <button @click="handleBatchAction('approve_all')" :disabled="batchLoading"                    class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs rounded-lg transition flex items-center space-x-1">              <span>
-✨ Setujui Semua ({{ reviewData.variants.length }})</span>
+
+            <button
+              @click="handleBatchAction('reject_selected')"
+              :disabled="selectedVariantIds.length === 0 || batchLoading"
+              class="px-3.5 py-2 bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:bg-[#DDE4E1] text-white font-bold text-xs rounded-xl transition"
+            >
+              ✕ Tolak Terpilih ({{ selectedVariantIds.length }})
             </button>
-            <button @click="handleBatchAction('reject_all')" :disabled="batchLoading"                    class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 font-bold text-xs rounded-lg transition flex items-center space-x-1">              <span>
-⚠️ Tolak Semua ({{ reviewData.variants.length }})</span>
+
+            <span class="hidden sm:block text-[#B8C2BF]">|</span>
+
+            <button
+              @click="handleBatchAction('approve_all')"
+              :disabled="batchLoading"
+              class="px-3.5 py-2 bg-white hover:bg-[#F2F7EF] text-[#527842] border border-[#A4CE8B] font-bold text-xs rounded-xl transition"
+            >
+              ✓ Setujui Semua
+            </button>
+
+            <button
+              @click="handleBatchAction('reject_all')"
+              :disabled="batchLoading"
+              class="px-3.5 py-2 bg-white hover:bg-[#FCF1F1] text-[#BA5A5A] border border-[#D99A9A] font-bold text-xs rounded-xl transition"
+            >
+              ✕ Tolak Semua
             </button>
           </div>
         </div>
-        </div>
-        <!-- Table / List -->        <div class="overflow-x-auto">          <table class="w-full text-left border-collapse">            <thead>              <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">                <th class="py-3.5 px-3 w-10 text-center rounded-l-xl">                  <input type="checkbox" @change="toggleSelectAll" :checked="isAllSelected" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />                </th>
-                <th class="py-3.5 px-4">
-Produk & Variant</th>
-                <th class="py-3.5 px-4">
-Harga Normal</th>
-                <th class="py-3.5 px-4">
-Harga Promo</th>
-                <th class="py-3.5 px-4">
-Stok / Limit</th>
-                <th class="py-3.5 px-4 text-center">
-Status</th>
-                <th class="py-3.5 px-4 text-right rounded-r-xl">
-Aksi Review</th>
+
+        <!-- Table -->
+        <div class="overflow-x-auto rounded-2xl border border-[#E3E9E6]">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr
+                class="border-b border-[#E3E9E6] text-[10px] font-extrabold text-[#899492] uppercase tracking-wider bg-[#F8FAF9]"
+              >
+                <th class="py-4 px-3 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    @change="toggleSelectAll"
+                    :checked="isAllSelected"
+                    class="rounded border-[#C7D0CD] text-[#BA5A5A] focus:ring-[#BA5A5A]"
+                  />
+                </th>
+
+                <th class="py-4 px-4">Produk & Variant</th>
+                <th class="py-4 px-4">Harga Normal</th>
+                <th class="py-4 px-4">Harga Promo</th>
+                <th class="py-4 px-4">Stok / Limit</th>
+                <th class="py-4 px-4 text-center">Status</th>
+                <th class="py-4 px-4 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 text-sm">              <tr v-for="variant in reviewData.variants" :key="variant.id" class="hover:bg-slate-50/60 transition" :class="{'bg-blue-50/30': selectedVariantIds.includes(variant.id)}">                <td class="py-4 px-3 text-center">                  <input type="checkbox" :value="variant.id" v-model="selectedVariantIds" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />                </td>
-                <td class="py-4 px-4 font-medium text-slate-900">                  <span class="block font-bold">
-{{ variant.product_name }}</span>
-                  <span class="text-xs text-slate-500">
-{{ variant.name }} <span v-if="variant.sku" class="font-mono text-slate-400">
-({{ variant.sku }})</span>
 
-</span>
-                  <p v-if="variant.rejection_notes" class="mt-1 text-xs text-rose-600 bg-rose-50 px-2 py-1 rounded border border-rose-100 inline-block font-normal">
-                    ⚠️ Catatan: {{ variant.rejection_notes }}                  </p>
+            <tbody class="divide-y divide-[#EDF1EF] text-sm">
+              <tr
+                v-for="variant in reviewData.variants"
+                :key="variant.id"
+                class="hover:bg-[#F8FAF9] transition"
+                :class="{
+                  'bg-[#86BCBD]/10': selectedVariantIds.includes(variant.id)
+                }"
+              >
+                <td class="py-4 px-3 text-center">
+                  <input
+                    type="checkbox"
+                    :value="variant.id"
+                    v-model="selectedVariantIds"
+                    class="rounded border-[#C7D0CD] text-[#BA5A5A] focus:ring-[#BA5A5A]"
+                  />
                 </td>
-                <td class="py-4 px-4 font-mono text-slate-600">
-{{ formatCurrency(variant.normal_price_snapshot) }}</td>
-                <td class="py-4 px-4 font-mono font-bold text-emerald-600">                  <span class="block">
-{{ formatCurrency(variant.campaign_price) }}</span>
-                  <span v-if="variant.discount_price < variant.normal_price_snapshot" class="text-xs font-normal text-slate-400 line-through">
-                    {{ formatCurrency(variant.discount_price) }}                  </span>
+
+                <td class="py-4 px-4">
+                  <span class="block font-bold text-[#293331]">
+                    {{ variant.product_name }}
+                  </span>
+
+                  <span class="text-xs text-[#899492]">
+                    {{ variant.name }}
+
+                    <span
+                      v-if="variant.sku"
+                      class="font-mono text-[#A5AEAB]"
+                    >
+                      ({{ variant.sku }})
+                    </span>
+                  </span>
+
+                  <p
+                    v-if="variant.rejection_notes"
+                    class="mt-2 text-xs text-[#BA5A5A] bg-[#BA5A5A]/10 px-2.5 py-1.5 rounded-lg border border-[#BA5A5A]/20 inline-block"
+                  >
+                    ⚠️ Catatan: {{ variant.rejection_notes }}
+                  </p>
                 </td>
-                <td class="py-4 px-4 text-slate-600">                  <span class="block">
-{{ variant.promotion_stock }} unit</span>
-                  <span v-if="variant.purchase_limit >
- 0" class="text-xs text-slate-400">
-Max {{ variant.purchase_limit }}/user</span>
+
+                <td class="py-4 px-4 font-mono text-[#687572]">
+                  {{ formatCurrency(variant.normal_price_snapshot) }}
                 </td>
-                <td class="py-4 px-4 text-center">                  <span class="px-2.5 py-1 rounded-full text-xs font-semibold inline-block"                        :class="getVariantStatusBadgeClass(variant.approval_status)">
-                    {{ variant.approval_status }}                  </span>
+
+                <td class="py-4 px-4 font-mono font-bold text-[#527842]">
+                  <span class="block">
+                    {{ formatCurrency(variant.campaign_price) }}
+                  </span>
+
+                  <span
+                    v-if="variant.discount_price < variant.normal_price_snapshot"
+                    class="text-xs font-normal text-[#A5AEAB] line-through"
+                  >
+                    {{ formatCurrency(variant.discount_price) }}
+                  </span>
                 </td>
-                <td class="py-4 px-4 text-right">                  <div class="inline-flex flex-wrap justify-end items-center gap-2">
-                    <button @click="handleAction('Approved', variant)"                            class="px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap"                            :class="variant.approval_status === 'Approved' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'">
-                      ✓ {{ variant.approval_status === 'Approved' ? 'Disetujui' : 'Approve' }}                    </button>
-                    <button @click="handleAction('Rejected', variant)"                            class="px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap"                            :class="variant.approval_status === 'Rejected' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'">
-                      ✕ {{ variant.approval_status === 'Rejected' ? 'Ditolak' : 'Reject' }}                    </button>
+
+                <td class="py-4 px-4 text-[#687572]">
+                  <span class="block font-medium">
+                    {{ variant.promotion_stock }} unit
+                  </span>
+
+                  <span
+                    v-if="variant.purchase_limit > 0"
+                    class="text-xs text-[#A5AEAB]"
+                  >
+                    Max {{ variant.purchase_limit }}/user
+                  </span>
+                </td>
+
+                <td class="py-4 px-4 text-center">
+                  <span
+                    class="px-2.5 py-1 rounded-full text-[10px] font-bold inline-block"
+                    :class="getVariantStatusBadgeClass(variant.approval_status)"
+                  >
+                    {{ variant.approval_status }}
+                  </span>
+                </td>
+
+                <td class="py-4 px-4 text-right">
+                  <div class="inline-flex flex-wrap justify-end gap-2">
+                    <button
+                      @click="handleAction('Approved', variant)"
+                      class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+                      :class="
+                        variant.approval_status === 'Approved'
+                          ? 'bg-[#A4CE8B] text-[#304A27]'
+                          : 'bg-[#A4CE8B]/15 text-[#527842] hover:bg-[#A4CE8B]/30 border border-[#A4CE8B]/50'
+                      "
+                    >
+                      ✓
+                      {{
+                        variant.approval_status === 'Approved'
+                          ? 'Disetujui'
+                          : 'Approve'
+                      }}
+                    </button>
+
+                    <button
+                      @click="handleAction('Rejected', variant)"
+                      class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
+                      :class="
+                        variant.approval_status === 'Rejected'
+                          ? 'bg-[#BA5A5A] text-white'
+                          : 'bg-[#BA5A5A]/10 text-[#BA5A5A] hover:bg-[#BA5A5A]/15 border border-[#BA5A5A]/25'
+                      "
+                    >
+                      ✕
+                      {{
+                        variant.approval_status === 'Rejected'
+                          ? 'Ditolak'
+                          : 'Reject'
+                      }}
+                    </button>
                   </div>
                 </td>
               </tr>
-              <tr v-if="reviewData.variants.length === 0">                <td colspan="7" class="py-8 text-center text-slate-400">
-Belum ada wujud variant yang dipetakan ke promosi ini.</td>
+
+              <tr v-if="reviewData.variants.length === 0">
+                <td
+                  colspan="7"
+                  class="py-12 text-center text-[#899492] text-sm"
+                >
+                  Belum ada variant yang dipetakan ke promosi ini.
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <!-- 4b. Daftar Task Campaign (Refinement #10) -->      <div v-if="reviewData.type === 'Campaign' && reviewData.tasks && reviewData.tasks.length" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">        <div class="flex items-center justify-between gap-4 mb-6">          <div>            <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2">              <span>📋</span>
-              <span>Daftar Task Campaign</span>
-            </h2>
-            <p class="text-xs text-slate-500 mt-0.5">Perbarui status pengerjaan dan kirim hasil visual jika dibutuhkan.</p>
-          </div>
+
+      <!-- =======================================================
+           CAMPAIGN TASKS
+      ======================================================== -->
+      <div
+        v-if="
+          reviewData.type === 'Campaign' &&
+          reviewData.tasks &&
+          reviewData.tasks.length
+        "
+        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+      >
+        <div class="mb-6">
+          <h2
+            class="text-lg font-extrabold text-[#293331] flex items-center gap-2"
+          >
+            <span
+              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+            >
+              <img
+                src="/images/task.webp"
+                alt="Statistics"
+                class="w-6 h-6 object-contain"
+              />
+            </span>
+            <span>Daftar Task Campaign</span>
+          </h2>
+
+          <p class="text-xs text-[#899492] mt-1">
+            Perbarui status pengerjaan dan kirim hasil visual jika dibutuhkan.
+          </p>
         </div>
-        <div class="space-y-4">          <div v-for="task in reviewData.tasks" :key="task.id" class="rounded-xl bg-slate-50 border border-slate-200/80 p-4">            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">              <div class="min-w-0 flex-1">                <p class="font-bold text-slate-800 flex items-center space-x-2 flex-wrap gap-y-1">                  <span>{{ task.name }}</span>
-                  <span v-if="task.requires_visual" class="px-2 py-0.5 rounded text-2xs font-extrabold uppercase tracking-wider bg-purple-100 text-purple-700 border border-purple-200">Butuh Visual</span>
-                  <span class="px-2.5 py-0.5 rounded-full text-2xs font-semibold inline-block" :class="getTaskStatusBadgeClass(task.progress_status)">
+
+        <div class="space-y-4">
+          <div
+            v-for="task in reviewData.tasks"
+            :key="task.id"
+            class="rounded-2xl bg-[#F8FAF9] border border-[#E3E9E6] p-5"
+          >
+            <div
+              class="flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+            >
+              <div class="min-w-0 flex-1">
+                <p
+                  class="font-bold text-[#293331] flex items-center gap-2 flex-wrap"
+                >
+                  <span>{{ task.name }}</span>
+
+                  <span
+                    v-if="task.requires_visual"
+                    class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-[#86BCBD]/20 text-[#315F60] border border-[#86BCBD]/30"
+                  >
+                    Butuh Visual
+                  </span>
+
+                  <span
+                    class="px-2.5 py-0.5 rounded-full text-[9px] font-bold"
+                    :class="getTaskStatusBadgeClass(task.progress_status)"
+                  >
                     {{ getTaskStatusLabel(task.progress_status) }}
                   </span>
                 </p>
-                <p class="text-xs text-slate-500 mt-1">                  <span v-if="task.visual_type" class="font-medium">Jenis Visual: {{ task.visual_type }}</span>
-                  <span v-if="task.deadline" class="ml-2">⏰ Deadline: {{ formatDate(task.deadline) }}</span>
+
+                <p class="text-xs text-[#899492] mt-2">
+                  <span
+                    v-if="task.visual_type"
+                    class="font-medium"
+                  >
+                    Jenis Visual: {{ task.visual_type }}
+                  </span>
+
+                  <span
+                    v-if="task.deadline"
+                    class="ml-2"
+                  >
+                    ⏰ Deadline: {{ formatDate(task.deadline) }}
+                  </span>
                 </p>
-                <p v-if="task.creative_brief" class="text-xs text-slate-500 mt-1">Brief: {{ Array.isArray(task.creative_brief) ? task.creative_brief.join(', ') : task.creative_brief }}</p>
+
+                <p
+                  v-if="task.creative_brief"
+                  class="text-xs text-[#687572] mt-2 leading-relaxed"
+                >
+                  Brief:
+                  {{
+                    Array.isArray(task.creative_brief)
+                      ? task.creative_brief.join(', ')
+                      : task.creative_brief
+                  }}
+                </p>
               </div>
+
               <div class="shrink-0 flex flex-wrap items-center gap-2">
-                <button type="button" @click="handleTaskStatus(task, 'Completed')"
-                    :disabled="taskBusy(task.id) || taskIsLocked(task) || (task.requires_visual && !hasVisualForTask(task))"
-                    :class="task.progress_status === 'Completed' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'"
-                    class="px-3 py-1.5 rounded-lg text-xs font-bold transition border"
-                    :title="taskIsLocked(task) ? 'Task sudah selesai dan dikunci' : (task.requires_visual ? (hasVisualForTask(task) ? 'Siap dikirim' : 'Butuh visual sebelum menandai selesai') : '')">
+                <button
+                  type="button"
+                  @click="handleTaskStatus(task, 'Completed')"
+                  :disabled="
+                    taskBusy(task.id) ||
+                    taskIsLocked(task) ||
+                    (task.requires_visual && !hasVisualForTask(task))
+                  "
+                  :class="
+                    task.progress_status === 'Completed'
+                      ? 'bg-[#A4CE8B] text-[#304A27] border-[#A4CE8B]'
+                      : 'bg-[#A4CE8B]/15 text-[#527842] border-[#A4CE8B]/50 hover:bg-[#A4CE8B]/30'
+                  "
+                  class="px-3.5 py-2 rounded-xl text-xs font-bold transition border"
+                >
                   ✓ Sudah Dikerjakan
                 </button>
-                <button type="button" @click="handleTaskStatus(task, 'NotStarted')"
-                    :disabled="taskBusy(task.id) || taskIsLocked(task)"
-                    :class="task.progress_status === 'NotStarted' ? 'bg-slate-600 text-white border-slate-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'"
-                    class="px-3 py-1.5 rounded-lg text-xs font-bold transition border"
-                    :title="taskIsLocked(task) ? 'Task sudah selesai dan dikunci' : ''">
+
+                <button
+                  type="button"
+                  @click="handleTaskStatus(task, 'NotStarted')"
+                  :disabled="taskBusy(task.id) || taskIsLocked(task)"
+                  :class="
+                    task.progress_status === 'NotStarted'
+                      ? 'bg-[#293331] text-white border-[#293331]'
+                      : 'bg-white text-[#687572] border-[#D5DDDA] hover:bg-[#F1F4F3]'
+                  "
+                  class="px-3.5 py-2 rounded-xl text-xs font-bold transition border"
+                >
                   ✕ Belum Dikerjakan
                 </button>
               </div>
             </div>
-            <!-- Visual submission area (only when requires_visual) -->            <div v-if="task.requires_visual" class="mt-3 pt-3 border-t border-slate-200/70">              <!-- Already submitted summary -->              <div v-if="task.visual_link || task.visual_file_url" class="mb-3 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">                <p class="font-bold mb-1">Visual sudah dikirim:  {{ task.visual_file_name || 'via Link' }}</p>
-                <p v-if="task.visual_link" class="mb-1">🔗 Link: <a :href="task.visual_link" target="_blank" rel="noopener" class="underline">{{ task.visual_link }}</a></p>
-                <p v-if="task.visual_file_url" class="mb-1">🖼️ File: <a :href="task.visual_file_url" target="_blank" rel="noopener" class="underline">{{ task.visual_file_name || 'Lihat gambar' }}</a></p>
-                <p v-if="task.submitted_by" class="text-emerald-600">Dikirim oleh: {{ task.submitted_by }} {{ task.submitted_at ? ('pada ' + formatDateTime(task.submitted_at)) : '' }}</p>
-                <div v-if="task.visual_file_url || task.visual_link" class="mt-2">
-                  <button @click="handleDeleteVisual(task)" class="px-3 py-1 text-rose-700 bg-rose-50 border border-rose-200 rounded-lg text-xs hover:bg-rose-100">Hapus Visual</button>
-                </div>
+
+            <!-- Visual Submission -->
+            <div
+              v-if="task.requires_visual"
+              class="mt-5 pt-5 border-t border-[#E3E9E6]"
+            >
+              <div
+                v-if="task.visual_link || task.visual_file_url"
+                class="mb-4 p-4 rounded-xl bg-[#A4CE8B]/15 border border-[#A4CE8B]/40 text-xs text-[#426332]"
+              >
+                <p class="font-bold mb-2">
+                  Visual sudah dikirim:
+                  {{ task.visual_file_name || 'via Link' }}
+                </p>
+
+                <p
+                  v-if="task.visual_link"
+                  class="mb-1"
+                >
+                  🔗 Link:
+                  <a
+                    :href="task.visual_link"
+                    target="_blank"
+                    rel="noopener"
+                    class="underline font-semibold"
+                  >
+                    {{ task.visual_link }}
+                  </a>
+                </p>
+
+                <p
+                  v-if="task.visual_file_url"
+                  class="mb-1"
+                >
+                  🖼️ File:
+                  <a
+                    :href="task.visual_file_url"
+                    target="_blank"
+                    rel="noopener"
+                    class="underline font-semibold"
+                  >
+                    {{ task.visual_file_name || 'Lihat gambar' }}
+                  </a>
+                </p>
+
+                <p
+                  v-if="task.submitted_by"
+                  class="text-[#527842] mt-2"
+                >
+                  Dikirim oleh: {{ task.submitted_by }}
+                  {{
+                    task.submitted_at
+                      ? 'pada ' + formatDateTime(task.submitted_at)
+                      : ''
+                  }}
+                </p>
+
+                <button
+                  v-if="task.visual_file_url || task.visual_link"
+                  @click="handleDeleteVisual(task)"
+                  class="mt-3 px-3 py-1.5 text-[#BA5A5A] bg-white border border-[#BA5A5A]/25 rounded-lg text-xs font-bold hover:bg-[#BA5A5A]/10"
+                >
+                  Hapus Visual
+                </button>
               </div>
+
               <form @submit.prevent="handleSubmitVisual(task)">
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Link Google Drive / URL Visual:</label>
-                <input type="url" v-model="taskVisualLinks[task.id]" placeholder="https://drive.google.com/..." class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 mb-2" />
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Atau unggah gambar (JPG/PNG/WEBP/GIF, maks 5MB):</label>
-                <input type="file" accept="image/*" @change="(e) => onTaskFileChange(e, task.id)" ref="" class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-50 file:px-3 file:py-1.5 file:text-amber-700 file:font-semibold mb-2" />
-                <div v-if="taskFileErrors[task.id]" class="text-rose-600 text-xs mb-2">{{ taskFileErrors[task.id] }}</div>
-                <div v-if="taskVisualPreviews[task.id]" class="mb-2">
-                  <img :src="taskVisualPreviews[task.id]" alt="Preview" class="max-h-40 rounded-md border border-slate-200" />
+                <label
+                  class="block text-xs font-bold text-[#52605E] mb-1.5"
+                >
+                  Link Google Drive / URL Visual
+                </label>
+
+                <input
+                  type="url"
+                  v-model="taskVisualLinks[task.id]"
+                  placeholder="https://drive.google.com/..."
+                  class="w-full rounded-xl border border-[#D5DDDA] bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/30 focus:border-[#86BCBD] mb-3"
+                />
+
+                <label
+                  class="block text-xs font-bold text-[#52605E] mb-1.5"
+                >
+                  Atau unggah gambar
+                  <span class="font-normal text-[#899492]">
+                    (JPG/PNG/WEBP/GIF, maks 5MB)
+                  </span>
+                </label>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  @change="(e) => onTaskFileChange(e, task.id)"
+                  class="block w-full text-sm text-[#687572] file:mr-3 file:rounded-lg file:border-0 file:bg-[#F7E49B]/40 file:px-3 file:py-2 file:text-[#79651A] file:font-bold mb-3"
+                />
+
+                <div
+                  v-if="taskFileErrors[task.id]"
+                  class="text-[#BA5A5A] text-xs mb-2"
+                >
+                  {{ taskFileErrors[task.id] }}
                 </div>
-                <button type="button" @click="handleSubmitVisual(task)" :disabled="taskBusy(task.id) || (!taskVisualFiles[task.id] && !taskVisualLinks[task.id]) || taskFileErrors[task.id]" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs transition">
+
+                <div
+                  v-if="taskVisualPreviews[task.id]"
+                  class="mb-3"
+                >
+                  <img
+                    :src="taskVisualPreviews[task.id]"
+                    alt="Preview"
+                    class="max-h-40 rounded-xl border border-[#D5DDDA]"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  @click="handleSubmitVisual(task)"
+                  :disabled="
+                    taskBusy(task.id) ||
+                    (!taskVisualFiles[task.id] &&
+                      !taskVisualLinks[task.id]) ||
+                    taskFileErrors[task.id]
+                  "
+                  class="px-4 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs transition shadow-sm"
+                >
                   Kirim Visual
                 </button>
               </form>
@@ -274,210 +1012,706 @@ Belum ada wujud variant yang dipetakan ke promosi ini.</td>
           </div>
         </div>
       </div>
-      <!-- 5. Komentar (Discussion Thread - Refinement #7) -->      <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">        <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2 mb-6">          <span>💬</span>
-          <span>
-Diskusi & Komentar (Comments)</span>
-          <span class="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-{{ reviewData.comments?.length || 0 }}</span>
-        </h2>
-        <!-- Comment List -->        <div class="space-y-4 mb-6 max-h-96 overflow-y-auto pr-2">          <div v-for="comment in reviewData.comments" :key="comment.id" class="p-4 rounded-xl border transition"               :class="comment.author_type === 'Admin' ? 'bg-blue-50/40 border-blue-100 ml-4 sm:ml-8' : 'bg-slate-50 border-slate-200/80 mr-4 sm:mr-8'">            <div class="flex items-center justify-between mb-2">              <div class="flex items-center space-x-2">                <!-- Author Type Badge (Refinement #7) -->                <span class="px-2 py-0.5 rounded text-2xs font-extrabold uppercase tracking-wider"                      :class="comment.author_type === 'Admin' ? 'bg-blue-600 text-white' : 'bg-amber-500 text-white'">
-                  {{ comment.author_type }}                </span>
-                <span class="font-bold text-slate-800 text-sm">
-{{ comment.author_name }}</span>
-                <span v-if="comment.author_position" class="text-xs text-slate-400">
-({{ comment.author_position }})</span>
-              </div>
-              <span class="text-xs text-slate-400 font-medium">
-{{ formatDateTime(comment.created_at) }}</span>
-            </div>
-            <p class="text-sm text-slate-700 whitespace-pre-line leading-relaxed">
-{{ comment.body }}</p>
-          </div>
-          <div v-if="!reviewData.comments || reviewData.comments.length === 0" class="py-8 text-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-sm">
-            Belum ada komentar diskusi. Mulai percakapan atau tinggalkan catatan untuk tim Admin di bawah ini.          </div>
-        </div>
-        <!-- Post Comment Form -->        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80">          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-Tulis Komentar atau Feedback</label>
-          <textarea v-model="newCommentBody" rows="3"                    placeholder="Tulis pesan, pertanyaan, atau catatan kolaborasi untuk Admin..."                    class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 mb-3">
-</textarea>
-          <div class="flex items-center justify-between">            <span class="text-xs text-slate-400">
-              Posting sebagai: <strong class="text-slate-600">
-{{ isIdentified() ? reviewerIdentity.name : 'Belum Teridentifikasi' }}</strong>
+
+      <!-- =======================================================
+           COMMENTS
+      ======================================================== -->
+      <div
+        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+      >
+        <h2
+          class="text-lg font-extrabold text-[#293331] flex items-center gap-2 mb-6"
+        >
+            <span
+              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+            >
+              <img
+                src="/images/chat.webp"
+                alt="Statistics"
+                class="w-6 h-6 object-contain"
+              />
             </span>
-            <button @click="handlePostComment" :disabled="!newCommentBody.trim() || loading"                    class="px-5 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition shadow-sm">
-              Kirim Komentar 🚀            </button>
-          </div>
-        </div>
-      </div>
-      <!-- 6. Timeline (Unified Activity Timeline - Refinement #8) -->      <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">        <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2 mb-6">          <span>⏱️</span>
-          <span>
-Kronologi Aktivitas (Activity Timeline)</span>
+
+          <span>Diskusi & Komentar</span>
+
+          <span
+            class="text-[10px] font-bold text-[#687572] bg-[#F1F4F3] px-2 py-1 rounded-full"
+          >
+            {{ reviewData.comments?.length || 0 }}
+          </span>
         </h2>
-        <div class="relative pl-6 border-l-2 border-slate-200 space-y-6">          <div v-for="log in latestTimeline" :key="log.id" class="relative group">            <div class="absolute -left-[31px] top-0 w-3.5 h-3.5 rounded-full border-2 border-white shadow-xs"                 :class="log.actor_type === 'Admin' ? 'bg-blue-500' : 'bg-amber-500'">
-</div>
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-1">              <span class="font-bold text-slate-800 text-sm flex items-center space-x-2">                <span>
-{{ log.action }}</span>
-                <span class="px-1.5 py-0.5 rounded text-3xs font-extrabold uppercase"                      :class="log.actor_type === 'Admin' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'">
-                  {{ log.actor_type }}                </span>
+
+        <div
+          class="space-y-4 mb-6 max-h-96 overflow-y-auto pr-2"
+        >
+          <div
+            v-for="comment in reviewData.comments"
+            :key="comment.id"
+            class="p-4 rounded-2xl border transition"
+            :class="
+              comment.author_type === 'Admin'
+                ? 'bg-[#86BCBD]/10 border-[#86BCBD]/25 ml-4 sm:ml-8'
+                : 'bg-[#F8FAF9] border-[#E3E9E6] mr-4 sm:mr-8'
+            "
+          >
+            <div
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2"
+            >
+              <div class="flex items-center gap-2 flex-wrap">
+                <span
+                  class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider"
+                  :class="
+                    comment.author_type === 'Admin'
+                      ? 'bg-[#86BCBD] text-[#293331]'
+                      : 'bg-[#F7E49B] text-[#79651A]'
+                  "
+                >
+                  {{ comment.author_type }}
+                </span>
+
+                <span class="font-bold text-[#293331] text-sm">
+                  {{ comment.author_name }}
+                </span>
+
+                <span
+                  v-if="comment.author_position"
+                  class="text-xs text-[#899492]"
+                >
+                  ({{ comment.author_position }})
+                </span>
+              </div>
+
+              <span class="text-xs text-[#A0AAA7]">
+                {{ formatDateTime(comment.created_at) }}
               </span>
-              <span class="text-xs text-slate-400">
-{{ formatDateTime(log.created_at) }}</span>
             </div>
-            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-{{ log.description }}</p>
-            <p v-if="log.actor_name" class="text-xs text-slate-400 mt-0.5">
-Oleh: {{ log.actor_name }} <span v-if="log.actor_position">
-({{ log.actor_position }})</span>
 
-</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- MODAL: Reviewer Identification (Refinement #3) -->    <div v-if="showIdentityModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">          <h3 class="text-lg font-bold text-slate-900">            {{ isIdentified() ? 'Ubah Identitas Reviewer Brand' : 'Identifikasi Reviewer Brand' }}
-          </h3>
-          <button @click="showIdentityModal = false" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
-        </div>
-        <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-          Sebelum melakukan aksi review (Approve/Reject) atau komentar, mohon lengkapi identitas Anda untuk pencatatan jejak audit (Audit Trail) SunTrack.        </p>
-        <form @submit.prevent="submitIdentityForm" class="space-y-4">          <div>            <label class="block text-xs font-bold text-slate-700 mb-1">
-Nama Lengkap <span class="text-rose-500">*</span>
-
-</label>
-            <input v-model="identityForm.name" type="text" required placeholder="Contoh: Budi Santoso"                   class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />          </div>
-          <div>            <label class="block text-xs font-bold text-slate-700 mb-1">
-Jabatan / Posisi <span class="text-slate-400 font-normal">
-(Opsional)</span>
-
-</label>
-            <input v-model="identityForm.position" type="text" placeholder="Contoh: Brand Manager / Marketing Director"                   class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />          </div>
-          <div>            <label class="block text-xs font-bold text-slate-700 mb-1">
-Nama Perusahaan / Brand
-</label>
-            <input v-model="identityForm.companyName" type="text" placeholder="Nama brand otomatis" disabled class="w-full rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm text-slate-500 focus:outline-none" />          </div>
-          <div>            <label class="block text-xs font-bold text-slate-700 mb-1">
-Nomor WhatsApp <span class="text-slate-400 font-normal">
-(Opsional)</span>
-
-</label>
-            <input v-model="identityForm.whatsappNumber" type="text" placeholder="Contoh: 081234567890"                   class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />          </div>
-          <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">            <button type="button" @click="showIdentityModal = false" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
-              Batal            </button>
-            <button type="submit" :disabled="!identityForm.name.trim() || loading" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold transition shadow-sm">
-              Simpan Identitas & Lanjutkan            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <!-- MODAL: Rejection Notes (Mandatory - Refinement #4) -->    <div v-if="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">          <h3 class="text-lg font-bold text-rose-600 flex items-center space-x-2">            <span>⚠️</span>
-            <span>
-Tolak Variant Produk</span>
-          </h3>
-          <button @click="showRejectModal = false" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
-        </div>
-        <p class="text-xs text-slate-600 mb-3">
-          Anda akan menolak variant: <strong class="text-slate-900">
-{{ selectedVariant?.product_name }} - {{ selectedVariant?.name }}</strong>
-.        </p>
-        <form @submit.prevent="confirmRejectVariant" class="space-y-4">          <div>            <label class="block text-xs font-bold text-slate-700 mb-1">
-Catatan Penolakan (Wajib Diisi) <span class="text-rose-500">*</span>
-
-</label>
-            <textarea v-model="rejectionNoteInput" rows="3" required placeholder="Jelaskan alasan penolakan, misalnya harga promo terlalu rendah atau stok tidak mencukupi..."                      class="w-full rounded-xl border border-rose-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
-</textarea>
-            <p class="text-2xs text-rose-500 mt-1">
-Alasan penolakan wajib disertakan agar Admin dapat menindaklanjuti.</p>
-          </div>
-          <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">            <button type="button" @click="showRejectModal = false" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
-              Batal            </button>
-            <button type="submit" :disabled="!rejectionNoteInput.trim() || loading" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-xs font-bold transition shadow-sm">
-              Konfirmasi Penolakan            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <!-- MODAL: Approval History (Refinement #6) -->    <div v-if="showHistoryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">      <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[85vh] flex flex-col">        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">          <h3 class="text-lg font-bold text-slate-900 flex items-center space-x-2">            <span>📜</span>
-            <span>
-Riwayat Approval (Immutable History)</span>
-          </h3>
-          <button @click="showHistoryModal = false" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
-        </div>
-        <div class="flex-grow overflow-y-auto space-y-3 pr-2">          <div v-for="hist in reviewData.approval_histories" :key="hist.id" class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm">            <div class="flex items-center justify-between font-bold text-slate-800 mb-1">              <span>
-{{ hist.variant_name }} <span v-if="hist.variant_sku" class="font-mono font-normal text-slate-400">
-({{ hist.variant_sku }})</span>
-
-</span>
-              <span class="text-xs text-slate-400 font-normal">
-{{ formatDateTime(hist.created_at) }}</span>
-            </div>
-            <div class="flex items-center space-x-2 my-2 text-xs">              <span class="px-2 py-0.5 rounded bg-slate-200 font-semibold text-slate-700">
-{{ hist.old_status }}</span>
-              <span>➝</span>
-              <span class="px-2 py-0.5 rounded font-bold"                    :class="hist.new_status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
-                {{ hist.new_status }}              </span>
-            </div>
-            <p v-if="hist.notes" class="text-xs text-rose-700 bg-rose-50 p-2 rounded border border-rose-100 mt-2">
-              📝 Catatan: {{ hist.notes }}            </p>
-            <p class="text-2xs text-slate-400 mt-2 border-t border-slate-200/60 pt-1.5">
-              Reviewer: <strong>
-{{ hist.reviewer_name }}</strong>
- <span v-if="hist.reviewer_position">
-({{ hist.reviewer_position }})</span>
- <span v-if="hist.company_name">
-• {{ hist.company_name }}</span>
+            <p
+              class="text-sm text-[#52605E] whitespace-pre-line leading-relaxed"
+            >
+              {{ comment.body }}
             </p>
           </div>
-          <div v-if="!reviewData.approval_histories || reviewData.approval_histories.length === 0" class="py-8 text-center text-slate-400 text-sm">
-            Belum ada riwayat perubahan status approval.          </div>
+
+          <div
+            v-if="!reviewData.comments || reviewData.comments.length === 0"
+            class="py-10 text-center bg-[#F8FAF9] rounded-2xl border border-dashed border-[#D5DDDA] text-[#899492] text-sm"
+          >
+            Belum ada komentar diskusi.
+          </div>
         </div>
-        <div class="pt-4 border-t border-slate-100 text-right mt-4">          <button @click="showHistoryModal = false" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition">
-              Tutup Riwayat          </button>
+
+        <div
+          class="bg-[#F8FAF9] rounded-2xl p-4 border border-[#E3E9E6]"
+        >
+          <label
+            class="block text-[10px] font-extrabold uppercase tracking-wider text-[#687572] mb-2"
+          >
+            Tulis Komentar atau Feedback
+          </label>
+
+          <textarea
+            v-model="newCommentBody"
+            rows="3"
+            placeholder="Tulis pesan, pertanyaan, atau catatan kolaborasi untuk Admin..."
+            class="w-full rounded-xl border border-[#D5DDDA] bg-white p-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD] mb-3"
+          ></textarea>
+
+          <div
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+          >
+            <span class="text-xs text-[#899492]">
+              Posting sebagai:
+              <strong class="text-[#293331]">
+                {{
+                  isIdentified()
+                    ? reviewerIdentity.name
+                    : 'Belum Teridentifikasi'
+                }}
+              </strong>
+            </span>
+
+            <button
+              @click="handlePostComment"
+              :disabled="!newCommentBody.trim() || loading"
+              class="px-5 py-2.5 bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:opacity-50 text-white font-bold text-xs rounded-xl transition shadow-sm"
+            >
+              Kirim Komentar
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Toasts -->
-      <div class="fixed top-4 right-4 z-50 flex flex-col items-end space-y-2">
-        <transition-group name="toast" tag="div">
-          <div v-for="t in toasts" :key="t.id" class="max-w-sm w-full px-4 py-2 rounded-lg shadow-md flex items-start gap-3" :class="{
-            'bg-emerald-500 text-white': t.type === 'success',
-            'bg-rose-500 text-white': t.type === 'error',
-            'bg-slate-800 text-white': t.type === 'info'
-          }">
-            <div class="flex-1 text-sm" v-html="t.message"></div>
-            <button @click="removeToast(t.id)" class="text-white opacity-90 hover:opacity-100">✕</button>
-          </div>
-        </transition-group>
-      </div>
+      <!-- =======================================================
+           ACTIVITY TIMELINE
+      ======================================================== -->
+      <div
+        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+      >
+        <h2
+          class="text-lg font-extrabold text-[#293331] flex items-center gap-2 mb-7"
+        >
+            <span
+              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+            >
+              <img
+                src="/images/activity.webp"
+                alt="Statistics"
+                class="w-6 h-6 object-contain"
+              />
+            </span>
 
-      <!-- Confirm Modal -->
-      <div v-if="confirmModal.show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
-          <div class="mb-4 text-lg font-bold">Konfirmasi</div>
-          <p class="text-sm text-slate-600 mb-4">{{ confirmModal.message }}</p>
-          <div class="flex justify-end space-x-3">
-            <button @click="confirmCancel" class="px-4 py-2 rounded-lg border">Batal</button>
-            <button @click="confirmOk" class="px-4 py-2 rounded-lg bg-amber-500 text-white">Ya</button>
+          <span>Kronologi Aktivitas</span>
+        </h2>
+
+        <div
+          class="relative pl-7 border-l-2 border-[#E3E9E6] space-y-7"
+        >
+          <div
+            v-for="log in latestTimeline"
+            :key="log.id"
+            class="relative group"
+          >
+            <div
+              class="absolute -left-[35px] top-0 w-4 h-4 rounded-full border-[3px] border-white shadow-sm"
+              :class="
+                log.actor_type === 'Admin'
+                  ? 'bg-[#86BCBD]'
+                  : 'bg-[#F7E49B]'
+              "
+            ></div>
+
+            <div
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1"
+            >
+              <span
+                class="font-bold text-[#293331] text-sm flex items-center gap-2"
+              >
+                <span>{{ log.action }}</span>
+
+                <span
+                  class="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase"
+                  :class="
+                    log.actor_type === 'Admin'
+                      ? 'bg-[#86BCBD]/20 text-[#315F60]'
+                      : 'bg-[#F7E49B]/50 text-[#79651A]'
+                  "
+                >
+                  {{ log.actor_type }}
+                </span>
+              </span>
+
+              <span class="text-xs text-[#A0AAA7]">
+                {{ formatDateTime(log.created_at) }}
+              </span>
+            </div>
+
+            <p
+              class="text-xs sm:text-sm text-[#687572] leading-relaxed"
+            >
+              {{ log.description }}
+            </p>
+
+            <p
+              v-if="log.actor_name"
+              class="text-xs text-[#A0AAA7] mt-1"
+            >
+              Oleh: {{ log.actor_name }}
+
+              <span v-if="log.actor_position">
+                ({{ log.actor_position }})
+              </span>
+            </p>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Prompt Modal -->
-      <div v-if="promptModal.show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
-          <div class="mb-4 text-lg font-bold">{{ promptModal.title || 'Masukkan' }}</div>
-          <p v-if="promptModal.message" class="text-sm text-slate-600 mb-3">{{ promptModal.message }}</p>
-          <input v-model="promptModal.value" type="text" class="w-full rounded-lg border px-3 py-2 mb-4" />
-          <div class="flex justify-end space-x-3">
-            <button @click="promptCancel" class="px-4 py-2 rounded-lg border">Batal</button>
-            <button @click="promptOk" class="px-4 py-2 rounded-lg bg-amber-500 text-white">Kirim</button>
+    <!-- =========================================================
+         IDENTITY MODAL
+    ========================================================== -->
+    <div
+      v-if="showIdentityModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-[26px] max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#E3E9E6]"
+      >
+        <div
+          class="flex items-center justify-between pb-4 border-b border-[#EDF1EF] mb-5"
+        >
+          <div>
+            <span
+              class="text-[10px] font-extrabold uppercase tracking-wider text-[#BA5A5A]"
+            >
+              Reviewer
+            </span>
+
+            <h3 class="text-lg font-extrabold text-[#293331] mt-1">
+              {{
+                isIdentified()
+                  ? 'Ubah Identitas Reviewer'
+                  : 'Identifikasi Reviewer'
+              }}
+            </h3>
+          </div>
+
+          <button
+            @click="showIdentityModal = false"
+            class="w-8 h-8 rounded-lg text-[#899492] hover:bg-[#F1F4F3] hover:text-[#293331] transition"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p class="text-xs text-[#687572] mb-5 leading-relaxed">
+          Lengkapi identitas Anda untuk pencatatan audit trail pada setiap
+          aktivitas review.
+        </p>
+
+        <form
+          @submit.prevent="submitIdentityForm"
+          class="space-y-4"
+        >
+          <div>
+            <label
+              class="block text-xs font-bold text-[#52605E] mb-1.5"
+            >
+              Nama Lengkap
+              <span class="text-[#BA5A5A]">*</span>
+            </label>
+
+            <input
+              v-model="identityForm.name"
+              type="text"
+              required
+              placeholder="Contoh: Budi Santoso"
+              class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD]"
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-xs font-bold text-[#52605E] mb-1.5"
+            >
+              Jabatan / Posisi
+              <span class="text-[#899492] font-normal">
+                (Opsional)
+              </span>
+            </label>
+
+            <input
+              v-model="identityForm.position"
+              type="text"
+              placeholder="Brand Manager / Marketing Director"
+              class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD]"
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-xs font-bold text-[#52605E] mb-1.5"
+            >
+              Nama Perusahaan / Brand
+            </label>
+
+            <input
+              v-model="identityForm.companyName"
+              type="text"
+              disabled
+              class="w-full rounded-xl border border-[#E3E9E6] bg-[#F1F4F3] px-3.5 py-2.5 text-sm text-[#899492]"
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-xs font-bold text-[#52605E] mb-1.5"
+            >
+              Nomor WhatsApp
+              <span class="text-[#899492] font-normal">
+                (Opsional)
+              </span>
+            </label>
+
+            <input
+              v-model="identityForm.whatsappNumber"
+              type="text"
+              placeholder="081234567890"
+              class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD]"
+            />
+          </div>
+
+          <div
+            class="flex items-center justify-end gap-3 pt-4 border-t border-[#EDF1EF]"
+          >
+            <button
+              type="button"
+              @click="showIdentityModal = false"
+              class="px-4 py-2.5 rounded-xl border border-[#D5DDDA] text-xs font-bold text-[#687572] hover:bg-[#F8FAF9] transition"
+            >
+              Batal
+            </button>
+
+            <button
+              type="submit"
+              :disabled="!identityForm.name.trim() || loading"
+              class="px-5 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:opacity-50 text-white text-xs font-bold transition shadow-sm"
+            >
+              Simpan Identitas
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         REJECTION MODAL
+    ========================================================== -->
+    <div
+      v-if="showRejectModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-[26px] max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#E3E9E6]"
+      >
+        <div
+          class="flex items-center justify-between pb-4 border-b border-[#EDF1EF] mb-5"
+        >
+          <div>
+            <span
+              class="text-[10px] font-extrabold uppercase tracking-wider text-[#BA5A5A]"
+            >
+              Approval Review
+            </span>
+
+            <h3 class="text-lg font-extrabold text-[#BA5A5A] mt-1">
+              Tolak Variant Produk
+            </h3>
+          </div>
+
+          <button
+            @click="showRejectModal = false"
+            class="w-8 h-8 rounded-lg text-[#899492] hover:bg-[#F1F4F3]"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p class="text-xs text-[#687572] mb-4">
+          Anda akan menolak variant:
+          <strong class="text-[#293331]">
+            {{ selectedVariant?.product_name }} -
+            {{ selectedVariant?.name }}
+          </strong>
+        </p>
+
+        <form
+          @submit.prevent="executeReject"
+          class="space-y-4"
+        >
+          <div>
+            <label
+              class="block text-xs font-bold text-[#52605E] mb-1.5"
+            >
+              Catatan Penolakan
+              <span class="text-[#BA5A5A]">*</span>
+            </label>
+
+            <textarea
+              v-model="rejectionNoteInput"
+              rows="4"
+              required
+              placeholder="Jelaskan alasan penolakan..."
+              class="w-full rounded-xl border border-[#D99A9A] p-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#BA5A5A]/20 focus:border-[#BA5A5A]"
+            ></textarea>
+
+            <p class="text-[10px] text-[#BA5A5A] mt-1.5">
+              Alasan penolakan wajib disertakan.
+            </p>
+          </div>
+
+          <div
+            class="flex items-center justify-end gap-3 pt-4 border-t border-[#EDF1EF]"
+          >
+            <button
+              type="button"
+              @click="showRejectModal = false"
+              class="px-4 py-2.5 rounded-xl border border-[#D5DDDA] text-xs font-bold text-[#687572]"
+            >
+              Batal
+            </button>
+
+            <button
+              type="submit"
+              :disabled="!rejectionNoteInput.trim() || loading"
+              class="px-5 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:opacity-50 text-white text-xs font-bold transition"
+            >
+              Konfirmasi Penolakan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         APPROVAL HISTORY
+    ========================================================== -->
+    <div
+      v-if="showHistoryModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-[26px] max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-[#E3E9E6] max-h-[85vh] flex flex-col"
+      >
+        <div
+          class="flex items-center justify-between pb-4 border-b border-[#EDF1EF] mb-4"
+        >
+          <div>
+            <span
+              class="text-[10px] font-extrabold uppercase tracking-wider text-[#86BCBD]"
+            >
+              Audit Trail
+            </span>
+
+            <h3 class="text-lg font-extrabold text-[#293331] mt-1">
+              Riwayat Approval
+            </h3>
+          </div>
+
+          <button
+            @click="showHistoryModal = false"
+            class="w-8 h-8 rounded-lg text-[#899492] hover:bg-[#F1F4F3]"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div
+          class="flex-grow overflow-y-auto space-y-3 pr-2"
+        >
+          <div
+            v-for="hist in reviewData.approval_histories"
+            :key="hist.id"
+            class="p-4 rounded-2xl bg-[#F8FAF9] border border-[#E3E9E6]"
+          >
+            <div
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 font-bold text-[#293331] mb-2"
+            >
+              <span>
+                {{ hist.variant_name }}
+
+                <span
+                  v-if="hist.variant_sku"
+                  class="font-mono font-normal text-[#A0AAA7]"
+                >
+                  ({{ hist.variant_sku }})
+                </span>
+              </span>
+
+              <span class="text-xs text-[#A0AAA7] font-normal">
+                {{ formatDateTime(hist.created_at) }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2 my-3 text-xs">
+              <span
+                class="px-2.5 py-1 rounded-lg bg-[#E7ECEA] font-semibold text-[#687572]"
+              >
+                {{ hist.old_status }}
+              </span>
+
+              <span class="text-[#A0AAA7]">→</span>
+
+              <span
+                class="px-2.5 py-1 rounded-lg font-bold"
+                :class="
+                  hist.new_status === 'Approved'
+                    ? 'bg-[#A4CE8B]/25 text-[#426332]'
+                    : 'bg-[#BA5A5A]/10 text-[#BA5A5A]'
+                "
+              >
+                {{ hist.new_status }}
+              </span>
+            </div>
+
+            <p
+              v-if="hist.notes"
+              class="text-xs text-[#BA5A5A] bg-[#BA5A5A]/10 p-3 rounded-xl border border-[#BA5A5A]/20"
+            >
+              📝 {{ hist.notes }}
+            </p>
+
+            <p
+              class="text-[10px] text-[#899492] mt-3 border-t border-[#E3E9E6] pt-2"
+            >
+              Reviewer:
+              <strong class="text-[#52605E]">
+                {{ hist.reviewer_name }}
+              </strong>
+
+              <span v-if="hist.reviewer_position">
+                ({{ hist.reviewer_position }})
+              </span>
+
+              <span v-if="hist.company_name">
+                • {{ hist.company_name }}
+              </span>
+            </p>
+          </div>
+
+          <div
+            v-if="
+              !reviewData.approval_histories ||
+              reviewData.approval_histories.length === 0
+            "
+            class="py-10 text-center text-[#899492] text-sm"
+          >
+            Belum ada riwayat perubahan status approval.
           </div>
         </div>
+
+        <div
+          class="pt-4 border-t border-[#EDF1EF] text-right mt-4"
+        >
+          <button
+            @click="showHistoryModal = false"
+            class="px-5 py-2.5 bg-[#293331] hover:bg-[#3D4B48] text-white font-bold text-xs rounded-xl transition"
+          >
+            Tutup Riwayat
+          </button>
+        </div>
       </div>
+    </div>
 
-    </PublicLayout>
+    <!-- =========================================================
+         TOASTS
+    ========================================================== -->
+    <div
+      class="fixed top-4 right-4 z-[60] flex flex-col items-end gap-2 max-w-sm w-[calc(100%-2rem)]"
+    >
+      <transition-group name="toast" tag="div">
+        <div
+          v-for="t in toasts"
+          :key="t.id"
+          class="w-full px-4 py-3 rounded-xl shadow-lg flex items-start gap-3 border"
+          :class="{
+            'bg-[#A4CE8B] text-[#304A27] border-[#94C27A]':
+              t.type === 'success',
+            'bg-[#BA5A5A] text-white border-[#A84F4F]':
+              t.type === 'error',
+            'bg-[#293331] text-white border-[#3D4B48]':
+              t.type === 'info'
+          }"
+        >
+          <div
+            class="flex-1 text-sm"
+            v-html="t.message"
+          ></div>
 
-  </template>
+          <button
+            @click="removeToast(t.id)"
+            class="opacity-70 hover:opacity-100"
+          >
+            ✕
+          </button>
+        </div>
+      </transition-group>
+    </div>
+
+    <!-- =========================================================
+         CONFIRM MODAL
+    ========================================================== -->
+    <div
+      v-if="confirmModal.show"
+      class="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-[#E3E9E6]"
+      >
+        <div
+          class="w-10 h-10 rounded-xl bg-[#F7E49B]/40 flex items-center justify-center mb-4"
+        >
+          ?
+        </div>
+
+        <div class="text-lg font-extrabold text-[#293331] mb-2">
+          Konfirmasi
+        </div>
+
+        <p class="text-sm text-[#687572] mb-6 leading-relaxed">
+          {{ confirmModal.message }}
+        </p>
+
+        <div class="flex justify-end gap-3">
+          <button
+            @click="confirmCancel"
+            class="px-4 py-2.5 rounded-xl border border-[#D5DDDA] text-xs font-bold text-[#687572] hover:bg-[#F8FAF9]"
+          >
+            Batal
+          </button>
+
+          <button
+            @click="confirmOk"
+            class="px-5 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] text-white text-xs font-bold"
+          >
+            Ya, Lanjutkan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         PROMPT MODAL
+    ========================================================== -->
+    <div
+      v-if="promptModal.show"
+      class="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-[#E3E9E6]"
+      >
+        <div
+          class="w-10 h-10 rounded-xl bg-[#F7E49B]/40 flex items-center justify-center mb-4"
+        >
+          ✎
+        </div>
+
+        <div class="text-lg font-extrabold text-[#293331] mb-2">
+          {{ promptModal.title || 'Masukkan' }}
+        </div>
+
+        <p
+          v-if="promptModal.message"
+          class="text-sm text-[#687572] mb-4"
+        >
+          {{ promptModal.message }}
+        </p>
+
+        <input
+          v-model="promptModal.value"
+          type="text"
+          class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD]"
+        />
+
+        <div class="flex justify-end gap-3">
+          <button
+            @click="promptCancel"
+            class="px-4 py-2.5 rounded-xl border border-[#D5DDDA] text-xs font-bold text-[#687572]"
+          >
+            Batal
+          </button>
+
+          <button
+            @click="promptOk"
+            class="px-5 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] text-white text-xs font-bold"
+          >
+            Kirim
+          </button>
+        </div>
+      </div>
+    </div>
+  </PublicLayout>
+</template>
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
@@ -498,6 +1732,7 @@ const {
   isIdentified,
   saveIdentity,
   fetchReviewData,
+  updateReviewStatus,
   submitApproval,
   submitBatchApproval,
   submitComment,
@@ -523,6 +1758,44 @@ const taskVisualPreviews = ref({});
 const taskFileErrors = ref({});
 
 const taskBusy = (taskId) => taskBusyIds.value.has(taskId);
+
+const handleStatusChange = async (event) => {
+  const newStatus = event.target.value;
+
+  if (!reviewData.value) return;
+
+  const oldStatus = reviewData.value.status;
+
+  if (newStatus === oldStatus) return;
+
+  try {
+    loading.value = true;
+
+    await updateReviewStatus(token, newStatus);
+
+    // Ambil ulang data dari database
+    await fetchReviewData(token);
+
+    showToast(
+      'success',
+      `Status berhasil diubah menjadi <strong>${newStatus}</strong>.`
+    );
+  } catch (err) {
+    console.error('handleStatusChange error:', err);
+
+    // Kembalikan ke data database
+    await fetchReviewData(token);
+
+    showToast(
+      'error',
+      err.response?.data?.message ||
+      err.message ||
+      'Gagal mengubah status.'
+    );
+  } finally {
+    loading.value = false;
+  }
+};
 
 const handleTaskStatus = async (task, status) => {
   if (!isIdentified()) {
@@ -925,16 +2198,48 @@ const formatCurrency = (val) => {
   }).format(val);
 };
 
+const statusOptions = [
+  // 'Draft',
+  // 'Active',
+  'Approved',
+  'Partially Approved',
+  'Rejected',
+  // 'Completed',
+];
+
+const availableStatusOptions = computed(() => {
+  const currentStatus = reviewData.value?.status;
+
+  if (
+    currentStatus &&
+    !statusOptions.includes(currentStatus)
+  ) {
+    return [currentStatus, ...statusOptions];
+  }
+
+  return statusOptions;
+});
+
 const getStatusBadgeClass = (status) => {
   switch (status) {
     case 'Approved':
-      return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
-    case 'Partially Approved':
-      return 'bg-blue-100 text-blue-800 border border-blue-200';
+    case 'Completed':
+      return 'bg-[#A4CE8B]/25 text-[#3F6935] border-[#A4CE8B]';
+
     case 'Rejected':
-      return 'bg-rose-100 text-rose-800 border border-rose-200';
+      return 'bg-[#BA5A5A]/10 text-[#9B4141] border-[#BA5A5A]/40';
+
+    case 'Partially Approved':
+      return 'bg-[#F7E49B]/40 text-[#806A19] border-[#F7E49B]';
+
+    case 'Active':
+      return 'bg-[#86BCBD]/20 text-[#356B6C] border-[#86BCBD]';
+
+    case 'Draft':
+      return 'bg-[#F7E49B]/40 text-[#806A19] border-[#F7E49B]';
+
     default:
-      return 'bg-amber-100 text-amber-800 border border-amber-200';
+      return 'bg-slate-100 text-slate-700 border-slate-200';
   }
 };
 
@@ -974,5 +2279,6 @@ const getVariantStatusBadgeClass = (status) => {
       return 'bg-amber-100 text-amber-800';
   }
 };
+
 </script>
 

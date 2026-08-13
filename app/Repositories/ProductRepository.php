@@ -14,12 +14,12 @@ class ProductRepository extends BaseRepository
     /**
      * Get paginated products filtered by company and optional search/status/brand_id criteria.
      */
-    public function getFilteredPaginated(int $companyId, array $filters = [], int $perPage = 15)
+    public function getFilteredPaginated(?string $companyId = null, array $filters = [], int $perPage = 15)
     {
         $query = $this->newQuery()
             ->with('brand')
             ->withCount('variants')
-            ->whereHas('brand', fn($q) => $q->where('company_id', $companyId));
+            ->when($companyId !== null, fn($q) => $q->whereHas('brand', fn($b) => $b->where('company_id', $companyId)));
 
         if (!empty($filters['search'])) {
             $s = $filters['search'];

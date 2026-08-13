@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('code', 100);
             $table->unique(['brand_id', 'code']);
             $table->timestamps();
-            
+            $table->softDeletes();
         });
     }
 
@@ -24,4 +24,3 @@ return new class extends Migration
         Schema::dropIfExists('products');
     }
 };
-

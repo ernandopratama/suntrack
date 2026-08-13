@@ -25,8 +25,10 @@ class UserController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $users = $this->repository->getFilteredPaginated(
-            companyId: (int) $request->user()->company_id,
+            companyId: $user->hasRole('Super Admin') ? null : $user->company_id,
             filters: $request->only(['search']),
             perPage: (int) $request->get('per_page', 15)
         );
@@ -73,7 +75,7 @@ class UserController extends Controller
 
     public function show(User $user): JsonResponse
     {
-        if ($user->company_id !== request()->user()->company_id) {
+        if (! request()->user()->hasRole('Super Admin') && $user->company_id !== request()->user()->company_id) {
             return $this->error('Unauthorized.', [], 403);
         }
 
@@ -86,7 +88,7 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
-        if ($user->company_id !== request()->user()->company_id) {
+        if (! request()->user()->hasRole('Super Admin') && $user->company_id !== request()->user()->company_id) {
             return $this->error('Unauthorized.', [], 403);
         }
 
@@ -118,7 +120,7 @@ class UserController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
-        if ($user->company_id !== request()->user()->company_id) {
+        if (! request()->user()->hasRole('Super Admin') && $user->company_id !== request()->user()->company_id) {
             return $this->error('Unauthorized.', [], 403);
         }
 

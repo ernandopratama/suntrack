@@ -18,10 +18,10 @@ class CampaignRepository extends BaseRepository
      *
      * @param array<string, mixed> $filters
      */
-    public function getFilteredPaginated(int $companyId, array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function getFilteredPaginated(?string $companyId = null, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = $this->newQuery()->with('pic')
-            ->whereHas('brand', fn($q) => $q->where('company_id', $companyId));
+            ->when($companyId !== null, fn($q) => $q->whereHas('brand', fn($b) => $b->where('company_id', $companyId)));
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];

@@ -30,8 +30,10 @@ class PromotionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $promotions = $this->repository->getFilteredPaginated(
-            companyId: (int) $request->user()->company_id,
+            companyId: $user->hasRole('Super Admin') ? null : $user->company_id,
             filters: $request->only(['search', 'status', 'campaign_id']),
             perPage: (int) $request->get('per_page', 15)
         );
@@ -237,6 +239,9 @@ class PromotionController extends Controller
      */
     private function isAccessible(Promotion $promotion, Request $request): bool
     {
+        if ($request->user()->hasRole('Super Admin')) {
+            return true;
+        }
         return $promotion->brand->company_id === $request->user()->company_id;
     }
 }

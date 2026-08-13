@@ -15,11 +15,12 @@ export function useUsers() {
             const response = await api.get('/admin/users', { params });
             if (response.data.success) {
                 users.value = response.data.data.users.data;
+                const meta = response.data.data.users.meta || {};
                 pagination.value = {
-                    current_page: response.data.data.users.current_page || 1,
-                    last_page: response.data.data.users.last_page || 1,
-                    total: response.data.data.users.total || 0,
-                    per_page: response.data.data.users.per_page || 15,
+                    current_page: meta.current_page || 1,
+                    last_page: meta.last_page || 1,
+                    total: meta.total || 0,
+                    per_page: meta.per_page || 15,
                 };
             }
         } catch (e) {

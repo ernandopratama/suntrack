@@ -15,11 +15,12 @@ export function useBrands() {
             const response = await api.get('/admin/brands', { params });
             if (response.data.success) {
                 brands.value = response.data.data.brands.data;
+                const meta = response.data.data.brands.meta || {};
                 pagination.value = {
-                    current_page: response.data.data.brands.current_page || 1,
-                    last_page: response.data.data.brands.last_page || 1,
-                    total: response.data.data.brands.total || 0,
-                    per_page: response.data.data.brands.per_page || 15,
+                    current_page: meta.current_page || 1,
+                    last_page: meta.last_page || 1,
+                    total: meta.total || 0,
+                    per_page: meta.per_page || 15,
                 };
             }
         } catch (e) {

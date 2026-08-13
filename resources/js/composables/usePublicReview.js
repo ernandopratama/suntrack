@@ -203,7 +203,23 @@ export function usePublicReview() {
         }
     };
 
-    return {
+    const updateReviewStatus = async (token, status) => {
+        try {
+            const response = await axios.patch(
+            `/api/v1/public/reviews/${token}/status`,
+            {
+                status,
+            }
+            );
+
+            return response.data;
+        } catch (err) {
+            console.error('updateReviewStatus error:', err.response || err);
+            throw err;
+        }
+        };
+
+        return {
         loading,
         error,
         reviewData,
@@ -213,11 +229,14 @@ export function usePublicReview() {
         isIdentified,
         saveIdentity,
         fetchReviewData,
+
+        updateReviewStatus,
+
         submitApproval,
         submitBatchApproval,
         submitComment,
         updateTaskProgress,
         submitTaskVisual,
         deleteTaskVisual,
-    };
+        };
 }
