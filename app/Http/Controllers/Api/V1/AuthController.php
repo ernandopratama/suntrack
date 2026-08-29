@@ -19,10 +19,18 @@ class AuthController extends Controller
      */
     public function login(Request $request): JsonResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $data = $request->validate([
+            'login' => ['nullable', 'string', 'max:255', 'required_without:email'],
+            'email' => ['nullable', 'email', 'max:255', 'required_without:login'],
             'password' => ['required'],
         ]);
+
+        $identifier = trim($data['login'] ?? $data['email']);
+        $loginField = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $credentials = [
+            $loginField => $loginField === 'username' ? strtolower($identifier) : $identifier,
+            'password' => $data['password'],
+        ];
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
@@ -42,6 +50,7 @@ class AuthController extends Controller
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
+                    'username' => $user->username,
                     'email' => $user->email,
                     'company_id' => $user->company_id,
                 ]
@@ -87,6 +96,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
                 'company_id' => $user->company_id,
                 'roles' => $user->roles->pluck('name'),

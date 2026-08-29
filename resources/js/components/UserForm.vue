@@ -276,6 +276,50 @@
 
 
             <!-- ===================================================== -->
+            <!-- USERNAME -->
+            <!-- ===================================================== -->
+            <div v-if="form.type === 'admin'">
+                <label
+                    for="user-username"
+                    class="mb-1.5 block text-xs font-extrabold text-gray-800"
+                >
+                    Username
+                    <span class="text-rose-500">*</span>
+                </label>
+
+                <div class="relative">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fa-solid fa-at text-[11px] text-gray-400"></i>
+                    </div>
+
+                    <input
+                        id="user-username"
+                        v-model="form.username"
+                        type="text"
+                        required
+                        minlength="3"
+                        maxlength="50"
+                        autocomplete="username"
+                        placeholder="contoh: budi.santoso"
+                        class="block w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-xs lowercase text-gray-900 placeholder-gray-400 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+                    />
+                </div>
+
+                <p class="mt-1.5 text-[10px] text-gray-400">
+                    Gunakan huruf kecil, angka, titik, garis bawah, atau tanda hubung.
+                </p>
+
+                <p
+                    v-if="hasError('username')"
+                    class="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-rose-600"
+                >
+                    <i class="fa-solid fa-circle-exclamation text-[8px]"></i>
+                    {{ getError("username") }}
+                </p>
+            </div>
+
+
+            <!-- ===================================================== -->
             <!-- EMAIL -->
             <!-- ===================================================== -->
             <div v-if="form.type === 'admin'">
@@ -498,6 +542,7 @@ const isEdit = ref(false);
 const defaultForm = () => ({
     type: "admin",
     name: "",
+    username: "",
     email: "",
     password: "",
     company_id: authStore.user?.company_id || "",
@@ -517,6 +562,7 @@ watch(
 
             form.type = props.user.type || "admin";
             form.name = props.user.name;
+            form.username = props.user.username || "";
             form.email = props.user.email || "";
             form.password = "";
         } else {
@@ -552,6 +598,7 @@ const submit = async () => {
     };
 
     if (form.type === "admin") {
+        payload.username = form.username.trim().toLowerCase();
         payload.email = form.email;
 
         if (form.password) {

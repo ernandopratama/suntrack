@@ -1000,7 +1000,7 @@ onMounted(() => {
   font-size: 0.875rem;
   line-height: 1.25rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--ui-content-soft);
 }
 
 .settings-input {
@@ -1008,12 +1008,12 @@ onMounted(() => {
   width: 100%;
   margin-top: 0.375rem;
   border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
-  background-color: #ffffff;
+  border: 1px solid var(--ui-border);
+  background-color: var(--ui-surface);
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
-  color: #1e293b;
+  color: var(--ui-content);
   outline: none;
   transition:
     border-color 150ms ease,
@@ -1032,14 +1032,14 @@ onMounted(() => {
 
 .settings-input:disabled {
   cursor: not-allowed;
-  background-color: #f8fafc;
-  color: #94a3b8;
+  background-color: var(--ui-surface-muted);
+  color: var(--ui-content-muted);
 }
 
 .settings-help {
   margin-top: 0.375rem;
   font-size: 0.75rem;
   line-height: 1.25rem;
-  color: #94a3b8;
+  color: var(--ui-content-muted);
 }
 </style>

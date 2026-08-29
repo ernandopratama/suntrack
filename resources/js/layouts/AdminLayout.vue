@@ -1,6 +1,6 @@
 ```vue
 <template>
-  <div class="h-screen flex overflow-hidden bg-slate-50">
+  <div class="h-screen flex overflow-hidden bg-page text-content">
 
     <!-- Mobile Backdrop -->
     <div
@@ -30,7 +30,7 @@
 
     <!-- Sidebar -->
     <aside
-      class="fixed inset-y-0 left-0 z-40 flex flex-col border-r border-slate-200 bg-white transition-all duration-300"
+      class="fixed inset-y-0 left-0 z-40 flex flex-col border-r border-default bg-surface transition-all duration-300"
       :class="
         sidebarOpen
           ? 'w-64 translate-x-0'
@@ -57,8 +57,7 @@
 
         <span
           v-if="sidebarOpen"
-          class="text-xl font-bold tracking-tight whitespace-nowrap"
-          style="color: #293681"
+          class="whitespace-nowrap text-xl font-bold tracking-tight text-brand-strong"
         >
           SunTrack
         </span>
@@ -465,13 +464,11 @@
       </nav>
 
       <!-- User -->
-      <div
-        v-if="sidebarOpen"
-        class="flex-shrink-0 border-t border-slate-100 p-4"
-      >
+      <div class="flex-shrink-0 border-t border-default p-4">
         <div
+          v-if="sidebarOpen"
           class="rounded-2xl p-3"
-          style="background: #f4fafa"
+          style="background: var(--ui-surface-muted)"
         >
           <div class="flex items-center">
 
@@ -491,25 +488,24 @@
             <!-- User Info -->
             <div class="ml-3 min-w-0 flex-1 overflow-hidden">
               <p
-                class="truncate text-sm font-semibold"
-                style="color: #293681"
+                class="truncate text-sm font-semibold text-content"
               >
                 {{ authStore.user?.name || 'Administrator' }}
               </p>
 
               <button
                 @click="handleLogout"
-                class="mt-0.5 text-xs font-medium text-slate-400 transition hover:text-red-500"
+                class="mt-0.5 text-xs font-medium text-content-muted transition hover:text-red-500"
               >
                 Logout
               </button>
             </div>
 
-            <i
-              class="fa-solid fa-ellipsis text-slate-300"
-            ></i>
+            <ThemeToggle />
           </div>
         </div>
+
+        <ThemeToggle v-else class="mx-auto" />
       </div>
 
     </aside>
@@ -522,7 +518,7 @@
 
       <!-- Mobile Header -->
       <header
-        class="flex h-16 flex-shrink-0 items-center justify-between border-b border-slate-100 bg-white px-5 md:hidden"
+        class="flex h-16 flex-shrink-0 items-center justify-between border-b border-default bg-surface px-5 md:hidden"
       >
         <div class="flex items-center gap-3">
           <div
@@ -544,16 +540,19 @@
           </span>
         </div>
 
-        <button
-          @click="sidebarOpen = !sidebarOpen"
-          class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-50"
-        >
-          <i class="fa-solid fa-bars"></i>
-        </button>
+        <div class="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            @click="sidebarOpen = !sidebarOpen"
+            class="flex h-10 w-10 items-center justify-center rounded-xl text-content-soft transition hover:bg-surface-muted"
+          >
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
       </header>
 
       <!-- Content -->
-      <main class="flex-1 overflow-y-auto bg-slate-50 p-5 lg:p-7">
+      <main class="flex-1 overflow-y-auto bg-page p-5 lg:p-7">
         <router-view />
       </main>
 
@@ -566,6 +565,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
+import ThemeToggle from "../components/ThemeToggle.vue";
 
 const authStore = useAuthStore();
 const router = useRouter();

@@ -1,9 +1,9 @@
 ```vue
 <template>
   <div
-    class="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8"
-    style="background: #f5f9fa"
+    class="relative flex min-h-screen items-center justify-center overflow-hidden bg-page px-4 py-10 text-content sm:px-6 lg:px-8"
   >
+    <ThemeToggle class="absolute right-5 top-5 z-20" />
     <!-- Background Decorations -->
     <div
       class="absolute -left-32 -top-32 h-96 w-96 rounded-full opacity-50"
@@ -23,7 +23,7 @@
     <!-- Login Card -->
     <div class="relative w-full max-w-md">
       <div
-        class="overflow-hidden rounded-3xl bg-white shadow-2xl shadow-slate-900/10 ring-1 ring-slate-100"
+        class="overflow-hidden rounded-3xl bg-surface shadow-2xl shadow-slate-900/10 ring-1 ring-default"
       >
         <!-- Top Accent -->
         <div
@@ -114,40 +114,28 @@
             <!-- Email -->
             <div>
               <label
-                for="email-address"
+                for="login-identifier"
                 class="mb-2 block text-sm font-semibold text-slate-700"
               >
-                Email address
+                Username atau email
               </label>
 
               <div class="relative">
                 <div
                   class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4"
                 >
-                  <svg
-                    class="h-5 w-5 text-slate-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.7"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M3 8l9 6 9-6M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"
-                    />
-                  </svg>
+                  <i class="fa-regular fa-user text-sm text-slate-400"></i>
                 </div>
 
                 <input
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  v-model="form.email"
+                  id="login-identifier"
+                  name="login"
+                  type="text"
+                  v-model="form.login"
                   required
-                  autocomplete="email"
+                  autocomplete="username"
                   class="login-input pl-11"
-                  placeholder="Enter your email"
+                  placeholder="Masukkan username atau email"
                 />
               </div>
             </div>
@@ -275,12 +263,13 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import ThemeToggle from '../components/ThemeToggle.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
 const form = ref({
-  email: 'admin@suntrack.com',
+  login: 'admin',
   password: 'password',
 });
 
@@ -315,14 +304,14 @@ const login = async () => {
   display: block;
   width: 100%;
   border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
   padding-top: 0.75rem;
   padding-right: 0.875rem;
   padding-bottom: 0.75rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
-  color: #1e293b;
+  color: var(--ui-content);
   outline: none;
   transition:
     border-color 150ms ease,

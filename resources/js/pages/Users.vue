@@ -136,6 +136,15 @@
                 </template>
 
 
+                <!-- USERNAME -->
+                <template #cell-username="{ row }">
+                    <div class="inline-flex items-center gap-2 text-xs text-gray-600">
+                        <i class="fa-solid fa-at text-[10px] text-gray-400"></i>
+                        <span>{{ row.username || '-' }}</span>
+                    </div>
+                </template>
+
+
                 <!-- EMAIL -->
                 <template #cell-email="{ row }">
                     <div
@@ -508,6 +517,11 @@ const columns = [
     {
         key: "email",
         label: "Email",
+        sortable: true,
+    },
+    {
+        key: "username",
+        label: "Username",
         sortable: true,
     },
     {

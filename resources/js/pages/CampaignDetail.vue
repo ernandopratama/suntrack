@@ -1208,7 +1208,7 @@
 .add-product-modal :deep(label) {
   display: block;
   margin-bottom: 0.5rem;
-  color: #293681;
+  color: var(--ui-brand-strong);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.01em;
@@ -1220,11 +1220,11 @@
 .add-product-modal :deep(textarea) {
   width: 100%;
   min-height: 44px;
-  border: 1px solid #dbe3ea;
+  border: 1px solid var(--ui-border);
   border-radius: 0.75rem;
-  background: #ffffff;
+  background: var(--ui-surface);
   padding: 0.7rem 0.9rem;
-  color: #293681;
+  color: var(--ui-content);
   font-size: 0.8rem;
   font-weight: 600;
   outline: none;
@@ -1238,7 +1238,7 @@
 /* Placeholder */
 .add-product-modal :deep(input::placeholder),
 .add-product-modal :deep(textarea::placeholder) {
-  color: #9ca3af;
+  color: var(--ui-content-muted);
   font-weight: 500;
 }
 
@@ -1254,7 +1254,7 @@
 .add-product-modal :deep(select:focus),
 .add-product-modal :deep(textarea:focus) {
   border-color: #4274d9;
-  background: #ffffff;
+  background: var(--ui-surface);
   box-shadow:
     0 0 0 3px rgba(66, 116, 217, 0.12),
     0 2px 6px rgba(41, 54, 129, 0.06);
@@ -1272,8 +1272,8 @@
 .add-product-modal :deep(select:disabled),
 .add-product-modal :deep(textarea:disabled) {
   cursor: not-allowed;
-  background: #f8fafc;
-  color: #9ca3af;
+  background: var(--ui-surface-muted);
+  color: var(--ui-content-muted);
 }
 
 /* Field spacing */

@@ -22,14 +22,23 @@ class StoreUserRequest extends FormRequest
 
         // Admin wajib email & password
         if ($this->input('type') === 'admin') {
+            $rules['username'] = ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/', 'unique:users,username'];
             $rules['email'] = ['required', 'email', 'unique:users,email'];
             $rules['password'] = ['required', Password::defaults()];
         } else {
             // Company tidak perlu email & password
+            $rules['username'] = ['nullable', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/', 'unique:users,username'];
             $rules['email'] = ['nullable', 'email', 'unique:users,email'];
             $rules['password'] = ['nullable'];
         }
 
         return $rules;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('username')) {
+            $this->merge(['username' => strtolower(trim((string) $this->input('username')))]);
+        }
     }
 }
