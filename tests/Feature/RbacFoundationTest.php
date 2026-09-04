@@ -6,6 +6,7 @@ use App\Models\Brand;
 use App\Models\Company;
 use App\Models\User;
 use App\Support\Rbac\RbacRegistry;
+use Database\Seeders\ProductionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -61,6 +62,23 @@ class RbacFoundationTest extends TestCase
             $this->assertSame(
                 [],
                 $this->rolePermissions(RbacRegistry::TEAM, $guard)
+            );
+        }
+    }
+
+    public function test_production_seeder_is_safe_to_run_repeatedly(): void
+    {
+        $this->seed(ProductionSeeder::class);
+        $this->seed(ProductionSeeder::class);
+
+        foreach (RbacRegistry::GUARDS as $guard) {
+            $this->assertSame(
+                $this->sorted(RbacRegistry::ROLES),
+                $this->sorted(Role::query()->where('guard_name', $guard)->pluck('name')->all())
+            );
+            $this->assertSame(
+                $this->sorted(RbacRegistry::PERMISSIONS),
+                $this->sorted(Permission::query()->where('guard_name', $guard)->pluck('name')->all())
             );
         }
     }

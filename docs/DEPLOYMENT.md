@@ -35,14 +35,16 @@ Aktifkan ekstensi berikut di `/usr/local/apps/php84/etc/php.d/extra.ini`:
 ```ini
 extension=pgsql.so
 extension=pdo_pgsql.so
+extension=igbinary.so
 extension=redis.so
+session.gc_divisor=100
 ```
 
 Pastikan ekstensi runtime tersedia:
 
 ```bash
-/usr/local/apps/php84/bin/php -m | grep -E 'bcmath|gd|intl|mbstring|pdo_pgsql|pgsql|redis|zip'
-/usr/local/apps/php84/bin/fpmctl84 restart
+/usr/local/apps/php84/bin/php -m | grep -E 'bcmath|gd|igbinary|intl|mbstring|pdo_pgsql|pgsql|redis|zip'
+systemctl restart php-fpm84.service
 ```
 
 Jangan gunakan PHP 8.5 pada VPS ini.
@@ -72,7 +74,7 @@ sudo -u sunrise /usr/local/apps/php84/bin/php artisan key:generate --force
 sudo -u sunrise npm ci
 sudo -u sunrise npm run build
 sudo -u sunrise /usr/local/apps/php84/bin/php artisan migrate --force
-sudo -u sunrise /usr/local/apps/php84/bin/php artisan db:seed --class=RolePermissionSeeder --force
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan db:seed --class=ProductionSeeder --force
 sudo -u sunrise /usr/local/apps/php84/bin/php artisan storage:link
 sudo -u sunrise /usr/local/apps/php84/bin/php artisan optimize
 ```
@@ -108,46 +110,27 @@ systemctl enable --now suntrack-scheduler.timer
 
 Pastikan CI commit tujuan sudah lulus sebelum melakukan deployment.
 
-### 3.1 Pemeriksaan awal dan backup
+### 3.1 Menjalankan deployment
 
 ```bash
 cd /home/sunrise/suntrack-app
-sudo -u sunrise git status --short
-systemctl is-active suntrack-queue.service
-systemctl is-active suntrack-scheduler.timer
-
-install -d -m 0700 /home/sunrise/backups
-backup_file="/home/sunrise/backups/suntrack-before-deploy-$(date +%Y%m%d-%H%M%S).dump"
-sudo -u postgres pg_dump -Fc sunrise_suntrack > "$backup_file"
-chmod 600 "$backup_file"
+bash deploy/webuzo/deploy.sh
 ```
 
-Hentikan proses jika working tree tidak bersih atau backup gagal.
+Hasil akhir yang berhasil adalah `DEPLOY_SUCCESS`. Jika commit server sudah sama dengan `origin/main`, script berhenti dengan `ALREADY_CURRENT`.
 
-### 3.2 Update aplikasi
+Script melakukan langkah berikut secara berurutan:
 
-```bash
-cd /home/sunrise/suntrack-app
-sudo -u sunrise /usr/local/apps/php84/bin/php artisan down --refresh=15
-systemctl stop suntrack-queue.service
+1. Memastikan repository bersih, environment produksi benar, PostgreSQL tersambung, serta ekstensi PHP tersedia.
+2. Mengambil referensi terbaru `origin/main` dan berhenti bila tidak ada update.
+3. Mencadangkan `.env` dan PostgreSQL ke `/root/suntrack-deploy-backups`.
+4. Mengaktifkan maintenance mode dan menghentikan queue worker.
+5. Melakukan fast-forward source, Composer install, dan Vite build.
+6. Menjalankan seluruh migration yang masih pending.
+7. Menjalankan `ProductionSeeder` yang aman diulang.
+8. Memperbarui service, mengaktifkan aplikasi, lalu memeriksa migration dan endpoint health.
 
-sudo -u sunrise git pull --ff-only origin main
-sudo -u sunrise /usr/local/apps/php84/bin/php /usr/local/bin/composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
-sudo -u sunrise npm ci
-sudo -u sunrise npm run build
-
-sudo -u sunrise /usr/local/apps/php84/bin/php artisan migrate --force
-sudo -u sunrise /usr/local/apps/php84/bin/php artisan storage:link
-sudo -u sunrise /usr/local/apps/php84/bin/php artisan optimize
-sudo -u sunrise /usr/local/apps/php84/bin/php artisan queue:restart
-
-chown -R sunrise:sunrise storage bootstrap/cache
-chmod -R ug+rwX storage bootstrap/cache
-
-systemctl restart suntrack-queue.service
-systemctl start suntrack-scheduler.service
-sudo -u sunrise /usr/local/apps/php84/bin/php artisan up
-```
+`DatabaseSeeder` tidak dijalankan di produksi karena berisi data awal dan akun contoh. Seeder baru yang aman untuk produksi harus idempotent dan didaftarkan pada `database/seeders/ProductionSeeder.php`.
 
 `npm ci` digunakan agar dependency frontend mengikuti `package-lock.json`.
 
@@ -166,8 +149,8 @@ sudo -u sunrise /usr/local/apps/php84/bin/php artisan schedule:list
 sudo -u sunrise /usr/local/apps/php84/bin/php artisan queue:failed
 
 redis-cli -h 127.0.0.1 -p 6379 ping
-curl -fsS https://suntrack.sunriseadsacademy.com/up
-curl -fsS https://suntrack.sunriseadsacademy.com/api/v1/health
+curl --resolve suntrack.sunriseadsacademy.com:443:127.0.0.1 -fsS https://suntrack.sunriseadsacademy.com/up
+curl --resolve suntrack.sunriseadsacademy.com:443:127.0.0.1 -fsS https://suntrack.sunriseadsacademy.com/api/v1/health
 ```
 
 Verifikasi melalui browser:
