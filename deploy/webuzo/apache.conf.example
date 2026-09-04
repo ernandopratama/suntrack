@@ -1,0 +1,17 @@
+DocumentRoot /home/sunrise/suntrack-app/public
+
+<Directory /home/sunrise/suntrack-app/public>
+    AllowOverride All
+    Options -Indexes +FollowSymLinks
+    Require all granted
+</Directory>
+
+<FilesMatch "\.(php|phtml)$">
+    <If "-f %{REQUEST_FILENAME}">
+        SetHandler "proxy:unix:/usr/local/apps/php84/var/fpm-sunrise.sock|fcgi://localhost/"
+    </If>
+</FilesMatch>
+
+<Location />
+    ProxyPass !
+</Location>

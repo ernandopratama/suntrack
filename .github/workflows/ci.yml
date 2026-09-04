@@ -122,7 +122,7 @@ jobs:
         run: php artisan test --testsuite=Unit
 
   feature-tests:
-    name: "Stage 4 · Feature Tests (MySQL + Redis)"
+    name: "Stage 4 · Feature Tests (MySQL + PostgreSQL + Redis)"
     runs-on: ubuntu-latest
     needs:
       - unit-tests
@@ -137,6 +137,20 @@ jobs:
           - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: suntrack_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d suntrack_test"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -159,7 +173,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
-          extensions: dom, curl, mbstring, zip, pdo, pdo_mysql, sqlite, pdo_sqlite, bcmath, redis, intl
+          extensions: dom, curl, mbstring, zip, pdo, pdo_mysql, pdo_pgsql, sqlite, pdo_sqlite, bcmath, redis, intl
           coverage: none
 
       - name: Get Composer Cache Directory
@@ -182,7 +196,7 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
-      - name: Run Database Migrations
+      - name: Run MySQL Database Migrations
         env:
           APP_ENV: testing
           DB_CONNECTION: mysql
@@ -193,11 +207,15 @@ jobs:
           DB_PASSWORD: root
 
           CACHE_STORE: redis
+          CACHE_PREFIX: suntrack_ci_mysql_cache_
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
+          REDIS_DB: 4
+          REDIS_CACHE_DB: 5
+          REDIS_PREFIX: suntrack_ci_mysql_
         run: php artisan migrate --force
 
-      - name: Run Feature Test Suite
+      - name: Run MySQL Feature Test Suite
         env:
           APP_ENV: testing
 
@@ -209,11 +227,59 @@ jobs:
           DB_PASSWORD: root
 
           CACHE_STORE: redis
+          CACHE_PREFIX: suntrack_ci_mysql_cache_
           QUEUE_CONNECTION: redis
           SESSION_DRIVER: redis
 
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
+          REDIS_DB: 4
+          REDIS_CACHE_DB: 5
+          REDIS_PREFIX: suntrack_ci_mysql_
+        run: php artisan test --testsuite=Feature
+
+      - name: Run PostgreSQL Database Migrations
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: suntrack_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          DB_SSLMODE: disable
+
+          CACHE_STORE: redis
+          CACHE_PREFIX: suntrack_ci_pgsql_cache_
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          REDIS_DB: 6
+          REDIS_CACHE_DB: 7
+          REDIS_PREFIX: suntrack_ci_pgsql_
+        run: php artisan migrate:fresh --force
+
+      - name: Run PostgreSQL Feature Test Suite
+        env:
+          APP_ENV: testing
+
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: suntrack_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          DB_SSLMODE: disable
+
+          CACHE_STORE: redis
+          CACHE_PREFIX: suntrack_ci_pgsql_cache_
+          QUEUE_CONNECTION: redis
+          SESSION_DRIVER: redis
+
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          REDIS_DB: 6
+          REDIS_CACHE_DB: 7
+          REDIS_PREFIX: suntrack_ci_pgsql_
         run: php artisan test --testsuite=Feature
 
   build-docker:

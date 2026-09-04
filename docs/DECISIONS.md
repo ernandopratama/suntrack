@@ -200,15 +200,15 @@ This document serves as the single source of truth for all important architectur
 **Related Components:** Backend, Queue, Scheduler, Notification, Reporting, Frontend
 
 ### ADR-018
-### Title: Docker-First Architecture for Local Development and Production Parity
+### Title: Docker Build Verification and Webuzo Production Runtime
 **Date:** 2026-07-27
-**Status:** Accepted
+**Status:** Superseded
 **Context:** Consistent environments across local development, CI/CD testing, and staging/production deployments are critical to eliminate "it works on my machine" defects. Relying on host-installed PHP, Node.js, Composer, or web servers creates environment drift and onboarding friction.
 **Decision:**
-1. **Containerized Development & Production:** Adopt Docker Compose as the standard local development environment and Docker containers as the production runtime. Define 6 core services: `app` (Laravel PHP 8.2-FPM + Node.js 20), `nginx` (Alpine web server), `mysql` (MySQL 8.0), `redis` (Redis 7 Alpine), `queue-worker` (background job processing), and `scheduler` (automated cron execution).
-2. **Zero Host Dependencies:** All application commands (`composer install`, `php artisan migrate`, `npm run build`, `php artisan test`) must execute cleanly inside the container via `docker compose exec app ...` without requiring host PHP/Node installations.
-3. **Multi-Stage Production Build Parity:** Utilize a multi-stage Dockerfile (`dependencies`, `frontend-build`, `production`) to compile frontend assets and install vendor dependencies cleanly, ensuring exact environment parity from development to production.
-**Rationale:** Guarantees reproducible builds, frictionless onboarding, zero host environment drift, and seamless container orchestration across Ubuntu, VPS, and Portainer deployments.
+1. **Production Runtime:** Run SunTrack on Webuzo using Nginx, Apache, PHP-FPM 8.4, PostgreSQL, Redis, and systemd-managed queue and scheduler services.
+2. **Docker Verification:** Keep the multi-stage Dockerfile as a CI build target. No Docker Compose production stack is currently tracked.
+3. **Database Verification:** Run feature tests against MySQL and PostgreSQL. PostgreSQL is the production database.
+**Rationale:** Matches the available VPS infrastructure while retaining reproducible build verification in CI.
 **Related Components:** Architecture, Docker, DevOps, Infrastructure
 
 ### ADR-019

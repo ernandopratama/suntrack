@@ -1,0 +1,11 @@
+[Unit]
+Description=Run due SunTrack Laravel scheduled tasks
+After=network.target
+
+[Service]
+Type=oneshot
+User=sunrise
+Group=sunrise
+WorkingDirectory=/home/sunrise/suntrack-app
+ExecStart=/usr/local/apps/php84/bin/php artisan schedule:run
+UMask=0027

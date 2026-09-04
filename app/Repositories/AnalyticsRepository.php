@@ -38,8 +38,8 @@ class AnalyticsRepository
                 ->whereBetween('ah.created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
                 ->select([
                     DB::raw('COUNT(*) as total_decisions'),
-                    DB::raw('COUNT(CASE WHEN ah.new_status = "Approved" THEN 1 END) as approved'),
-                    DB::raw('COUNT(CASE WHEN ah.new_status = "Rejected" THEN 1 END) as rejected'),
+                    DB::raw("COUNT(CASE WHEN ah.new_status = 'Approved' THEN 1 END) as approved"),
+                    DB::raw("COUNT(CASE WHEN ah.new_status = 'Rejected' THEN 1 END) as rejected"),
                 ])
                 ->first();
 
@@ -59,8 +59,8 @@ class AnalyticsRepository
                 ->select([
                     'b.name as brand_name',
                     DB::raw('COUNT(*) as total'),
-                    DB::raw('COUNT(CASE WHEN ah.new_status = "Approved" THEN 1 END) as approved'),
-                    DB::raw('COUNT(CASE WHEN ah.new_status = "Rejected" THEN 1 END) as rejected'),
+                    DB::raw("COUNT(CASE WHEN ah.new_status = 'Approved' THEN 1 END) as approved"),
+                    DB::raw("COUNT(CASE WHEN ah.new_status = 'Rejected' THEN 1 END) as rejected"),
                 ])
                 ->groupBy('b.id', 'b.name')
                 ->orderBy('total', 'desc')
@@ -104,9 +104,9 @@ class AnalyticsRepository
                 ->whereBetween('pr.created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
                 ->select([
                     DB::raw('COUNT(*) as total'),
-                    DB::raw('COUNT(CASE WHEN pr.status = "Approved" THEN 1 END) as approved'),
-                    DB::raw('COUNT(CASE WHEN pr.status = "Rejected" THEN 1 END) as rejected'),
-                    DB::raw('COUNT(CASE WHEN pr.status = "Pending" THEN 1 END) as pending'),
+                    DB::raw("COUNT(CASE WHEN pr.status = 'Approved' THEN 1 END) as approved"),
+                    DB::raw("COUNT(CASE WHEN pr.status = 'Rejected' THEN 1 END) as rejected"),
+                    DB::raw("COUNT(CASE WHEN pr.status = 'Pending' THEN 1 END) as pending"),
                     DB::raw('COUNT(CASE WHEN pr.campaign_id IS NOT NULL THEN 1 END) as with_campaign'),
                 ])
                 ->first();
@@ -148,10 +148,10 @@ class AnalyticsRepository
                 ->whereBetween('created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
                 ->select([
                     DB::raw('COUNT(*) as total_submitted'),
-                    DB::raw('COUNT(CASE WHEN status = "Approved" THEN 1 END) as approved'),
-                    DB::raw('COUNT(CASE WHEN status = "Rejected" THEN 1 END) as rejected'),
-                    DB::raw('COUNT(CASE WHEN status = "Pending" THEN 1 END) as pending'),
-                    DB::raw('COUNT(CASE WHEN status = "Partially Approved" THEN 1 END) as partially_approved'),
+                    DB::raw("COUNT(CASE WHEN status = 'Approved' THEN 1 END) as approved"),
+                    DB::raw("COUNT(CASE WHEN status = 'Rejected' THEN 1 END) as rejected"),
+                    DB::raw("COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending"),
+                    DB::raw("COUNT(CASE WHEN status = 'Partially Approved' THEN 1 END) as partially_approved"),
                 ])
                 ->first();
 

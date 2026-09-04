@@ -9,6 +9,8 @@ use App\Services\Storage\StorageService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class Sprint9ProductionReadyTest extends TestCase
@@ -101,9 +103,17 @@ class Sprint9ProductionReadyTest extends TestCase
 
     public function test_automated_database_backup_command()
     {
+        Storage::fake('public');
+
         $exitCode = Artisan::call('suntrack:backup-db');
         $this->assertEquals(0, $exitCode);
         $output = Artisan::output();
         $this->assertStringContainsString('Backup successfully completed', $output);
+
+        $backup = collect(Storage::disk('public')->allFiles('backups'))->first();
+        $this->assertNotNull($backup);
+
+        $snapshot = json_decode(Storage::disk('public')->get($backup), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame(DB::connection()->getDatabaseName(), $snapshot['database']);
     }
 }

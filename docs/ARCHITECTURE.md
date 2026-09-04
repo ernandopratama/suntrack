@@ -10,7 +10,7 @@ SunTrack is engineered around five fundamental software architecture principles:
 
 1.  **Clean Architecture & Strict Separation of Concerns:** Business logic is decoupled from HTTP transport layers, database frameworks, and external third-party APIs.
 2.  **SOLID Object-Oriented Design:** All components follow Single Responsibility, Open-Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion principles.
-3.  **Docker-First & Zero Host Dependency (ADR-018):** All development, testing, and production runtime environments execute inside isolated containers via Docker Compose. No host installation of PHP, Node.js, Composer, or web servers is required.
+3.  **Verified Runtime Parity:** CI verifies PHP 8.4, Node.js 24, MySQL, PostgreSQL, Redis, and the production Docker image. Production runs directly on Webuzo with PHP-FPM 8.4, PostgreSQL, Redis, and systemd services.
 4.  **Immutable Audit Trails & Observability:** Every state transition, financial pricing adjustment, and brand collaboration interaction is recorded immutably in `approval_histories` and centralized via `ActivityLogger`.
 5.  **Zero Breaking Changes & Backward Compatibility:** API endpoints enforce versioning (`/api/v1/`) and additive schema design to guarantee seamless client integrations.
 
@@ -26,7 +26,7 @@ graph TD
     Router -->|FormRequest Validation| Controller[HTTP Controllers / ApiV1]
     Controller -->|DTO / Array| Service[Domain Service Layer]
     Service -->|Interface Injection| Repo[Repository Layer]
-    Repo -->|Eloquent / SQL| DB[(MySQL 8.0 Primary / Read Replicas)]
+    Repo -->|Eloquent / SQL| DB[(PostgreSQL 18)]
     Repo -->|Cache Tags / TTL| Cache[(Redis 7 Cache Store)]
     Service -->|Dispatch Job / Event| Queue[(Redis 7 Queue / Worker)]
     Service -->|Storage Interface| Storage[Storage Abstraction / S3 / GCP]
@@ -56,15 +56,18 @@ graph TD
 
 ---
 
-## 3. Containerized Micro-Service Topology
+## 3. Production Topology
 
-The system is deployed as an orchestrated stack of 6 specialized Docker micro-services:
-1.  **`app` (`suntrack-app`)**: Multi-stage PHP 8.2-FPM & Node.js 20 runtime executing business logic and asset compilation.
-2.  **`nginx` (`suntrack-nginx`)**: Alpine web server acting as reverse proxy and static asset delivery engine.
-3.  **`mysql` (`suntrack-mysql`)**: MySQL 8.0 relational database engine with volume persistence (`mysql_data`).
-4.  **`redis` (`suntrack-redis`)**: Redis 7 Alpine engine powering `CACHE_STORE`, `QUEUE_CONNECTION`, and `SESSION_DRIVER` (`redis_data`).
-5.  **`queue-worker` (`suntrack-queue-worker`)**: Asynchronous worker processing background job queues (`php artisan queue:work`).
-6.  **`scheduler` (`suntrack-scheduler`)**: Automated scheduler evaluating console cron rules every minute (`php artisan schedule:work`).
+Production uses the following Webuzo-managed and systemd-managed components:
+
+1. **Nginx and Apache:** Webuzo terminates HTTPS and sends PHP requests to PHP-FPM.
+2. **PHP-FPM 8.4:** Runs Laravel from `/home/sunrise/suntrack-app` with `public` as document root.
+3. **PostgreSQL 18:** Stores application and RBAC data.
+4. **Redis:** Stores cache, sessions, and queued jobs in SunTrack-specific Redis databases.
+5. **Queue worker:** `suntrack-queue.service` continuously executes `php artisan queue:work redis`.
+6. **Scheduler:** `suntrack-scheduler.timer` invokes `php artisan schedule:run` every minute.
+
+The repository Dockerfile remains a CI build target. It is not the active VPS runtime.
 
 ---
 
@@ -72,8 +75,8 @@ The system is deployed as an orchestrated stack of 6 specialized Docker micro-se
 
 To maintain sub-100ms API response times under enterprise data loads (±100,000 records), SunTrack employs three scalability pillars:
 1.  **Redis Caching Strategies & Observers:** High-read endpoints (Dashboard analytics, catalog listings, system settings) are cached in Redis using tag-based or key-based caching. Laravel Observers (`CampaignObserver`, `PromotionObserver`, etc.) listen for model mutation events (`saved`, `deleted`) and automatically invalidate stale cache keys.
-2.  **Database Indexing & Read Replica Separation:** Composite database indexes are maintained on high-cardinality foreign keys and status columns. `config/database.php` is configured with separate `read` and `write` MySQL host arrays with `'sticky' => true` to support horizontal read replica scaling without read-after-write latency anomalies.
-3.  **Stateless Container Scaling:** Because sessions and caches reside entirely in Redis and media uploads reside in multi-cloud storage (S3/GCP), the `app` and `nginx` container tier is 100% stateless and can be scaled horizontally behind an enterprise load balancer (AWS ALB, Nginx Load Balancer, or Kubernetes Ingress).
+2.  **Database Indexing:** Composite database indexes are maintained on high-cardinality foreign keys and status columns. Production PostgreSQL queries are covered by the CI feature suite.
+3.  **External Session and Cache State:** Sessions, cache entries, and queued jobs reside in Redis. Uploaded media can use local storage or an object-storage driver.
 
 ---
 
@@ -96,4 +99,3 @@ To ensure enterprise-grade reliability and rapid root-cause analysis during stag
 5.  **Redis & Queue Monitoring:**
     - **Purpose:** Ensures high-throughput background automation without job deadlocks or memory leaks.
     - **Architecture:** Health Check endpoints (`GET /api/v1/health`) actively evaluate Redis ping responses. Background queues (`suntrack-queue-worker`) are monitored for failed jobs (`failed_jobs` table and `php artisan queue:failed`), with automated retry mechanisms configured via `php artisan queue:retry`.
-

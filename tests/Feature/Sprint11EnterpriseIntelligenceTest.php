@@ -143,6 +143,31 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
             ->assertJsonPath('data.total_promotion_variant_mappings', 2);
     }
 
+    public function test_promotion_effectiveness_report_uses_portable_sql(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::create(['name' => 'Portable SQL Company']);
+        $brand = Brand::create(['company_id' => $company->id, 'name' => 'Portable SQL Brand']);
+
+        foreach (['Approved', 'Rejected', 'Pending'] as $status) {
+            Promotion::create([
+                'brand_id' => $brand->id,
+                'name' => "{$status} Promotion",
+                'status' => $status,
+            ]);
+        }
+
+        $today = now()->toDateString();
+
+        $this->actingAs($user)
+            ->getJson("/api/v1/admin/reports/promotion-effectiveness?date_from={$today}&date_to={$today}")
+            ->assertOk()
+            ->assertJsonPath('data.total_promotions', 3)
+            ->assertJsonPath('data.approved', 1)
+            ->assertJsonPath('data.rejected', 1)
+            ->assertJsonPath('data.pending', 1);
+    }
+
     // -------------------------------------------------------
     // 2. Audit Dashboard Tests
     // -------------------------------------------------------
@@ -256,6 +281,13 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
         // Accept 200 (healthy) or 503 (degraded) — both are valid responses
         $this->assertContains($response->status(), [200, 503]);
         $response->assertJsonStructure(['data' => ['overall_status', 'checks', 'timestamp']]);
+        $this->assertSame(
+            'healthy',
+            $response->json('data.checks.database.status'),
+            (string) $response->json('data.checks.database.error'),
+        );
+
+        $this->assertIsInt($response->json('data.checks.database.tables'));
     }
 
     public function test_system_cache_stats_returns_hit_miss_data(): void

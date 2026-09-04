@@ -1,0 +1,18 @@
+[Unit]
+Description=SunTrack Laravel queue worker
+After=network.target
+
+[Service]
+Type=simple
+User=sunrise
+Group=sunrise
+WorkingDirectory=/home/sunrise/suntrack-app
+ExecStart=/usr/local/apps/php84/bin/php artisan queue:work redis --sleep=3 --tries=3 --timeout=300 --max-time=3600
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=360
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

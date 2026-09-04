@@ -1,6 +1,6 @@
 # SunTrack Database Performance & Scaling Architecture (ADR-022)
 
-This document defines SunTrack's database performance strategy, covering all production indexes, composite index rationale, query optimization patterns, and horizontal scaling preparation for MySQL at enterprise scale (100k+ rows per table).
+This document defines SunTrack's database performance strategy, covering indexes, query optimization patterns, and scaling preparation. PostgreSQL 18 is the production database. MySQL remains covered for compatibility in CI.
 
 ---
 

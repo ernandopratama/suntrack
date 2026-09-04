@@ -1,115 +1,220 @@
-# SunTrack — Generic Containerized Deployment Runbook
+# SunTrack - Runbook Deployment Webuzo
 
-This runbook provides step-by-step instructions for deploying SunTrack to any production environment supporting Docker and Docker Compose (e.g., Ubuntu Server, Debian VPS, AWS EC2, DigitalOcean Droplet, or Portainer). This deployment strategy is completely vendor-agnostic and relies exclusively on standardized container orchestration.
+Dokumen ini adalah sumber utama deployment produksi SunTrack ke VPS Webuzo. Target produksi menggunakan PostgreSQL dan Redis tanpa Docker Compose.
 
----
+## 1. Arsitektur produksi
 
-## 1. Production Server Prerequisites
-- A Linux server (e.g., Ubuntu 22.04 LTS or 24.04 LTS) with at least 2GB RAM and 20GB SSD storage.
-- Docker Engine and Docker Compose V2 installed:
-  ```bash
-  curl -fsSL https://get.docker.com -o get-docker.sh
-  sudo sh get-docker.sh
-  sudo usermod -aG docker $USER
-  ```
-- Domain name (e.g., `suntrack.yourdomain.com`) pointed to your server's public IP address.
+- Domain: `https://suntrack.sunriseadsacademy.com`
+- Project: `/home/sunrise/suntrack-app`
+- Document root: `/home/sunrise/suntrack-app/public`
+- Web: Nginx Webuzo ke Apache, lalu PHP-FPM 8.4
+- Database: PostgreSQL pada `127.0.0.1:5432`
+- Cache, session, dan queue: Redis pada `127.0.0.1:6379`
+- Queue worker: `suntrack-queue.service`
+- Scheduler: `suntrack-scheduler.timer`
 
----
+PHP 8.4.1 atau lebih baru diperlukan oleh dependency Symfony yang terkunci di `composer.lock`.
 
-## 2. Server Deployment Steps
+## 2. Persiapan server satu kali
 
-### Step 1: Transfer / Clone Project to Server
+### 2.1 PostgreSQL
+
+Buat role dan database melalui Terminal admin Webuzo. Ganti password sebelum menjalankan perintah.
+
 ```bash
-git clone https://github.com/suntrack/suntrack.git /var/www/suntrack
-cd /var/www/suntrack
+sudo -u postgres psql -c "CREATE USER sunrise_nando45 WITH PASSWORD 'CHANGE_ME';"
+sudo -u postgres psql -c "CREATE DATABASE sunrise_suntrack OWNER sunrise_nando45;"
 ```
 
-### Step 2: Configure Production Environment (`.env`)
-Copy the template and configure production secrets:
-```bash
-cp .env.example .env
-nano .env
-```
-Ensure the following critical production variables are set:
+Database yang sudah ada tidak perlu dibuat ulang.
+
+### 2.2 PHP 8.4
+
+Aktifkan ekstensi berikut di `/usr/local/apps/php84/etc/php.d/extra.ini`:
+
 ```ini
-APP_NAME=SunTrack
-APP_ENV=production
-APP_KEY= # Will be generated in Step 4
-APP_DEBUG=false
-APP_URL=https://suntrack.yourdomain.com
+extension=pgsql.so
+extension=pdo_pgsql.so
+extension=redis.so
+```
 
-# Docker Service Bindings
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_PORT=3306
-DB_DATABASE=suntrack_prod
-DB_USERNAME=suntrack_admin
-DB_PASSWORD=YourStrongSecurePasswordHere!
+Pastikan ekstensi runtime tersedia:
 
-# Redis Infrastructure
-CACHE_STORE=redis
-QUEUE_CONNECTION=redis
-SESSION_DRIVER=redis
-REDIS_HOST=redis
-REDIS_PASSWORD=null
+```bash
+/usr/local/apps/php84/bin/php -m | grep -E 'bcmath|gd|intl|mbstring|pdo_pgsql|pgsql|redis|zip'
+/usr/local/apps/php84/bin/fpmctl84 restart
+```
+
+Jangan gunakan PHP 8.5 pada VPS ini.
+
+### 2.3 Clone dan environment
+
+```bash
+sudo -u sunrise git clone https://github.com/ernandopratama/suntrack.git /home/sunrise/suntrack-app
+cd /home/sunrise/suntrack-app
+cp .env.production.example .env
+chown sunrise:sunrise .env
+chmod 600 .env
+```
+
+Isi `APP_KEY`, `DB_PASSWORD`, dan konfigurasi layanan produksi. Nilai Redis harus dipisah:
+
+```ini
+REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
-
-# Storage Service Abstraction
-FILESYSTEM_DISK=local # Or s3 / google_drive
 ```
 
-### Step 3: Build & Launch Container Stack
-Build the production Docker images and start the services:
+Untuk instalasi pertama, `APP_KEY` dapat dibuat setelah Composer selesai:
+
 ```bash
-docker compose up -d --build
+sudo -u sunrise /usr/local/apps/php84/bin/php /usr/local/bin/composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan key:generate --force
+sudo -u sunrise npm ci
+sudo -u sunrise npm run build
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan migrate --force
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan db:seed --class=RolePermissionSeeder --force
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan storage:link
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan optimize
 ```
-Verify all 6 containers (`suntrack-app`, `suntrack-nginx`, `suntrack-mysql`, `suntrack-redis`, `suntrack-queue-worker`, `suntrack-scheduler`) are running:
+
+Jangan menjalankan `key:generate` lagi pada deployment berikutnya.
+
+### 2.4 Apache dan PHP-FPM
+
+Cadangkan konfigurasi domain yang aktif, lalu pasang template repository:
+
 ```bash
-docker compose ps
+cp /var/webuzo-data/apache2/custom/domains/suntrack.sunriseadsacademy.com.conf /var/webuzo-data/apache2/custom/domains/suntrack.sunriseadsacademy.com.conf.backup
+install -m 0644 deploy/webuzo/apache.conf.example /var/webuzo-data/apache2/custom/domains/suntrack.sunriseadsacademy.com.conf
+/usr/local/apps/apache2/bin/httpd -t
+/usr/local/apps/apache2/bin/httpd -k graceful
 ```
 
-### Step 4: Initialize Production Database & Assets
-Execute initialization commands inside the running `app` container:
+Document root wajib mengarah ke folder `public`.
+
+### 2.5 Queue worker dan scheduler
+
 ```bash
-# Generate production encryption key
-docker compose exec app php artisan key:generate --force
+install -m 0644 deploy/webuzo/suntrack-queue.service /etc/systemd/system/suntrack-queue.service
+install -m 0644 deploy/webuzo/suntrack-scheduler.service /etc/systemd/system/suntrack-scheduler.service
+install -m 0644 deploy/webuzo/suntrack-scheduler.timer /etc/systemd/system/suntrack-scheduler.timer
 
-# Optimize Composer autoloader for production
-docker compose exec app composer install --no-dev --optimize-autoloader
-
-# Run database migrations and seed default RBAC roles
-docker compose exec app php artisan migrate --force --seed
-
-# Build production Vue 3 SPA bundle
-docker compose exec app npm ci
-docker compose exec app npm run build
-
-# Cache configuration, routes, and views for maximum performance
-docker compose exec app php artisan config:cache
-docker compose exec app php artisan route:cache
-docker compose exec app php artisan view:cache
+systemctl daemon-reload
+systemctl enable --now suntrack-queue.service
+systemctl enable --now suntrack-scheduler.timer
 ```
 
----
+## 3. Deployment pembaruan
 
-## 3. Portainer Management (Optional)
-If managing deployment via [Portainer](https://www.portainer.io/):
-1. Navigate to **Stacks** -> **Add stack**.
-2. Name the stack `suntrack-prod`.
-3. Select **Repository** or paste the contents of `docker-compose.yml`.
-4. Define environment variables in the Portainer UI corresponding to your `.env` production secrets.
-5. Click **Deploy the stack**.
+Pastikan CI commit tujuan sudah lulus sebelum melakukan deployment.
 
----
+### 3.1 Pemeriksaan awal dan backup
 
-## 4. Health Verification & Maintenance
-- **Health Check API:** Verify system operational status by querying:
-  ```bash
-  curl -i http://localhost:8000/api/v1/health
-  ```
-  Expected output: `200 OK` with JSON payload verifying Database, Cache, Queue, and Storage status.
-- **Automated Backups:** The containerized scheduler automatically executes `suntrack:backup-db` daily at 01:00 AM, archiving database dumps to your configured `StorageService` driver.
-- **Viewing Worker Logs:**
-  ```bash
-  docker compose logs --tail=100 -f queue-worker
-  ```
+```bash
+cd /home/sunrise/suntrack-app
+sudo -u sunrise git status --short
+systemctl is-active suntrack-queue.service
+systemctl is-active suntrack-scheduler.timer
+
+install -d -m 0700 /home/sunrise/backups
+backup_file="/home/sunrise/backups/suntrack-before-deploy-$(date +%Y%m%d-%H%M%S).dump"
+sudo -u postgres pg_dump -Fc sunrise_suntrack > "$backup_file"
+chmod 600 "$backup_file"
+```
+
+Hentikan proses jika working tree tidak bersih atau backup gagal.
+
+### 3.2 Update aplikasi
+
+```bash
+cd /home/sunrise/suntrack-app
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan down --refresh=15
+systemctl stop suntrack-queue.service
+
+sudo -u sunrise git pull --ff-only origin main
+sudo -u sunrise /usr/local/apps/php84/bin/php /usr/local/bin/composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+sudo -u sunrise npm ci
+sudo -u sunrise npm run build
+
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan migrate --force
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan storage:link
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan optimize
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan queue:restart
+
+chown -R sunrise:sunrise storage bootstrap/cache
+chmod -R ug+rwX storage bootstrap/cache
+
+systemctl restart suntrack-queue.service
+systemctl start suntrack-scheduler.service
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan up
+```
+
+`npm ci` digunakan agar dependency frontend mengikuti `package-lock.json`.
+
+## 4. Verifikasi setelah deployment
+
+```bash
+/usr/local/apps/apache2/bin/httpd -t
+systemctl --no-pager --full status suntrack-queue.service
+systemctl --no-pager --full status suntrack-scheduler.timer
+journalctl -u suntrack-queue.service -n 50 --no-pager
+journalctl -u suntrack-scheduler.service -n 50 --no-pager
+
+cd /home/sunrise/suntrack-app
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan migrate:status
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan schedule:list
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan queue:failed
+
+redis-cli -h 127.0.0.1 -p 6379 ping
+curl -fsS https://suntrack.sunriseadsacademy.com/up
+curl -fsS https://suntrack.sunriseadsacademy.com/api/v1/health
+```
+
+Verifikasi melalui browser:
+
+1. Login dengan username dan email.
+2. Hak akses Super Admin, Admin, dan Tim.
+3. CRUD Company, Brand, Campaign, Promotion, Task, dan Product.
+4. Upload visual dan akses URL `/storage/...`.
+5. Export report dan pemrosesan queue.
+6. Activity Log dan halaman monitoring.
+
+## 5. Rollback kode
+
+Catat SHA commit yang aktif sebelum deployment:
+
+```bash
+cd /home/sunrise/suntrack-app
+sudo -u sunrise git rev-parse HEAD
+```
+
+Jika kode baru gagal dan migrasi tidak mengubah data secara tidak kompatibel:
+
+```bash
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan down
+sudo -u sunrise git switch --detach COMMIT_SEBELUMNYA
+sudo -u sunrise /usr/local/apps/php84/bin/php /usr/local/bin/composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+sudo -u sunrise npm ci
+sudo -u sunrise npm run build
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan optimize
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan queue:restart
+systemctl restart suntrack-queue.service
+sudo -u sunrise /usr/local/apps/php84/bin/php artisan up
+```
+
+Jangan menjalankan `migrate:rollback` otomatis di produksi. Jika schema atau data sudah berubah secara tidak kompatibel, pulihkan dump PostgreSQL setelah menghentikan aplikasi dan memastikan target database benar.
+
+Untuk kembali mengikuti branch utama:
+
+```bash
+sudo -u sunrise git switch main
+sudo -u sunrise git pull --ff-only origin main
+```
+
+## 6. Kepemilikan dan secret
+
+- `.env` dimiliki `sunrise:sunrise` dengan permission `600` agar PHP-FPM dan service dapat membacanya.
+- `storage` dan `bootstrap/cache` harus dapat ditulis oleh user `sunrise`.
+- Document root tidak boleh menunjuk ke root repository.
+- Password dan secret tidak disimpan di Git.
+- Redis memakai database `2` untuk queue/session dan database `3` untuk cache agar terpisah dari LMS.

@@ -37,7 +37,7 @@ class BackupDatabaseCommand extends Command
 
             $snapshot = [
                 'timestamp' => now()->toIso8601String(),
-                'database' => config('database.connections.mysql.database'),
+                'database' => DB::connection()->getDatabaseName(),
                 'tables' => [],
             ];
 

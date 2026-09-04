@@ -9,6 +9,7 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -121,13 +122,13 @@ class SystemMonitorController extends Controller
     {
         try {
             $pdo = DB::connection()->getPdo();
-            $version = DB::selectOne('SELECT VERSION() as version');
-            $tables = count(DB::select('SHOW TABLES')) ?: 0;
+            $version = $pdo->getAttribute(\PDO::ATTR_SERVER_VERSION);
+            $tables = count(Schema::getTableListing());
 
             return [
                 'status' => 'healthy',
                 'driver' => DB::getDriverName(),
-                'version' => $version->version ?? 'N/A',
+                'version' => is_string($version) ? $version : 'N/A',
                 'tables' => $tables,
                 'connection' => config('database.default'),
             ];
