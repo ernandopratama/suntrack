@@ -22,7 +22,7 @@ class AuditRepository
      */
     public function getLoginHistory(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
-        $query = LoginHistory::with('user')->latest();
+        $query = LoginHistory::with('user')->latest('login_at');
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -34,10 +34,10 @@ class AuditRepository
             $query->where('user_id', $filters['user_id']);
         }
         if (! empty($filters['date_from'])) {
-            $query->whereDate('created_at', '>=', $filters['date_from']);
+            $query->whereDate('login_at', '>=', $filters['date_from']);
         }
         if (! empty($filters['date_to'])) {
-            $query->whereDate('created_at', '<=', $filters['date_to']);
+            $query->whereDate('login_at', '<=', $filters['date_to']);
         }
 
         return $query->paginate($perPage);
@@ -49,7 +49,7 @@ class AuditRepository
     public function getQueueHistory(array $filters = [], int $perPage = 20): array
     {
         $failed = DB::table('failed_jobs')
-            ->latest()
+            ->orderByDesc('failed_at')
             ->limit(100)
             ->get()
             ->map(fn ($j) => [
@@ -93,8 +93,8 @@ class AuditRepository
             $todayStr = now()->toDateString();
 
             return [
-                'logins_today' => LoginHistory::whereDate('created_at', $todayStr)->count(),
-                'failed_logins_today' => LoginHistory::whereDate('created_at', $todayStr)->where('status', 'failed')->count(),
+                'logins_today' => LoginHistory::whereDate('login_at', $todayStr)->count(),
+                'failed_logins_today' => LoginHistory::whereDate('login_at', $todayStr)->where('status', 'failed')->count(),
                 'total_failed_jobs' => DB::table('failed_jobs')->count(),
                 'total_pending_jobs' => DB::table('jobs')->count(),
                 'error_log_size_kb' => $this->getErrorLogSizeKb(),
