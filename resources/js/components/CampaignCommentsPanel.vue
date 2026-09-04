@@ -238,6 +238,7 @@
 
           <!-- Send Button -->
           <button
+            v-if="$can('campaign.update')"
             @click="handleSend"
             :disabled="!newBody.trim() || loading"
             type="button"

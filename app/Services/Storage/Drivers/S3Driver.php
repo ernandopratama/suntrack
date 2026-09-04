@@ -3,8 +3,8 @@
 namespace App\Services\Storage\Drivers;
 
 use App\Contracts\Storage\StorageDriverInterface;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class S3Driver implements StorageDriverInterface
 {
@@ -15,7 +15,8 @@ class S3Driver implements StorageDriverInterface
         try {
             return Storage::disk($this->disk)->put($path, $content, $options);
         } catch (\Exception $e) {
-            Log::error('S3Driver put error: ' . $e->getMessage());
+            Log::error('S3Driver put error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -25,7 +26,8 @@ class S3Driver implements StorageDriverInterface
         try {
             return $this->exists($path) ? Storage::disk($this->disk)->get($path) : null;
         } catch (\Exception $e) {
-            Log::error('S3Driver get error: ' . $e->getMessage());
+            Log::error('S3Driver get error: '.$e->getMessage());
+
             return null;
         }
     }
@@ -35,7 +37,7 @@ class S3Driver implements StorageDriverInterface
         try {
             return Storage::disk($this->disk)->url($path);
         } catch (\Exception $e) {
-            return '/storage/error-s3-unconfigured/' . $path;
+            return '/storage/error-s3-unconfigured/'.$path;
         }
     }
 
@@ -44,7 +46,8 @@ class S3Driver implements StorageDriverInterface
         try {
             return Storage::disk($this->disk)->delete($path);
         } catch (\Exception $e) {
-            Log::error('S3Driver delete error: ' . $e->getMessage());
+            Log::error('S3Driver delete error: '.$e->getMessage());
+
             return false;
         }
     }

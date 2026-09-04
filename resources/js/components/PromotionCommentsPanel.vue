@@ -239,6 +239,7 @@
 
         <!-- Send Button -->
         <button
+          v-if="$can('promotion.update')"
           type="button"
           @click="handleSend"
           :disabled="!newBody.trim() || loading"

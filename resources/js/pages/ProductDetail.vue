@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="space-y-6">
     <!-- Header -->
@@ -93,6 +92,7 @@
           <StatusBadge :status="product.status" />
 
           <button
+            v-if="$can('product.update')"
             @click="openEditProduct"
             class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
             style="background: #4274d9"
@@ -345,6 +345,7 @@
 
               <!-- New Variant -->
               <button
+                v-if="$can('variant.create')"
                 @click="openCreateVariant"
                 class="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 style="background: #293681"
@@ -386,7 +387,7 @@
           v-else-if="!variants.length"
           title="No variants found"
           description="Create master variants for this product to set reference pricing and stock levels."
-          button-text="+ Create First Variant"
+          :button-text="$can('variant.create') ? '+ Create First Variant' : ''"
           @action="openCreateVariant"
         />
 
@@ -474,6 +475,7 @@
                 <td class="px-6 py-4 text-right">
                   <div class="flex items-center justify-end gap-2">
                     <button
+                      v-if="$can('variant.update')"
                       @click="openEditVariant(v)"
                       class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
                       style="color: #4274d9"
@@ -484,6 +486,7 @@
                     </button>
 
                     <button
+                      v-if="$can('variant.delete')"
                       @click="handleDeleteVariant(v)"
                       class="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-500 transition-colors hover:bg-red-50 hover:text-red-700"
                     >
@@ -622,6 +625,7 @@
           </button>
 
           <button
+            v-if="$can('product.update')"
             type="submit"
             form="edit-product-form"
             :disabled="loading"
@@ -784,6 +788,7 @@
           </button>
 
           <button
+            v-if="selectedVariant ? $can('variant.update') : $can('variant.create')"
             type="submit"
             form="variant-form"
             :disabled="loading"

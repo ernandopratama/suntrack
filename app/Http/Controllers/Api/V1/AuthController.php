@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\ActivityType;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\Authorization\DataScopeService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +19,7 @@ class AuthController extends Controller
     /**
      * Authenticate an Admin user.
      */
-    public function login(Request $request): JsonResponse
+    public function login(Request $request, DataScopeService $dataScope): JsonResponse
     {
         $data = $request->validate([
             'login' => ['nullable', 'string', 'max:255', 'required_without:email'],
@@ -47,13 +49,7 @@ class AuthController extends Controller
             );
 
             return $this->success('Login successful.', [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'company_id' => $user->company_id,
-                ]
+                'user' => $this->accessProfile($user, $dataScope),
             ]);
         }
 
@@ -89,19 +85,36 @@ class AuthController extends Controller
     /**
      * Get the authenticated user profile.
      */
-    public function user(Request $request): JsonResponse
+    public function user(Request $request, DataScopeService $dataScope): JsonResponse
     {
         $user = $request->user();
+
         return $this->success('User retrieved successfully.', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'username' => $user->username,
-                'email' => $user->email,
-                'company_id' => $user->company_id,
-                'roles' => $user->roles->pluck('name'),
-                'permissions' => $user->permissions->pluck('name'),
-            ]
+            'user' => $this->accessProfile($user, $dataScope),
         ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function accessProfile(User $user, DataScopeService $dataScope): array
+    {
+        $user->unsetRelation('roles');
+        $user->unsetRelation('permissions');
+        $roles = $user->getRoleNames()->values();
+        $globalScope = $dataScope->hasGlobalScope($user);
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'role' => $roles->first(),
+            'roles' => $roles,
+            'permissions' => $user->getAllPermissions()->pluck('name')->sort()->values(),
+            'scope' => [
+                'global' => $globalScope,
+                'company_ids' => $globalScope ? [] : $dataScope->effectiveCompanyIds($user)->values(),
+                'brand_ids' => $globalScope ? [] : $dataScope->effectiveBrandIds($user)->values(),
+            ],
+        ];
     }
 }

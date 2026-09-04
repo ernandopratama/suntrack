@@ -1,1 +1,12 @@
-<?php require 'vendor/autoload.php';  = require_once 'bootstrap/app.php';  = ->make(Illuminate\Contracts\Console\Kernel::class); ->bootstrap(); var_dump(\App\Models\User::first()->toArray()); ?>
+<?php
+
+use App\Models\User;
+use Illuminate\Contracts\Console\Kernel;
+
+require 'vendor/autoload.php';
+
+$app = require_once 'bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
+$kernel->bootstrap();
+
+var_dump(User::first()?->toArray());

@@ -29,13 +29,13 @@ class BrandReviewSubmittedEvent implements ShouldBroadcast
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, Channel>
      */
     public function broadcastOn(): array
     {
         return [
             new PrivateChannel('admin-dashboard'),
-            new PrivateChannel('promotions.' . $this->promotionId),
+            new PrivateChannel('promotions.'.$this->promotionId),
         ];
     }
 

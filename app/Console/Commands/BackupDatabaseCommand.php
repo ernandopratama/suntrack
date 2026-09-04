@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Services\Storage\StorageService;
 use App\Services\ActivityLogger;
+use App\Services\Storage\StorageService;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -48,7 +48,7 @@ class BackupDatabaseCommand extends Command
             }
 
             $content = json_encode($snapshot, JSON_PRETTY_PRINT);
-            $filename = 'backups/suntrack_backup_' . now()->format('Y_m_d_His') . '.json';
+            $filename = 'backups/suntrack_backup_'.now()->format('Y_m_d_His').'.json';
 
             $disk = $this->option('disk');
             if ($disk) {
@@ -73,8 +73,9 @@ class BackupDatabaseCommand extends Command
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('Database backup failed: ' . $e->getMessage());
-            ActivityLogger::log('System:BackupFailed', 'Automated backup failed: ' . $e->getMessage(), 'System', 'Scheduler');
+            $this->error('Database backup failed: '.$e->getMessage());
+            ActivityLogger::log('System:BackupFailed', 'Automated backup failed: '.$e->getMessage(), 'System', 'Scheduler');
+
             return Command::FAILURE;
         }
     }

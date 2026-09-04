@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="p-1">
     <form

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ApprovalHistory extends Model
 {
@@ -22,12 +23,14 @@ class ApprovalHistory extends Model
         'notes',
     ];
 
-    public function promotion()
+    /** @return BelongsTo<Promotion, $this> */
+    public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class);
     }
 
-    public function variant()
+    /** @return BelongsTo<Variant, $this> */
+    public function variant(): BelongsTo
     {
         return $this->belongsTo(Variant::class);
     }

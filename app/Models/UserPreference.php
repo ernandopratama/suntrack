@@ -18,7 +18,7 @@ class UserPreference extends Model
 
     protected $casts = [
         'dashboard_widgets' => 'array',
-        'extended'          => 'array',
+        'extended' => 'array',
         'default_page_size' => 'integer',
     ];
 

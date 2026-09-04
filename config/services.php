@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'url' => env('WHATSAPP_API_URL'),
+        'key' => env('WHATSAPP_API_KEY'),
+    ],
+
+    'elasticsearch' => [
+        'host' => env('ELASTICSEARCH_HOST'),
+    ],
+
+    'meilisearch' => [
+        'host' => env('MEILISEARCH_HOST'),
+    ],
+
 ];

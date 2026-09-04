@@ -231,7 +231,7 @@ Super Admin selalu memperoleh seluruh permission. Implementasi dapat memakai sel
 
 ### Admin
 
-Permission Admin bersifat tetap sesuai dokumen ini. Admin tidak dapat mengubah permission role Admin melalui antarmuka.
+Permission awal Admin mengikuti matriks dokumen ini. Super Admin dapat menonaktifkan atau mengaktifkan permission role Admin dalam whitelist `ADMIN_PERMISSIONS`. Permission terlarang seperti `user.delete` dan `access.assign-role` tidak dapat diberikan. Admin tidak dapat mengubah permission role sendiri.
 
 ### Tim
 
@@ -264,9 +264,9 @@ activity.view
 report.export
 ```
 
-Super Admin dan Admin dapat menyesuaikan permission user Tim melalui daftar permission yang diizinkan untuk Tim. Permission pengelolaan user, role, Company, Brand, dan sistem tidak dapat diberikan kepada Tim.
+Super Admin dapat mengatur permission bersama role Tim melalui whitelist `TEAM_ALLOWED_PERMISSIONS`. Permission role diwarisi seluruh user Tim. Super Admin dan Admin juga dapat menyesuaikan direct permission setiap user Tim melalui whitelist yang sama. Permission pengelolaan user, role, Company, Brand, dan sistem tidak dapat diberikan kepada Tim.
 
-Implementasi permission Tim harus mendukung pengaktifan dan penonaktifan permission per user. Role Tim berfungsi sebagai klasifikasi, sedangkan permission operasional Tim disimpan sebagai direct permissions melalui relasi `model_has_permissions`.
+Permission efektif Tim merupakan gabungan permission role dan direct permission user. Penghapusan permission bersama dari role tidak menghapus direct permission yang masih dimiliki user. Penyesuaian individual tetap dilakukan melalui halaman User dan Hak Akses.
 
 ## 7. Cakupan Data Tim
 
@@ -491,6 +491,80 @@ Cache permission Spatie dan cache cakupan data harus dibersihkan setelah role, p
 
 Pekerjaan dijalankan sesuai urutan berikut. Setiap tahap harus memenuhi hasil dan verifikasi yang ditentukan sebelum tahap berikutnya dimulai.
 
+### Status Pelaksanaan
+
+| Tahap | Status | Bukti |
+|---|---|---|
+| 1. Audit sistem | Selesai | `docs/RBAC-AUDIT.md` |
+| 2. Registry role dan permission | Selesai dan teruji | `app/Support/Rbac/RbacRegistry.php` dan `database/seeders/RolePermissionSeeder.php` |
+| 3. Struktur assignment | Selesai dan teruji | Migrasi `user_company_assignments` dan `user_brand_assignments` |
+| 4. Relasi dan layanan cakupan data | Selesai dan teruji | Relasi assignment dan `app/Services/Authorization/DataScopeService.php` |
+| 5. Proteksi backend | Selesai dan teruji | Middleware permission, Policy, query scope, API assignment Tim, dan endpoint Activity Log |
+| 6. Migrasi user dan assignment lama | Selesai, teruji, dan diaktifkan | Command `rbac:migrate-legacy-users`, normalisasi tipe user, snapshot rollback, dan migrasi seluruh user termasuk soft-deleted |
+| 7. Kontrak data autentikasi | Selesai dan teruji | Endpoint login/profil mengirim role aktif, permission efektif, dan ringkasan scope |
+| 8. Halaman User dan Hak Akses | Selesai dan teruji | Daftar/form user, halaman Role khusus Super Admin, assignment Company/Brand, scope efektif, dan riwayat akses |
+| 9. Penyesuaian tampilan modul | Selesai dan teruji | Guard route, menu, tombol aksi, form, halaman akses ditolak, Activity Log, Export, dan dark mode tampilan baru |
+| 10. Audit dan invalidasi cache | Selesai dan teruji | Activity Log menyimpan actor, target, nilai sebelum/sesudah, serta invalidasi cache permission dan scope |
+| 11. Pengujian menyeluruh | Selesai dan teruji otomatis | Pengujian role, permission, scope, manipulasi ID, sesi aktif, migrasi, login, route, dan theme contract |
+| 12. Aktivasi bertahap | Selesai dan terverifikasi | Backup PostgreSQL, migrasi, seeder, migrasi data, build produksi, dan smoke API tiga role |
+| 13. Pembersihan data legacy | Selesai dan terverifikasi | Role legacy dihapus, `users.company_id` dihapus, kode transisi dibersihkan, dan arsip rollback tersedia |
+
+Database aktif telah menjalankan seluruh Tahap 1-13. Role internal aktif hanya `Super Admin`, `Admin`, dan `Tim`. Cakupan Tim hanya berasal dari tabel assignment.
+
+Verifikasi Tahap 7-9 pada 2 September 2026:
+
+- Test suite: 53 tes dan 246 assertion lulus.
+- Kontrak frontend RBAC: 3 tes dan 25 assertion lulus.
+- PHPStan pada komponen inti Tahap 7-9: tidak ada error.
+- Pint dan build produksi Vite: lulus.
+- Route `api/v1/admin/access/options` memakai autentikasi Sanctum dan permission `access.view`.
+
+Verifikasi Tahap 10-12 pada 2 September 2026:
+
+- Backup PostgreSQL tersimpan di `storage/app/private/backups/rbac_pre_activation_20260902_134101.dump` dan arsip dapat dibaca oleh `pg_restore`.
+- Seluruh migrasi database aktif berstatus selesai tanpa migrasi pending.
+- Database aktif memiliki tiga role final dan 44 permission untuk guard `web`.
+- Satu Super Admin aktif tetap tersedia.
+- Satu user aktif dan satu user soft-deleted dengan role legacy `Company` telah dipensiunkan dari role internal; snapshot rollback tersimpan.
+- Activity Log migrasi akses menyimpan dua catatan `Access Updated`.
+- Smoke API database aktif lulus untuk profil Super Admin, pengelolaan akses Admin, Campaign/Activity Log/Export Tim, serta penolakan User dan Company pada Tim.
+- Seluruh user dan token smoke dijalankan dalam transaksi rollback; tidak ada data smoke yang tertinggal.
+- Test suite akhir: 60 tes dan 332 assertion lulus setelah seluruh perubahan dan aktivasi.
+- PHPStan pada komponen RBAC: tidak ada error.
+- Pint dan build produksi Vite: lulus.
+- Verifikasi visual browser belum tersedia pada sesi aktivasi; theme contract, route guard, dan build produksi telah lulus.
+
+Verifikasi Tahap 13 pada 3 September 2026:
+
+- Audit ulang Tahap 1-12 lulus pada baseline 60 tes dan 332 assertion.
+- Migrasi kontraksi role dan kolom legacy lulus maju, rollback, dan penerapan ulang pada database uji.
+- Database aktif hanya memiliki tiga nama role final pada guard `web` dan `api`; tidak ada role atau assignment non-final.
+- Kolom `users.company_id` sudah dihapus. Tiga nilai lama tersimpan pada `rbac_legacy_user_company_snapshots`.
+- Delapan definisi role legacy lintas guard tersimpan pada `rbac_legacy_role_snapshots` untuk rollback.
+- Kode otorisasi tidak lagi membaca `users.company_id`; cakupan Tim memakai `user_company_assignments` dan `user_brand_assignments`.
+- Search dan Pricing Analytics untuk Super Admin/Admin memakai cakupan global dan tidak bergantung pada Company user.
+- Test suite akhir: 58 tes dan 316 assertion lulus setelah tes kompatibilitas transisi dihapus.
+- PHPStan komponen inti: tidak ada error. Pint file Tahap 13 dan build produksi Vite lulus.
+- Smoke database aktif lulus: profil Tim `200`, Company scope Tim `200` dengan satu hasil, User/Company create Tim `403`, Search Admin `200`, dan Pricing Admin `200`.
+- Data user, Company, token, dan entity smoke dibungkus transaksi rollback; tidak ada data smoke tertinggal.
+
+Verifikasi halaman Role pada 3 September 2026:
+
+- Menu dan route `/roles` hanya tersedia untuk Super Admin.
+- Halaman hanya menampilkan `Super Admin`, `Admin`, dan `Tim` dari guard `web`.
+- Permission Super Admin terkunci. Permission Admin dan Tim hanya dapat dipilih dari whitelist registry masing-masing.
+- Perubahan permission disinkronkan ke guard `web` dan `api`, dibersihkan dari cache, dan dicatat pada Activity Log.
+- Modal user menampilkan user aktif pemilik role dengan pagination; user soft-deleted tidak ditampilkan.
+- Endpoint create, rename, dan delete role tidak tersedia.
+- Test suite: 65 tes dan 354 assertion lulus. PHPStan komponen Role dan build produksi Vite lulus.
+- Pemeriksaan visual browser tidak tersedia pada sesi ini.
+
+Rollback setelah Tahap 13:
+
+- Backup sebelum kontraksi tersedia di `storage/app/private/backups/rbac_pre_legacy_cleanup_20260902_073231.dump`; arsip custom PostgreSQL berukuran 96.971 byte dan memiliki 245 baris TOC.
+- `php artisan migrate:rollback --step=2` memulihkan definisi role legacy dan nilai `users.company_id` dari tabel snapshot.
+- Rollback penuh ke kondisi sebelum Tahap 13 dilakukan dengan menghentikan aplikasi dan memulihkan backup PostgreSQL tersebut bersama versi kode sebelum Tahap 13.
+
 ### Tahap 1 - Audit Sistem Saat Ini
 
 Pekerjaan:
@@ -518,7 +592,7 @@ Pekerjaan:
 
 - Menetapkan nama role final: `Super Admin`, `Admin`, dan `Tim`.
 - Membuat satu registry permission berdasarkan Bagian 5.
-- Menetapkan permission tetap untuk Super Admin dan Admin.
+- Menetapkan permission awal dan whitelist konfigurasi untuk Super Admin, Admin, dan Tim.
 - Menetapkan permission default dan whitelist permission untuk Tim.
 - Membuat seeder role dan permission yang aman dijalankan berulang kali.
 
@@ -653,6 +727,7 @@ Urutan antarmuka:
 4. Multi-select Company dan Brand.
 5. Ringkasan cakupan efektif.
 6. Riwayat perubahan akses.
+7. Halaman Role khusus Super Admin untuk mengatur permission Admin/Tim dan melihat user pemilik role.
 
 Verifikasi:
 
@@ -660,6 +735,8 @@ Verifikasi:
 - Admin hanya dapat membuat dan mengedit Tim.
 - Admin tidak dapat menghapus user atau mengubah Admin dan Super Admin.
 - Tim tidak dapat membuka halaman User dan Hak Akses.
+- Admin dan Tim tidak dapat membuka halaman maupun API Role.
+- Super Admin tidak dapat mengubah permission role Super Admin atau membuat, mengganti nama, dan menghapus role final.
 
 ### Tahap 9 - Menyesuaikan Seluruh Tampilan Modul
 
@@ -735,6 +812,8 @@ Verifikasi:
 
 Tahap ini dikerjakan pada migrasi terpisah setelah sistem baru stabil dan seluruh pengujian lulus.
 
+Status: selesai dan telah diterapkan pada database aktif tanggal 2 September 2026.
+
 Pekerjaan:
 
 - Memastikan tidak ada user yang masih memakai role lama.
@@ -748,6 +827,13 @@ Verifikasi:
 - Database hanya memiliki tiga role internal final.
 - Seluruh cakupan Tim berasal dari tabel assignment.
 - Pengujian regresi tetap lulus setelah data legacy dihapus.
+
+Implementasi:
+
+- Migrasi `2026_09_02_000002_retire_legacy_rbac_roles` menolak kontraksi bila role legacy masih memiliki assignment, mengarsipkan definisi dan permission role, lalu menghapus role non-final.
+- Migrasi `2026_09_02_000003_remove_company_id_from_users_table` menolak kontraksi bila cakupan Tim belum dipindahkan, mengarsipkan nilai lama, lalu menghapus kolom.
+- Fallback scope, input/payload `company_id` milik User, relasi User-Company lama, command migrasi transisi, dan tes kompatibilitas lama telah dihapus.
+- Tabel snapshot dipertahankan sebagai data rollback dan tidak digunakan oleh otorisasi aktif.
 
 ### Aturan Pelaksanaan
 

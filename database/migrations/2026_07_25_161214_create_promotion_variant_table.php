@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('approval_status', 50)->default('Pending');
             $table->text('rejection_notes')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['promotion_id', 'variant_id']);
         });
     }

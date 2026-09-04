@@ -2,9 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\ActivityLogger;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Promotion extends Model
@@ -24,7 +29,7 @@ class Promotion extends Model
 
     protected $casts = [
         'start_date' => 'datetime',
-        'end_date'   => 'datetime',
+        'end_date' => 'datetime',
     ];
 
     /**
@@ -45,11 +50,11 @@ class Promotion extends Model
      */
     protected static function generateCode(): string
     {
-        $prefix = 'PRM-' . now()->format('Ym') . '-';
+        $prefix = 'PRM-'.now()->format('Ym').'-';
 
         // Find the highest sequence number this month
         $lastCode = static::withTrashed()
-            ->where('code', 'like', $prefix . '%')
+            ->where('code', 'like', $prefix.'%')
             ->orderByDesc('code')
             ->value('code');
 
@@ -57,19 +62,21 @@ class Promotion extends Model
             ? (int) substr($lastCode, strlen($prefix)) + 1
             : 1;
 
-        return $prefix . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
     }
 
     // =========================================================
     // Relationships
     // =========================================================
 
-    public function brand()
+    /** @return BelongsTo<Brand, $this> */
+    public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
     }
 
-    public function campaign()
+    /** @return BelongsTo<Campaign, $this> */
+    public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
     }
@@ -78,7 +85,8 @@ class Promotion extends Model
      * Variants linked to this promotion via the promotion_variant pivot table.
      * This pivot already contains all pricing fields, anticipating Sprint 5.
      */
-    public function variants()
+    /** @return BelongsToMany<Variant, $this> */
+    public function variants(): BelongsToMany
     {
         return $this->belongsToMany(Variant::class, 'promotion_variant')
             ->withPivot([
@@ -95,22 +103,26 @@ class Promotion extends Model
             ->withTimestamps();
     }
 
-    public function secureLinks()
+    /** @return MorphMany<SecureLink, $this> */
+    public function secureLinks(): MorphMany
     {
         return $this->morphMany(SecureLink::class, 'linkable');
     }
 
-    public function approvalHistories()
+    /** @return HasMany<ApprovalHistory, $this> */
+    public function approvalHistories(): HasMany
     {
         return $this->hasMany(ApprovalHistory::class)->latest();
     }
 
-    public function comments()
+    /** @return MorphMany<Comment, $this> */
+    public function comments(): MorphMany
     {
         return $this->morphMany(Comment::class, 'commentable')->oldest();
     }
 
-    public function activityLogs()
+    /** @return MorphMany<ActivityLog, $this> */
+    public function activityLogs(): MorphMany
     {
         return $this->morphMany(ActivityLog::class, 'loggable')->latest();
     }
@@ -133,7 +145,7 @@ class Promotion extends Model
         } else {
             $approved = $variants->where('pivot.approval_status', 'Approved')->count();
             $rejected = $variants->where('pivot.approval_status', 'Rejected')->count();
-            $pending  = $variants->where('pivot.approval_status', 'Pending')->count();
+            $pending = $variants->where('pivot.approval_status', 'Pending')->count();
 
             if ($approved === $total) {
                 $newStatus = 'Approved';
@@ -150,7 +162,7 @@ class Promotion extends Model
             $oldStatus = $this->status;
             $this->update(['status' => $newStatus]);
 
-            \App\Services\ActivityLogger::log(
+            ActivityLogger::log(
                 'Status Changed',
                 "Promotion status automatically updated from '{$oldStatus}' to '{$newStatus}' based on Brand variant review.",
                 'Brand',

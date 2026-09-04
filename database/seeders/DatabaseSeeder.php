@@ -25,7 +25,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::create([
-            'company_id' => $company->id,
             'name' => 'Super Admin',
             'username' => 'admin',
             'email' => 'admin@suntrack.com',

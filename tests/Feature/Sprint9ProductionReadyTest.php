@@ -2,15 +2,14 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Company;
-use App\Services\Storage\StorageService;
+use App\Models\User;
 use App\Services\Settings\SettingsService;
+use App\Services\Storage\StorageService;
+use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use Tests\TestCase;
 
 class Sprint9ProductionReadyTest extends TestCase
 {
@@ -23,7 +22,7 @@ class Sprint9ProductionReadyTest extends TestCase
         parent::setUp();
 
         // Seed roles and permissions
-        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+        $this->seed(RolePermissionSeeder::class);
 
         $company = Company::create(['name' => 'Test Company']);
         $this->adminUser = User::create([
@@ -71,7 +70,7 @@ class Sprint9ProductionReadyTest extends TestCase
             'settings' => [
                 ['key' => 'app.name', 'value' => 'SunTrack Enterprise', 'type' => 'string', 'group' => 'general', 'is_public' => true],
                 ['key' => 'security.rate_limit_api', 'value' => 120, 'type' => 'integer', 'group' => 'security', 'is_public' => false],
-            ]
+            ],
         ]);
 
         $updateResponse->assertStatus(200);
@@ -89,7 +88,7 @@ class Sprint9ProductionReadyTest extends TestCase
     public function test_media_storage_abstraction_service()
     {
         $storageService = app(StorageService::class);
-        $testPath = 'unit_tests/test_' . time() . '.txt';
+        $testPath = 'unit_tests/test_'.time().'.txt';
 
         $this->assertTrue($storageService->put($testPath, 'Hello Storage'));
         $this->assertTrue($storageService->exists($testPath));

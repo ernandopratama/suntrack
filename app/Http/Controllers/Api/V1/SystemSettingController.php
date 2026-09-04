@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use App\Services\Settings\SettingsService;
 use App\Traits\ApiResponse;
-use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -27,6 +27,7 @@ class SystemSettingController extends Controller
         if ($group) {
             return $this->success("Settings retrieved for group: {$group}", $this->settingsService->getGroup($group));
         }
+
         return $this->success('All system settings retrieved successfully.', $this->settingsService->all());
     }
 
@@ -63,9 +64,9 @@ class SystemSettingController extends Controller
 
             ActivityLogger::log(
                 'SystemSettings:Update',
-                "Updated " . count($updated) . " system setting keys.",
+                'Updated '.count($updated).' system setting keys.',
                 'Admin',
-                $request->user()?->name ?? 'System Admin',
+                $request->user()->name ?? 'System Admin',
                 null,
                 $request->user()?->id,
                 null,
@@ -73,10 +74,12 @@ class SystemSettingController extends Controller
             );
 
             DB::commit();
+
             return $this->success('System settings updated successfully.', $this->settingsService->all());
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Failed to update settings: ' . $e->getMessage(), [], 500);
+
+            return $this->error('Failed to update settings: '.$e->getMessage(), [], 500);
         }
     }
 

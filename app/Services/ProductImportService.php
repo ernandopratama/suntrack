@@ -2,14 +2,13 @@
 
 namespace App\Services;
 
+use App\Enums\ActivityType;
 use App\Models\Brand;
 use App\Models\Product;
+use App\Models\User;
 use App\Models\Variant;
-use App\Enums\ActivityType;
-use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 use ZipArchive;
-use SimpleXMLElement;
 
 class ProductImportService
 {
@@ -42,12 +41,12 @@ class ProductImportService
 
         // Map headers (case-insensitive)
         $headerMap = $this->mapHeaders($rows[0]);
-        if (!isset($headerMap['nama_produk'], $headerMap['kode_produk'])) {
+        if (! isset($headerMap['nama_produk'], $headerMap['kode_produk'])) {
             throw new \RuntimeException('Missing required columns: Nama Produk, Kode Produk.');
         }
 
         $brand = Brand::find($brandId);
-        if (!$brand) {
+        if (! $brand) {
             throw new \RuntimeException('Brand not found.');
         }
 
@@ -68,6 +67,7 @@ class ProductImportService
 
                     if (empty($productName) || empty($productCode)) {
                         $skipped++;
+
                         continue;
                     }
 
@@ -89,7 +89,7 @@ class ProductImportService
                             'name' => $productName,
                             'status' => 'Active',
                         ]);
-        
+
                         $imported++;
                     }
 
@@ -113,7 +113,7 @@ class ProductImportService
                     }
 
                     if (empty($variantCode)) {
-                        $variantCode = $productCode . '-001';
+                        $variantCode = $productCode.'-001';
                     }
                     if (empty($variantName)) {
                         $variantName = $productName;
@@ -134,10 +134,11 @@ class ProductImportService
                         ]
                     );
 
-    
-
                 } catch (\Exception $e) {
-                    $msg = $e->getMessage(); if (strlen($msg) > 200) { $msg = substr($msg, 0, 200) . "..."; } $errors[] = "Row {$rowNum}: {$msg}";
+                    $msg = $e->getMessage();
+                    if (strlen($msg) > 200) {
+                        $msg = substr($msg, 0, 200).'...';
+                    } $errors[] = "Row {$rowNum}: {$msg}";
                     $skipped++;
                 }
             }
@@ -154,7 +155,7 @@ class ProductImportService
                 action: ActivityType::Created->value,
                 description: "Imported {$imported} product(s) via Excel upload for brand '{$brand->name}'.",
                 actorType: 'Admin',
-                actorName: optional(\App\Models\User::find($userId))->name ?? 'System',
+                actorName: optional(User::find($userId))->name ?? 'System',
                 loggable: $brand,
                 actorId: $userId
             );
@@ -182,6 +183,7 @@ class ProductImportService
         foreach ($sxml->si as $si) {
             $strings[] = (string) $si->t;
         }
+
         return $strings;
     }
 
@@ -207,7 +209,7 @@ class ProductImportService
 
         // Find the first sheet
         $sheetNodes = $wb->xpath('//s:sheets/s:sheet');
-        if (!$sheetNodes || empty($sheetNodes)) {
+        if ($sheetNodes === false || $sheetNodes === []) {
             return $rows;
         }
 
@@ -232,13 +234,13 @@ class ProductImportService
         $sheetPath = null;
         foreach ($rels->Relationship as $rel) {
             $attrs = $rel->attributes();
-            if ((string)$attrs['Id'] === $rid) {
-                $sheetPath = 'xl/' . (string)$attrs['Target'];
+            if ((string) $attrs['Id'] === $rid) {
+                $sheetPath = 'xl/'.(string) $attrs['Target'];
                 break;
             }
         }
 
-        if (!$sheetPath) {
+        if (! $sheetPath) {
             return $rows;
         }
 
@@ -255,7 +257,7 @@ class ProductImportService
 
         $sheet->registerXPathNamespace('s', $mainNs);
         $sheetDataNodes = $sheet->xpath('//s:sheetData');
-        if (!$sheetDataNodes || empty($sheetDataNodes)) {
+        if ($sheetDataNodes === false || $sheetDataNodes === []) {
             return $rows;
         }
         $sheetData = $sheetDataNodes[0];
@@ -264,12 +266,12 @@ class ProductImportService
             $rowData = [];
             foreach ($row->c as $cell) {
                 $attrs = $cell->attributes();
-                $ref = (string)$attrs['r'];
-                $type = (string)$attrs['t'];
-                $value = (string)$cell->v;
+                $ref = (string) $attrs['r'];
+                $type = (string) $attrs['t'];
+                $value = (string) $cell->v;
 
-                if ($type === 's' && isset($sharedStrings[(int)$value])) {
-                    $value = $sharedStrings[(int)$value];
+                if ($type === 's' && isset($sharedStrings[(int) $value])) {
+                    $value = $sharedStrings[(int) $value];
                 }
 
                 // Extract column letter from cell reference (e.g., "A1" -> "A")
@@ -281,7 +283,8 @@ class ProductImportService
 
         return $rows;
     }
-private function mapHeaders(array $headerRow): array
+
+    private function mapHeaders(array $headerRow): array
     {
         $map = [
             'nama_produk' => null,
@@ -358,14 +361,7 @@ private function mapHeaders(array $headerRow): array
         if (is_numeric($cleaned)) {
             return (float) $cleaned;
         }
+
         return null;
     }
 }
-
-
-
-
-
-
-
-

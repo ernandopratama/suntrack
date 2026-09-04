@@ -16,7 +16,7 @@ class UserPreferenceController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected UserPreferenceService $service = new UserPreferenceService()
+        protected UserPreferenceService $service = new UserPreferenceService
     ) {}
 
     /**
@@ -25,6 +25,7 @@ class UserPreferenceController extends Controller
     public function show(Request $request): JsonResponse
     {
         $prefs = $this->service->getPreferences($request->user()->id);
+
         return $this->success('Preferences retrieved.', ['preferences' => $prefs]);
     }
 
@@ -35,18 +36,19 @@ class UserPreferenceController extends Controller
     {
         $request->validate([
             'default_landing_page' => ['sometimes', 'string', 'max:100'],
-            'default_page_size'    => ['sometimes', 'integer', 'in:10,15,25,50,100'],
-            'theme'                => ['sometimes', 'in:dark,light,system'],
-            'locale'               => ['sometimes', 'in:id,en'],
-            'timezone'             => ['sometimes', 'string', 'max:50'],
-            'dashboard_widgets'    => ['sometimes', 'array'],
-            'extended'             => ['sometimes', 'array'],
+            'default_page_size' => ['sometimes', 'integer', 'in:10,15,25,50,100'],
+            'theme' => ['sometimes', 'in:dark,light,system'],
+            'locale' => ['sometimes', 'in:id,en'],
+            'timezone' => ['sometimes', 'string', 'max:50'],
+            'dashboard_widgets' => ['sometimes', 'array'],
+            'extended' => ['sometimes', 'array'],
         ]);
 
         $prefs = $this->service->updatePreferences($request->user()->id, $request->only([
             'default_landing_page', 'default_page_size', 'theme', 'locale', 'timezone',
             'dashboard_widgets', 'extended',
         ]));
+
         return $this->success('Preferences updated.', ['preferences' => $prefs]);
     }
 }

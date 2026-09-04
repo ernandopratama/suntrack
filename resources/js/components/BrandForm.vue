@@ -317,6 +317,7 @@
         </button>
 
         <button
+          v-if="isEdit ? $can('brand.update') : $can('brand.create')"
           type="submit"
           form="brand-form"
           :disabled="loading"
@@ -372,7 +373,6 @@ import { ref, computed, watch, onMounted } from 'vue';
 import ModalForm from './ModalForm.vue';
 import { useBrands } from '../composables/useBrands';
 import { useCompanies } from '../composables/useCompanies';
-import { useAuthStore } from '../stores/auth';
 
 const props = defineProps({
   isOpen: { type: Boolean, required: true },
@@ -383,7 +383,6 @@ const emit = defineEmits(['close', 'saved']);
 
 const { createBrand, updateBrand, loading, error } = useBrands();
 const { companies, fetchCompanies } = useCompanies();
-const authStore = useAuthStore();
 
 const isEdit = ref(false);
 
@@ -419,17 +418,14 @@ watch(
 
         form.value = {
           name: props.brand.name,
-          company_id:
-            props.brand.company_id ||
-            authStore.user?.company_id ||
-            ''
+          company_id: props.brand.company_id || ''
         };
       } else {
         isEdit.value = false;
 
         form.value = {
           name: '',
-          company_id: authStore.user?.company_id || ''
+          company_id: ''
         };
       }
 

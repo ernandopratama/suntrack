@@ -194,6 +194,7 @@
             </div>
 
             <button
+              v-if="$can('promotion.update')"
               @click="updateExpiry"
               :disabled="loading"
               type="button"
@@ -206,6 +207,7 @@
 
           <div class="flex flex-wrap gap-2">
             <button
+              v-if="$can('promotion.update')"
               @click="handleRegenerate"
               :disabled="loading"
               type="button"
@@ -216,7 +218,7 @@
             </button>
 
             <button
-              v-if="secureLink.status !== 'Revoked'"
+              v-if="$can('promotion.update') && secureLink.status !== 'Revoked'"
               @click="handleRevoke"
               :disabled="loading"
               type="button"
@@ -249,6 +251,7 @@
           </p>
 
           <button
+            v-if="$can('promotion.update')"
             @click="handleGenerate"
             :disabled="loading"
             type="button"
@@ -311,7 +314,7 @@
 
         <!-- Batch Toolbar -->
         <div
-          v-if="variants.length > 0"
+          v-if="$can('promotion.approve') && variants.length > 0"
           class="mb-5 rounded-2xl border border-[#95CCDD]/60 bg-[#D0E7E6]/30 p-4"
         >
           <div
@@ -419,6 +422,7 @@
                 >
                   <th class="w-12 px-3 py-3.5 text-center">
                     <input
+                      v-if="$can('promotion.approve')"
                       type="checkbox"
                       @change="toggleSelectAll"
                       :checked="isAllSelected"
@@ -456,6 +460,7 @@
                 >
                   <td class="px-3 py-4 text-center">
                     <input
+                      v-if="$can('promotion.approve')"
                       type="checkbox"
                       :value="variant.id"
                       v-model="selectedVariantIds"

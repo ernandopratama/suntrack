@@ -41,6 +41,7 @@
       <div class="flex flex-col gap-2 sm:flex-row">
         <!-- Import -->
         <button
+          v-if="$can('product.create')"
           @click="openImportModal"
           class="inline-flex items-center justify-center rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           style="border-color: #95ccdd; color: #293681;"
@@ -63,6 +64,7 @@
 
         <!-- New Product -->
         <button
+          v-if="$can('product.create')"
           @click="openCreate"
           class="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           style="background-color: #293681;"
@@ -169,7 +171,7 @@
 
             <!-- Bulk Delete -->
             <button
-              v-if="selectedIds.length > 0"
+              v-if="$can('product.delete') && selectedIds.length > 0"
               @click="confirmBulkDelete"
               class="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm font-semibold text-red-600 transition-all duration-200 hover:bg-red-100"
             >
@@ -194,6 +196,7 @@
         <!-- Checkbox Header -->
         <template #head-checkbox>
           <input
+            v-if="$can('product.delete')"
             type="checkbox"
             :checked="
               selectedIds.length === products.length &&
@@ -211,6 +214,7 @@
         <!-- Checkbox -->
         <template #cell-checkbox="{ row }">
           <input
+            v-if="$can('product.delete')"
             type="checkbox"
             :checked="selectedIds.includes(row.id)"
             @change="toggleSelect(row.id)"
@@ -361,6 +365,7 @@
 
             <!-- Edit -->
             <button
+              v-if="$can('product.update')"
               @click="openEdit(row)"
               class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
               title="Edit Product"
@@ -388,6 +393,7 @@
 
             <!-- Delete -->
             <button
+              v-if="$can('product.delete')"
               @click="confirmDelete(row)"
               class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
               title="Delete Product"
@@ -642,6 +648,7 @@
           </button>
 
           <button
+            v-if="selectedProduct ? $can('product.update') : $can('product.create')"
             type="submit"
             form="product-form"
             :disabled="submitting"
@@ -907,7 +914,7 @@
           </button>
 
           <button
-            v-if="!importResult"
+            v-if="!importResult && $can('product.create')"
             type="submit"
             form="import-form"
             :disabled="importing"

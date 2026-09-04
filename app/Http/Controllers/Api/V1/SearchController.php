@@ -16,7 +16,7 @@ class SearchController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected GlobalSearchService $search = new GlobalSearchService()
+        protected GlobalSearchService $search = new GlobalSearchService
     ) {}
 
     /**
@@ -27,19 +27,17 @@ class SearchController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $request->validate([
-            'q'      => ['required', 'string', 'min:2', 'max:100'],
-            'types'  => ['sometimes', 'array'],
-            'types.*'=> ['string', 'in:campaign,promotion,product,variant,activity_log,comment'],
-            'limit'  => ['sometimes', 'integer', 'min:1', 'max:20'],
+            'q' => ['required', 'string', 'min:2', 'max:100'],
+            'types' => ['sometimes', 'array'],
+            'types.*' => ['string', 'in:campaign,promotion,product,variant,activity_log,comment'],
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:20'],
         ]);
 
-        $user      = $request->user();
-        $companyId = $user->company_id ?? 0;
-        $query     = $request->string('q')->trim()->toString();
-        $types     = $request->array('types');
-        $limit     = (int) $request->input('limit', 5);
+        $query = $request->string('q')->trim()->toString();
+        $types = $request->array('types');
+        $limit = (int) $request->input('limit', 5);
 
-        $result = $this->search->search($query, $types, $limit, $companyId);
+        $result = $this->search->search($query, $types, $limit);
 
         return $this->success('Search completed.', $result);
     }

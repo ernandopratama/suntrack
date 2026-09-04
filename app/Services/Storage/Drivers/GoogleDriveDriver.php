@@ -3,8 +3,8 @@
 namespace App\Services\Storage\Drivers;
 
 use App\Contracts\Storage\StorageDriverInterface;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class GoogleDriveDriver implements StorageDriverInterface
 {
@@ -15,9 +15,10 @@ class GoogleDriveDriver implements StorageDriverInterface
         try {
             return Storage::disk($this->disk)->put($path, $content, $options);
         } catch (\Exception $e) {
-            Log::error('GoogleDriveDriver put error: ' . $e->getMessage());
+            Log::error('GoogleDriveDriver put error: '.$e->getMessage());
+
             // Fallback to local disk if Google Drive disk is unconfigured in local dev
-            return Storage::disk('local')->put('gdrive-fallback/' . $path, $content, $options);
+            return Storage::disk('local')->put('gdrive-fallback/'.$path, $content, $options);
         }
     }
 
@@ -26,7 +27,7 @@ class GoogleDriveDriver implements StorageDriverInterface
         try {
             return $this->exists($path) ? Storage::disk($this->disk)->get($path) : null;
         } catch (\Exception $e) {
-            return Storage::disk('local')->get('gdrive-fallback/' . $path);
+            return Storage::disk('local')->get('gdrive-fallback/'.$path);
         }
     }
 
@@ -35,7 +36,7 @@ class GoogleDriveDriver implements StorageDriverInterface
         try {
             return Storage::disk($this->disk)->url($path);
         } catch (\Exception $e) {
-            return '/storage/gdrive-fallback/' . $path;
+            return '/storage/gdrive-fallback/'.$path;
         }
     }
 
@@ -44,7 +45,7 @@ class GoogleDriveDriver implements StorageDriverInterface
         try {
             return Storage::disk($this->disk)->delete($path);
         } catch (\Exception $e) {
-            return Storage::disk('local')->delete('gdrive-fallback/' . $path);
+            return Storage::disk('local')->delete('gdrive-fallback/'.$path);
         }
     }
 
@@ -53,7 +54,7 @@ class GoogleDriveDriver implements StorageDriverInterface
         try {
             return Storage::disk($this->disk)->exists($path);
         } catch (\Exception $e) {
-            return Storage::disk('local')->exists('gdrive-fallback/' . $path);
+            return Storage::disk('local')->exists('gdrive-fallback/'.$path);
         }
     }
 

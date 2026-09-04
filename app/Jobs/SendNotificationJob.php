@@ -15,15 +15,16 @@ class SendNotificationJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 60;
 
     /**
      * Create a new job instance.
      *
-     * @param string $channel ('whatsapp', 'email', 'in_app', 'webhook')
-     * @param string $recipient Target address
-     * @param string $message Main message content
-     * @param array<string, mixed> $metadata Full structured metadata
+     * @param  string  $channel  ('whatsapp', 'email', 'in_app', 'webhook')
+     * @param  string  $recipient  Target address
+     * @param  string  $message  Main message content
+     * @param  array<string, mixed>  $metadata  Full structured metadata
      */
     public function __construct(
         protected string $channel,

@@ -197,6 +197,7 @@
 
           <!-- Edit -->
           <button
+            v-if="$can('campaign.update')"
             @click="openEditModal"
             type="button"
             class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-[#D0E7E6] bg-[#D0E7E6]/40 px-4 py-2.5 text-xs font-extrabold text-[#293681] shadow-sm transition-all duration-200 hover:border-[#95CCDD] hover:bg-[#D0E7E6] hover:shadow-md"
@@ -404,6 +405,7 @@
             </div>
 
             <button
+              v-if="$can('task.create')"
               @click="openCreateTaskModal"
               type="button"
               class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4274D9] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#293681] hover:shadow-md"
@@ -485,6 +487,7 @@
                   </span>
 
                   <button
+                    v-if="$can('task.update')"
                     @click="openEditTaskModal(t)"
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-[11px] font-bold text-gray-600 transition-all hover:border-[#95CCDD] hover:bg-[#D0E7E6]/30 hover:text-[#293681]"
@@ -494,6 +497,7 @@
                   </button>
 
                   <button
+                    v-if="$can('task.delete')"
                     @click="confirmDeleteTask(t)"
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-600 transition-all hover:bg-red-100"
@@ -611,6 +615,7 @@
                   </router-link>
 
                   <button
+                    v-if="$can('promotion.delete')"
                     @click="deletePromotionAction(p)"
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-600 transition-all hover:bg-red-100"
@@ -653,6 +658,7 @@
             </div>
 
             <button
+              v-if="$can('promotion.update')"
               @click="openAddProductModal"
               type="button"
               class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4274D9] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#293681] hover:shadow-md"
@@ -805,6 +811,7 @@
                       <td class="px-5 py-3.5">
                         <div class="flex items-center justify-end gap-1">
                           <button
+                            v-if="$can('promotion.update')"
                             @click="openEditVariantPricing(promo.id, v)"
                             type="button"
                             class="inline-flex items-center gap-1 rounded-lg px-2.5 py-2 text-[10px] font-bold text-[#4274D9] transition-colors hover:bg-[#D0E7E6]/40 hover:text-[#293681]"
@@ -814,6 +821,7 @@
                           </button>
 
                           <button
+                            v-if="$can('promotion.update')"
                             @click="removeVariantFromPromo(promo.id, v.id)"
                             type="button"
                             class="inline-flex items-center gap-1 rounded-lg px-2.5 py-2 text-[10px] font-bold text-red-500 transition-colors hover:bg-red-50 hover:text-red-700"
@@ -892,6 +900,7 @@
 
                   <div class="flex justify-end gap-2">
                     <button
+                      v-if="$can('promotion.update')"
                       @click="openEditVariantPricing(promo.id, v)"
                       type="button"
                       class="inline-flex items-center gap-1.5 rounded-lg border border-[#95CCDD] bg-[#D0E7E6]/30 px-3 py-2 text-[10px] font-bold text-[#293681]"
@@ -901,6 +910,7 @@
                     </button>
 
                     <button
+                      v-if="$can('promotion.update')"
                       @click="removeVariantFromPromo(promo.id, v.id)"
                       type="button"
                       class="inline-flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-[10px] font-bold text-red-600"
@@ -1089,6 +1099,7 @@
           </button>
 
           <button
+            v-if="$can('promotion.update')"
             type="submit"
             form="pricing-form"
             :disabled="pricingSubmitting"

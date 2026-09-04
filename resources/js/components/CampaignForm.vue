@@ -451,6 +451,7 @@
         </button>
 
         <button
+          v-if="isEdit ? $can('campaign.update') : $can('campaign.create')"
           type="submit"
           form="campaign-form"
           :disabled="loading"

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Support\Rbac\RbacRegistry;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -60,7 +62,10 @@ class UsernameLoginTest extends TestCase
 
     public function test_user_can_be_updated_without_changing_email(): void
     {
+        $this->seed(RolePermissionSeeder::class);
+
         $actor = User::factory()->create();
+        $actor->assignRole(RbacRegistry::SUPER_ADMIN);
         $user = User::factory()->create([
             'name' => 'Existing User',
             'username' => 'existing.user',

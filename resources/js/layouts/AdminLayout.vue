@@ -1,6 +1,6 @@
 ```vue
 <template>
-  <div class="h-screen flex overflow-hidden bg-page text-content">
+  <div class="fixed inset-0 flex overflow-hidden bg-page text-content">
 
     <!-- Mobile Backdrop -->
     <div
@@ -83,6 +83,7 @@
 
         <!-- Dashboard -->
         <router-link
+          v-if="$can('campaign.view')"
           to="/dashboard"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -122,6 +123,7 @@
 
         <!-- Users -->
         <router-link
+          v-if="$can('user.view')"
           to="/users"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -154,8 +156,44 @@
           ></span>
         </router-link>
 
+        <!-- Roles -->
+        <router-link
+          v-if="$hasRole('Super Admin')"
+          to="/roles"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="
+            $route.path.startsWith('/roles')
+              ? 'shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
+          "
+          :style="
+            $route.path.startsWith('/roles')
+              ? { background: '#D0E7E6', color: '#293681' }
+              : {}
+          "
+        >
+          <i
+            class="fa-solid fa-user-shield w-5 text-center"
+            :style="
+              $route.path.startsWith('/roles')
+                ? { color: '#4274D9' }
+                : {}
+            "
+          ></i>
+
+          <span v-if="sidebarOpen" class="ml-3">Roles</span>
+
+          <span
+            v-if="$route.path.startsWith('/roles') && sidebarOpen"
+            class="ml-auto h-2 w-2 rounded-full"
+            style="background: #4274d9"
+          ></span>
+        </router-link>
+
         <!-- Companies -->
         <router-link
+          v-if="$can('company.view')"
           to="/companies"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -190,6 +228,7 @@
 
         <!-- Brands -->
         <router-link
+          v-if="$can('brand.view')"
           to="/brands"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -224,6 +263,7 @@
 
         <!-- Campaigns -->
         <router-link
+          v-if="$can('campaign.view')"
           to="/campaigns"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -258,6 +298,7 @@
 
         <!-- Promotions -->
         <router-link
+          v-if="$can('promotion.view')"
           to="/promotions"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -292,6 +333,7 @@
 
         <!-- Tasks -->
         <router-link
+          v-if="$can('task.view')"
           to="/tasks"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -326,6 +368,7 @@
 
         <!-- Products -->
         <router-link
+          v-if="$can('product.view')"
           to="/products"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -359,7 +402,10 @@
         </router-link>
 
         <!-- Divider -->
-        <div class="my-5 flex items-center gap-3 px-3">
+        <div
+          v-if="$can('activity.view') || $can('report.export') || $can('settings.view')"
+          class="my-5 flex items-center gap-3 px-3"
+        >
           <div class="h-px flex-1 bg-slate-100"></div>
 
           <span
@@ -377,6 +423,7 @@
 
         <!-- Activity -->
         <router-link
+          v-if="$can('activity.view')"
           to="/activity"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -407,6 +454,7 @@
 
         <!-- Export -->
         <router-link
+          v-if="$can('report.export')"
           to="/export"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -435,6 +483,7 @@
 
         <!-- Settings -->
         <router-link
+          v-if="$can('settings.view')"
           to="/settings"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -512,7 +561,7 @@
 
     <!-- Main -->
     <div
-      class="flex flex-1 flex-col overflow-hidden transition-all duration-300"
+      class="flex min-w-0 flex-1 flex-col overflow-hidden transition-all duration-300"
       :class="sidebarOpen ? 'md:ml-64' : 'md:ml-20'"
     >
 
@@ -552,7 +601,7 @@
       </header>
 
       <!-- Content -->
-      <main class="flex-1 overflow-y-auto bg-page p-5 lg:p-7">
+      <main class="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-page p-5 lg:p-7">
         <router-view />
       </main>
 

@@ -161,6 +161,7 @@
 
                 <!-- Save -->
                 <button
+                    v-if="isEdit ? $can('company.update') : $can('company.create')"
                     type="submit"
                     form="company-form"
                     :disabled="loading"

@@ -15,7 +15,7 @@ class SavedFilter extends Model
     ];
 
     protected $casts = [
-        'filters'    => 'array',
+        'filters' => 'array',
         'is_default' => 'boolean',
     ];
 

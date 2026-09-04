@@ -1,9 +1,16 @@
 <?php
 
+use App\Http\Middleware\SecurityHeadersMiddleware;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Spatie\Permission\Exceptions\UnauthorizedException;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,32 +23,30 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register Sanctum SPA stateful middleware for session-based auth on API routes
         $middleware->statefulApi();
 
-        $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
+        $middleware->append(SecurityHeadersMiddleware::class);
         $middleware->alias([
-            'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
-        $exceptions->renderable(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
+        $exceptions->renderable(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json(['success' => false, 'message' => 'Unauthenticated.', 'errors' => []], 401);
             }
         });
-        $exceptions->renderable(function (\Illuminate\Auth\Access\AuthorizationException $e, Request $request) {
+        $exceptions->renderable(function (AuthorizationException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json(['success' => false, 'message' => 'This action is unauthorized.', 'errors' => []], 403);
             }
         });
-        $exceptions->renderable(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, Request $request) {
+        $exceptions->renderable(function (UnauthorizedException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json(['success' => false, 'message' => 'User does not have the right roles or permissions.', 'errors' => []], 403);
             }
         });
     })->create();
-
-

@@ -22,11 +22,11 @@ class NotificationCenterController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'type'      => ['sometimes', 'in:whatsapp,email,in_app,sms'],
-            'status'    => ['sometimes', 'in:pending,processing,sent,delivered,failed,cancelled'],
+            'type' => ['sometimes', 'in:whatsapp,email,in_app,sms'],
+            'status' => ['sometimes', 'in:pending,processing,sent,delivered,failed,cancelled'],
             'date_from' => ['sometimes', 'date'],
-            'date_to'   => ['sometimes', 'date'],
-            'per_page'  => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'date_to' => ['sometimes', 'date'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
 
         $query = NotificationLog::latest();
@@ -62,19 +62,19 @@ class NotificationCenterController extends Controller
      */
     public function retry(NotificationLog $notification): JsonResponse
     {
-        if (!$notification->canRetry()) {
+        if (! $notification->canRetry()) {
             return $this->error('Notification cannot be retried.', [
-                'reason'   => 'Status is not failed or max_attempts reached.',
-                'status'   => $notification->status,
+                'reason' => 'Status is not failed or max_attempts reached.',
+                'status' => $notification->status,
                 'attempts' => $notification->attempts,
             ], 422);
         }
 
         // Reset to pending for the queue to pick up
         $notification->update([
-            'status'         => 'pending',
+            'status' => 'pending',
             'failure_reason' => null,
-            'failed_at'      => null,
+            'failed_at' => null,
         ]);
         $notification->incrementAttempts();
 
@@ -86,7 +86,7 @@ class NotificationCenterController extends Controller
      */
     public function cancel(NotificationLog $notification): JsonResponse
     {
-        if (!in_array($notification->status, ['pending', 'failed'])) {
+        if (! in_array($notification->status, ['pending', 'failed'])) {
             return $this->error('Cannot cancel a notification in its current state.', [
                 'status' => $notification->status,
             ], 422);
@@ -107,17 +107,19 @@ class NotificationCenterController extends Controller
             ->groupBy('type', 'status')
             ->get()
             ->groupBy('type')
-            ->map(fn ($rows) => $rows->mapWithKeys(fn ($r) => [$r->status => $r->count]));
+            ->map(fn ($rows) => $rows->mapWithKeys(fn (NotificationLog $log) => [
+                $log->status => (int) $log->getAttribute('count'),
+            ]));
 
         $totals = [
-            'total'     => NotificationLog::count(),
-            'sent'      => NotificationLog::where('status', 'sent')->orWhere('status', 'delivered')->count(),
-            'failed'    => NotificationLog::where('status', 'failed')->count(),
-            'pending'   => NotificationLog::where('status', 'pending')->count(),
+            'total' => NotificationLog::count(),
+            'sent' => NotificationLog::where('status', 'sent')->orWhere('status', 'delivered')->count(),
+            'failed' => NotificationLog::where('status', 'failed')->count(),
+            'pending' => NotificationLog::where('status', 'pending')->count(),
         ];
 
         return $this->success('Notification summary retrieved.', [
-            'totals'    => $totals,
+            'totals' => $totals,
             'breakdown' => $breakdown,
         ]);
     }

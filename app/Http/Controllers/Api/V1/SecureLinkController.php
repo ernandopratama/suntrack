@@ -9,7 +9,6 @@ use App\Http\Resources\CommentResource;
 use App\Http\Resources\SecureLinkResource;
 use App\Models\Campaign;
 use App\Models\Promotion;
-use App\Models\SecureLink;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -22,7 +21,10 @@ class SecureLinkController extends Controller
 
     public function showPromotionLink(Promotion $promotion)
     {
+        $this->authorize('view', $promotion);
+
         $link = $promotion->secureLinks()->first();
+
         return response()->json([
             'success' => true,
             'message' => 'Secure link retrieved successfully.',
@@ -32,6 +34,8 @@ class SecureLinkController extends Controller
 
     public function storePromotionLink(Request $request, Promotion $promotion)
     {
+        $this->authorize('update', $promotion);
+
         $request->validate([
             'expires_at' => 'nullable|date|after:now',
         ]);
@@ -39,7 +43,7 @@ class SecureLinkController extends Controller
         $link = $promotion->secureLinks()->first();
         $isNew = false;
 
-        if (!$link) {
+        if (! $link) {
             $link = $promotion->secureLinks()->create([
                 'token' => Str::random(64),
                 'expires_at' => $request->expires_at,
@@ -71,6 +75,8 @@ class SecureLinkController extends Controller
 
     public function regeneratePromotionLink(Request $request, Promotion $promotion)
     {
+        $this->authorize('update', $promotion);
+
         $link = $promotion->secureLinks()->first();
         if ($link) {
             $link->update([
@@ -102,8 +108,10 @@ class SecureLinkController extends Controller
 
     public function destroyPromotionLink(Request $request, Promotion $promotion)
     {
+        $this->authorize('update', $promotion);
+
         $link = $promotion->secureLinks()->first();
-        if ($link && !$link->revoked_at) {
+        if ($link && ! $link->revoked_at) {
             $link->update(['revoked_at' => now()]);
 
             ActivityLogger::log(
@@ -125,6 +133,8 @@ class SecureLinkController extends Controller
 
     public function getPromotionHistories(Promotion $promotion)
     {
+        $this->authorize('view', $promotion);
+
         return response()->json([
             'success' => true,
             'message' => 'Approval histories retrieved successfully.',
@@ -134,6 +144,8 @@ class SecureLinkController extends Controller
 
     public function storePromotionComment(StoreCommentRequest $request, Promotion $promotion)
     {
+        $this->authorize('update', $promotion);
+
         $comment = $promotion->comments()->create([
             'user_id' => $request->user()->id,
             'author_name' => $request->user()->name,
@@ -144,7 +156,7 @@ class SecureLinkController extends Controller
 
         ActivityLogger::log(
             'Comment Added',
-            "Admin ({$request->user()->name}) commented: \"" . Str::limit($request->body, 60) . "\"",
+            "Admin ({$request->user()->name}) commented: \"".Str::limit($request->body, 60).'"',
             'Admin',
             $request->user()->name,
             $promotion,
@@ -164,7 +176,10 @@ class SecureLinkController extends Controller
 
     public function showCampaignLink(Campaign $campaign)
     {
+        $this->authorize('view', $campaign);
+
         $link = $campaign->secureLinks()->first();
+
         return response()->json([
             'success' => true,
             'message' => 'Secure link retrieved successfully.',
@@ -174,6 +189,8 @@ class SecureLinkController extends Controller
 
     public function storeCampaignLink(Request $request, Campaign $campaign)
     {
+        $this->authorize('update', $campaign);
+
         $request->validate([
             'expires_at' => 'nullable|date|after:now',
         ]);
@@ -181,7 +198,7 @@ class SecureLinkController extends Controller
         $link = $campaign->secureLinks()->first();
         $isNew = false;
 
-        if (!$link) {
+        if (! $link) {
             $link = $campaign->secureLinks()->create([
                 'token' => Str::random(64),
                 'expires_at' => $request->expires_at,
@@ -213,8 +230,10 @@ class SecureLinkController extends Controller
 
     public function destroyCampaignLink(Request $request, Campaign $campaign)
     {
+        $this->authorize('update', $campaign);
+
         $link = $campaign->secureLinks()->first();
-        if ($link && !$link->revoked_at) {
+        if ($link && ! $link->revoked_at) {
             $link->update(['revoked_at' => now()]);
 
             ActivityLogger::log(
@@ -236,6 +255,8 @@ class SecureLinkController extends Controller
 
     public function storeCampaignComment(StoreCommentRequest $request, Campaign $campaign)
     {
+        $this->authorize('update', $campaign);
+
         $comment = $campaign->comments()->create([
             'user_id' => $request->user()->id,
             'author_name' => $request->user()->name,
@@ -246,7 +267,7 @@ class SecureLinkController extends Controller
 
         ActivityLogger::log(
             'Comment Added',
-            "Admin ({$request->user()->name}) commented: \"" . Str::limit($request->body, 60) . "\"",
+            "Admin ({$request->user()->name}) commented: \"".Str::limit($request->body, 60).'"',
             'Admin',
             $request->user()->name,
             $campaign,

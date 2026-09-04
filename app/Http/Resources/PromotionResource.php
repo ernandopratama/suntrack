@@ -2,9 +2,15 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Promotion;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Promotion
+ *
+ * @property-read int|null $variants_count
+ */
 class PromotionResource extends JsonResource
 {
     /**
@@ -30,7 +36,7 @@ class PromotionResource extends JsonResource
             : 0;
 
         $totalEstimatedValue = $hasVariants
-            ? (float) $this->variants->sum(fn($v) => ($v->pivot->campaign_price ?? 0) * ($v->pivot->promotion_stock ?? 0))
+            ? (float) $this->variants->sum(fn ($v) => ($v->pivot->campaign_price ?? 0) * ($v->pivot->promotion_stock ?? 0))
             : 0.0;
 
         // Approved products placeholder for future approval workflow sprint
@@ -39,45 +45,45 @@ class PromotionResource extends JsonResource
             : 0;
 
         return [
-            'id'          => $this->id,
-            'code'        => $this->code,
-            'name'        => $this->name,
+            'id' => $this->id,
+            'code' => $this->code,
+            'name' => $this->name,
             'description' => $this->description,
-            'status'      => $this->status,
-            'start_date'  => $this->start_date?->format('Y-m-d'),
-            'end_date'    => $this->end_date?->format('Y-m-d'),
+            'status' => $this->status,
+            'start_date' => $this->start_date?->format('Y-m-d'),
+            'end_date' => $this->end_date?->format('Y-m-d'),
 
             // Eager loaded relationships
-            'campaign'    => $this->whenLoaded('campaign', fn() => [
-                'id'   => $this->campaign->id,
+            'campaign' => $this->whenLoaded('campaign', fn () => [
+                'id' => $this->campaign->id,
                 'name' => $this->campaign->name,
             ]),
-            'brand'       => $this->whenLoaded('brand', fn() => [
-                'id'   => $this->brand->id,
+            'brand' => $this->whenLoaded('brand', fn () => [
+                'id' => $this->brand->id,
                 'name' => $this->brand->name,
             ]),
 
             // Automatically calculated metrics
-            'total_products'                  => $totalProducts,
-            'total_variants'                  => $totalVariants,
-            'total_promotion_stock'           => $totalPromotionStock,
+            'total_products' => $totalProducts,
+            'total_variants' => $totalVariants,
+            'total_promotion_stock' => $totalPromotionStock,
             'total_estimated_promotion_value' => $totalEstimatedValue,
-            'total_approved_products'         => $totalApprovedProducts,
+            'total_approved_products' => $totalApprovedProducts,
 
             'metrics' => [
-                'total_products'                  => $totalProducts,
-                'total_variants'                  => $totalVariants,
-                'total_promotion_stock'           => $totalPromotionStock,
+                'total_products' => $totalProducts,
+                'total_variants' => $totalVariants,
+                'total_promotion_stock' => $totalPromotionStock,
                 'total_estimated_promotion_value' => $totalEstimatedValue,
-                'total_approved_products'         => $totalApprovedProducts,
+                'total_approved_products' => $totalApprovedProducts,
             ],
 
-            'secure_link' => $this->whenLoaded('secureLinks', fn() => $this->secureLinks->first() ? new SecureLinkResource($this->secureLinks->first()) : null),
+            'secure_link' => $this->whenLoaded('secureLinks', fn () => $this->secureLinks->first() ? new SecureLinkResource($this->secureLinks->first()) : null),
             'approval_histories' => ApprovalHistoryResource::collection($this->whenLoaded('approvalHistories')),
             'comments' => CommentResource::collection($this->whenLoaded('comments')),
 
-            'updated_at'  => $this->updated_at->format('Y-m-d H:i:s'),
-            'created_at'  => $this->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }
 }

@@ -3,10 +3,10 @@
 namespace App\Services\Notification;
 
 use App\Contracts\Notification\NotificationDriverInterface;
-use App\Services\Notification\Drivers\WhatsAppDriver;
 use App\Services\Notification\Drivers\EmailDriver;
 use App\Services\Notification\Drivers\InAppDriver;
 use App\Services\Notification\Drivers\WebhookDriver;
+use App\Services\Notification\Drivers\WhatsAppDriver;
 use InvalidArgumentException;
 
 class NotificationService
@@ -17,10 +17,10 @@ class NotificationService
     public function __construct()
     {
         // Register default stub drivers (Refinement #7)
-        $this->registerDriver(new WhatsAppDriver());
-        $this->registerDriver(new EmailDriver());
-        $this->registerDriver(new InAppDriver());
-        $this->registerDriver(new WebhookDriver());
+        $this->registerDriver(new WhatsAppDriver);
+        $this->registerDriver(new EmailDriver);
+        $this->registerDriver(new InAppDriver);
+        $this->registerDriver(new WebhookDriver);
     }
 
     /**
@@ -34,16 +34,15 @@ class NotificationService
     /**
      * Send a notification through a specific channel.
      *
-     * @param string $channel ('whatsapp', 'email', 'in_app', 'webhook')
-     * @param string $recipient Phone number, email address, user ID, or URL
-     * @param string $message Main message body
-     * @param array<string, mixed> $metadata Full metadata (subject, related_entity, related_entity_id, etc.)
-     * @return bool
+     * @param  string  $channel  ('whatsapp', 'email', 'in_app', 'webhook')
+     * @param  string  $recipient  Phone number, email address, user ID, or URL
+     * @param  string  $message  Main message body
+     * @param  array<string, mixed>  $metadata  Full metadata (subject, related_entity, related_entity_id, etc.)
      */
     public function send(string $channel, string $recipient, string $message, array $metadata = []): bool
     {
         $channel = strtolower(trim($channel));
-        if (!isset($this->drivers[$channel])) {
+        if (! isset($this->drivers[$channel])) {
             throw new InvalidArgumentException("Notification driver [{$channel}] is not registered.");
         }
 
@@ -53,10 +52,8 @@ class NotificationService
     /**
      * Dispatch the same message across multiple notification channels simultaneously.
      *
-     * @param array<int, string> $channels
-     * @param string $recipient
-     * @param string $message
-     * @param array<string, mixed> $metadata
+     * @param  array<int, string>  $channels
+     * @param  array<string, mixed>  $metadata
      * @return array<string, bool> Results per channel
      */
     public function sendToMany(array $channels, string $recipient, string $message, array $metadata = []): array
@@ -69,6 +66,7 @@ class NotificationService
                 $results[$channel] = false;
             }
         }
+
         return $results;
     }
 
@@ -78,10 +76,10 @@ class NotificationService
     public function sendReminder(string $channel, string $recipient, string $title, string $message, string $entityType, string $entityId): bool
     {
         return $this->send($channel, $recipient, $message, [
-            'subject'           => $title,
-            'related_entity'    => $entityType,
+            'subject' => $title,
+            'related_entity' => $entityType,
             'related_entity_id' => $entityId,
-            'reminder_type'     => 'automated_deadline_alert',
+            'reminder_type' => 'automated_deadline_alert',
         ]);
     }
 }

@@ -14,7 +14,7 @@ class ElasticsearchSearchDriver implements SearchDriverInterface
     public function isAvailable(): bool
     {
         // Returns true when ELASTICSEARCH_HOST is configured
-        return filled(env('ELASTICSEARCH_HOST'));
+        return filled(config('services.elasticsearch.host'));
     }
 
     public function driverName(): string
@@ -25,11 +25,12 @@ class ElasticsearchSearchDriver implements SearchDriverInterface
     /**
      * @return array<string, array<int, array<string, mixed>>>
      */
-    public function search(string $query, array $types, int $limit, int|string $companyId): array
+    public function search(string $query, array $types, int $limit, int|string|null $companyId): array
     {
         // TODO: Implement using elastic/elasticsearch-php when provisioned.
         // Reference: https://www.elastic.co/guide/en/elasticsearch/client/php-api/current
         Log::info("ElasticsearchSearchDriver: search called but not yet implemented. Query: [{$query}]");
+
         return [];
     }
 }

@@ -23,17 +23,12 @@ class VariantController extends Controller
      */
     public function index(Product $product, Request $request): JsonResponse
     {
-        // Super Admin can access any variant
-        if (!$request->user()->hasRole('Super Admin') && $product->brand->company_id !== $request->user()->company_id) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('view', $product);
 
         $variants = $product->variants()
-            ->when($request->filled('search'), fn($q) =>
-                $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('code', 'like', "%{$request->search}%"))
-            ->when($request->filled('status'), fn($q) =>
-                $q->where('status', $request->status))
+            ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', "%{$request->search}%")
+                ->orWhere('code', 'like', "%{$request->search}%"))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->orderBy('name')
             ->paginate($request->get('per_page', 50));
 
@@ -44,10 +39,8 @@ class VariantController extends Controller
 
     public function store(StoreVariantRequest $request, Product $product): JsonResponse
     {
-        // Super Admin can access any variant
-        if (!$request->user()->hasRole('Super Admin') && $product->brand->company_id !== $request->user()->company_id) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('view', $product);
+        $this->authorize('create', Variant::class);
 
         $variant = $product->variants()->create($request->validated());
         $user = $request->user();
@@ -68,10 +61,8 @@ class VariantController extends Controller
 
     public function update(UpdateVariantRequest $request, Product $product, Variant $variant): JsonResponse
     {
-        // Super Admin can access any variant
-        if (!$request->user()->hasRole('Super Admin') && $product->brand->company_id !== $request->user()->company_id) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        abort_unless($variant->product_id === $product->id, 404);
+        $this->authorize('update', $variant);
 
         $variant->update($request->validated());
         $user = $request->user();
@@ -92,14 +83,12 @@ class VariantController extends Controller
 
     public function destroy(Product $product, Variant $variant, Request $request): JsonResponse
     {
-        // Super Admin can access any variant
-        if (!$request->user()->hasRole('Super Admin') && $product->brand->company_id !== $request->user()->company_id) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        abort_unless($variant->product_id === $product->id, 404);
+        $this->authorize('delete', $variant);
 
         $user = $request->user();
         $codeName = "{$variant->code} - {$variant->name}";
-        
+
         $variant->delete();
 
         ActivityLogger::log(

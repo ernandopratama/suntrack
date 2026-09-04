@@ -3,23 +3,24 @@
 namespace App\Services\Storage;
 
 use App\Contracts\Storage\StorageDriverInterface;
+use App\Services\Settings\SettingsService;
+use App\Services\Storage\Drivers\GoogleDriveDriver;
 use App\Services\Storage\Drivers\LocalDriver;
 use App\Services\Storage\Drivers\S3Driver;
-use App\Services\Storage\Drivers\GoogleDriveDriver;
-use App\Services\Settings\SettingsService;
 use InvalidArgumentException;
 
 class StorageService implements StorageDriverInterface
 {
     protected array $drivers = [];
+
     protected SettingsService $settingsService;
 
     public function __construct(SettingsService $settingsService)
     {
         $this->settingsService = $settingsService;
         $this->registerDriver('local', new LocalDriver('public'));
-        $this->registerDriver('s3', new S3Driver());
-        $this->registerDriver('google_drive', new GoogleDriveDriver());
+        $this->registerDriver('s3', new S3Driver);
+        $this->registerDriver('google_drive', new GoogleDriveDriver);
     }
 
     public function registerDriver(string $name, StorageDriverInterface $driver): void
@@ -30,15 +31,16 @@ class StorageService implements StorageDriverInterface
     public function driver(?string $name = null): StorageDriverInterface
     {
         $name = $name ?: $this->getDefaultDriverName();
-        if (!isset($this->drivers[$name])) {
+        if (! isset($this->drivers[$name])) {
             throw new InvalidArgumentException("Storage driver [{$name}] is not registered.");
         }
+
         return $this->drivers[$name];
     }
 
     public function getDefaultDriverName(): string
     {
-        return $this->settingsService->get('storage.default_disk', env('FILESYSTEM_DISK', 'local'));
+        return $this->settingsService->get('storage.default_disk', config('filesystems.default', 'local'));
     }
 
     public function put(string $path, $content, array $options = []): bool|string

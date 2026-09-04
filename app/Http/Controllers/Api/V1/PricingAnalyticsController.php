@@ -16,7 +16,7 @@ class PricingAnalyticsController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected PricingAnalyticsRepository $repo = new PricingAnalyticsRepository()
+        protected PricingAnalyticsRepository $repo = new PricingAnalyticsRepository
     ) {}
 
     /**
@@ -24,8 +24,8 @@ class PricingAnalyticsController extends Controller
      */
     public function overview(Request $request): JsonResponse
     {
-        $companyId = $request->user()->company_id;
-        $data = $this->repo->getPricingOverview($companyId);
+        $data = $this->repo->getPricingOverview();
+
         return $this->success('Pricing analytics overview retrieved.', $data);
     }
 
@@ -34,9 +34,9 @@ class PricingAnalyticsController extends Controller
      */
     public function marginViolations(Request $request): JsonResponse
     {
-        $companyId = $request->user()->company_id;
-        $perPage   = (int) $request->input('per_page', 20);
-        $data      = $this->repo->getMarginViolations($companyId, $perPage);
+        $perPage = (int) $request->input('per_page', 20);
+        $data = $this->repo->getMarginViolations(null, $perPage);
+
         return $this->success('Margin violations retrieved.', $data);
     }
 
@@ -49,9 +49,8 @@ class PricingAnalyticsController extends Controller
             'discount_percent' => ['required', 'numeric', 'min:0.01', 'max:99.99'],
         ]);
 
-        $companyId      = $request->user()->company_id;
-        $discountPct    = (float) $request->input('discount_percent');
-        $data           = $this->repo->simulateDiscount($companyId, $discountPct);
+        $discountPct = (float) $request->input('discount_percent');
+        $data = $this->repo->simulateDiscount(null, $discountPct);
 
         return $this->success('Discount simulation complete.', $data);
     }

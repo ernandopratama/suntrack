@@ -8,7 +8,10 @@ use Illuminate\Validation\Validator;
 
 class PromotionVariantRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return true;
+    }
 
     /**
      * Validate promotion-specific pricing rules.
@@ -17,23 +20,23 @@ class PromotionVariantRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'variant_id'       => ['required', 'exists:variants,id'],
-            'campaign_price'   => ['required', 'numeric', 'min:0'],
-            'bottom_price'     => ['required', 'numeric', 'min:0'],
-            'discount_price'   => ['required', 'numeric', 'min:0'],
-            'promotion_stock'  => ['required', 'integer', 'min:0'],
-            'purchase_limit'   => ['required', 'integer', 'min:0'],
-            'notes'            => ['nullable', 'string'],
+            'variant_id' => ['required', 'exists:variants,id'],
+            'campaign_price' => ['required', 'numeric', 'min:0'],
+            'bottom_price' => ['required', 'numeric', 'min:0'],
+            'discount_price' => ['required', 'numeric', 'min:0'],
+            'promotion_stock' => ['required', 'integer', 'min:0'],
+            'purchase_limit' => ['required', 'integer', 'min:0'],
+            'notes' => ['nullable', 'string'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'campaign_price.min'   => 'Campaign price cannot be negative.',
-            'discount_price.min'   => 'Discount price cannot be negative.',
-            'promotion_stock.min'  => 'Promotion stock cannot be negative.',
-            'purchase_limit.min'   => 'Purchase limit cannot be negative.',
+            'campaign_price.min' => 'Campaign price cannot be negative.',
+            'discount_price.min' => 'Discount price cannot be negative.',
+            'promotion_stock.min' => 'Promotion stock cannot be negative.',
+            'purchase_limit.min' => 'Purchase limit cannot be negative.',
         ];
     }
 
@@ -49,14 +52,14 @@ class PromotionVariantRequest extends FormRequest
                 }
 
                 $variant = Variant::find($this->input('variant_id'));
-                if (!$variant) {
+                if (! $variant) {
                     return;
                 }
 
                 $campaignPrice = (float) $this->input('campaign_price');
                 $discountPrice = (float) $this->input('discount_price');
-                $bottomPrice   = (float) $this->input('bottom_price', $variant->bottom_price);
-                $promoStock    = (int) $this->input('promotion_stock');
+                $bottomPrice = (float) $this->input('bottom_price', $variant->bottom_price);
+                $promoStock = (int) $this->input('promotion_stock');
 
                 // 1. Campaign Price cannot exceed master Normal Price
                 if ($campaignPrice > $variant->normal_price) {
@@ -89,7 +92,7 @@ class PromotionVariantRequest extends FormRequest
                         "Promotion stock ({$promoStock}) cannot exceed available current stock ({$variant->current_stock})."
                     );
                 }
-            }
+            },
         ];
     }
 }

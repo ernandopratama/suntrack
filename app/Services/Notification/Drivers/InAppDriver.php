@@ -11,13 +11,13 @@ class InAppDriver implements NotificationDriverInterface
     public function send(string $recipient, string $message, array $metadata = []): bool
     {
         $payload = array_merge([
-            'channel'           => 'in_app',
-            'recipient'         => $recipient,
-            'subject'           => $metadata['subject'] ?? 'System Notification',
-            'message'           => $message,
-            'status'            => 'sent_log_mode',
-            'sent_at'           => now()->toIso8601String(),
-            'related_entity'    => $metadata['related_entity'] ?? null,
+            'channel' => 'in_app',
+            'recipient' => $recipient,
+            'subject' => $metadata['subject'] ?? 'System Notification',
+            'message' => $message,
+            'status' => 'sent_log_mode',
+            'sent_at' => now()->toIso8601String(),
+            'related_entity' => $metadata['related_entity'] ?? null,
             'related_entity_id' => $metadata['related_entity_id'] ?? null,
         ], $metadata);
 

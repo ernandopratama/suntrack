@@ -56,6 +56,7 @@
 
       <!-- Create Campaign -->
       <button
+        v-if="$can('campaign.create')"
         @click="openCreateModal"
         type="button"
         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-sm hover:shadow-md transition-all duration-200"
@@ -253,6 +254,7 @@
 
           <!-- Edit -->
           <button
+            v-if="$can('campaign.update')"
             type="button"
             @click="openEditModal(row)"
             class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900"

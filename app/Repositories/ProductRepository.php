@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Product;
+use App\Models\User;
 
 class ProductRepository extends BaseRepository
 {
@@ -14,25 +15,30 @@ class ProductRepository extends BaseRepository
     /**
      * Get paginated products filtered by company and optional search/status/brand_id criteria.
      */
-    public function getFilteredPaginated(?string $companyId = null, array $filters = [], int $perPage = 15)
+    public function getFilteredPaginated(User|string|null $scope = null, array $filters = [], int $perPage = 15)
     {
         $query = $this->newQuery()
             ->with('brand')
-            ->withCount('variants')
-            ->when($companyId !== null, fn($q) => $q->whereHas('brand', fn($b) => $b->where('company_id', $companyId)));
+            ->withCount('variants');
 
-        if (!empty($filters['search'])) {
+        if ($scope instanceof User) {
+            $query = $this->scopeForUser($query, $scope);
+        } elseif ($scope !== null) {
+            $query->whereHas('brand', fn ($brand) => $brand->where('company_id', $scope));
+        }
+
+        if (! empty($filters['search'])) {
             $s = $filters['search'];
-            $query->where(fn($q) => $q->where('name', 'like', "%{$s}%")
+            $query->where(fn ($q) => $q->where('name', 'like', "%{$s}%")
                 ->orWhere('code', 'like', "%{$s}%")
                 ->orWhere('sku', 'like', "%{$s}%"));
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['brand_id'])) {
+        if (! empty($filters['brand_id'])) {
             $query->where('brand_id', $filters['brand_id']);
         }
 

@@ -16,13 +16,13 @@ class StorePromotionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'        => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'campaign_id' => ['nullable', 'exists:campaigns,id'],
-            'brand_id'    => ['nullable', 'exists:brands,id'],
-            'start_date'  => ['nullable', 'date'],
-            'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
-            'status'      => ['required', new Enum(PromotionStatus::class)],
+            'brand_id' => ['nullable', 'exists:brands,id'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'status' => ['required', new Enum(PromotionStatus::class)],
         ];
     }
 }

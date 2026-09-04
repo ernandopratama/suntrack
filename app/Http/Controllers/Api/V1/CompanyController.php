@@ -23,16 +23,13 @@ class CompanyController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage = (int) $request->get('per_page', 15);
-        $search = $request->get('search', '');
+        $this->authorize('viewAny', Company::class);
 
-        $query = Company::withCount('brands', 'users')->with('brands');
-
-        if (!empty($search)) {
-            $query->where('name', 'like', "%{$search}%");
-        }
-
-        $companies = $query->orderBy('name', 'asc')->paginate($perPage);
+        $companies = $this->repository->getFilteredPaginated(
+            user: $request->user(),
+            filters: $request->only(['search']),
+            perPage: (int) $request->get('per_page', 15)
+        );
 
         // Transform data
         $companies->getCollection()->transform(function ($company) {
@@ -49,12 +46,14 @@ class CompanyController extends Controller
         });
 
         return $this->success('Companies retrieved successfully.', [
-            'companies' => $companies
+            'companies' => $companies,
         ]);
     }
 
     public function store(StoreCompanyRequest $request): JsonResponse
     {
+        $this->authorize('create', Company::class);
+
         $user = $request->user();
         $data = $request->validated();
 
@@ -76,29 +75,33 @@ class CompanyController extends Controller
                 'brands' => [],
                 'users_count' => 0,
                 'created_at' => $company->created_at->format('Y-m-d H:i:s'),
-            ]
+            ],
         ], 201);
     }
 
     public function show(Company $company): JsonResponse
     {
-        $company->load('brands', 'users');
+        $this->authorize('view', $company);
+
+        $brands = $company->brands()->get();
 
         return $this->success('Company retrieved successfully.', [
             'company' => [
                 'id' => $company->id,
                 'name' => $company->name,
-                'brands' => $company->brands->map(function ($brand) {
+                'brands' => $brands->map(function ($brand) {
                     return ['id' => $brand->id, 'name' => $brand->name];
                 }),
-                'users_count' => $company->users->count(),
+                'users_count' => $company->assignedUsers()->count(),
                 'created_at' => $company->created_at->format('Y-m-d H:i:s'),
-            ]
+            ],
         ]);
     }
 
     public function update(UpdateCompanyRequest $request, Company $company): JsonResponse
     {
+        $this->authorize('update', $company);
+
         $user = $request->user();
         $company->update($request->validated());
 
@@ -116,12 +119,14 @@ class CompanyController extends Controller
                 'id' => $company->id,
                 'name' => $company->name,
                 'created_at' => $company->created_at->format('Y-m-d H:i:s'),
-            ]
+            ],
         ]);
     }
 
     public function destroy(Company $company): JsonResponse
     {
+        $this->authorize('delete', $company);
+
         $user = request()->user();
         $companyName = $company->name;
         $company->delete();

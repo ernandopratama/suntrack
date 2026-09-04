@@ -38,17 +38,17 @@ class BenchmarkDataSeederCommand extends Command
 
         // Ensure prerequisite company, brand, and user exist
         $company = Company::first();
-        if (!$company) {
+        if (! $company) {
             $company = Company::create(['name' => 'SunTrack Benchmark Corp', 'code' => 'ST-BENCH']);
         }
 
         $brand = Brand::where('company_id', $company->id)->first();
-        if (!$brand) {
+        if (! $brand) {
             $brand = Brand::create(['company_id' => $company->id, 'name' => 'Benchmark Brand Alpha']);
         }
 
         $user = User::first();
-        if (!$user) {
+        if (! $user) {
             $user = User::create([
                 'name' => 'Benchmark Admin',
                 'email' => 'benchmark@suntrack.id',
@@ -69,6 +69,7 @@ class BenchmarkDataSeederCommand extends Command
         $this->info("1/5 Seeding ~{$perTableCount} Products...");
         $this->seedTable('products', $perTableCount, $chunkSize, function ($index) use ($brandId, $now) {
             $id = Str::uuid()->toString();
+
             return [
                 'id' => $id,
                 'brand_id' => $brandId,
@@ -92,6 +93,7 @@ class BenchmarkDataSeederCommand extends Command
         $this->info("2/5 Seeding ~{$perTableCount} Variants...");
         $this->seedTable('variants', $perTableCount, $chunkSize, function ($index) use ($productIds, $now) {
             $prodId = $productIds[$index % count($productIds)];
+
             return [
                 'id' => Str::uuid()->toString(),
                 'product_id' => $prodId,
@@ -111,15 +113,16 @@ class BenchmarkDataSeederCommand extends Command
         $this->info("3/5 Seeding ~{$perTableCount} Campaigns...");
         $this->seedTable('campaigns', $perTableCount, $chunkSize, function ($index) use ($brandId, $userId, $todayStr, $nextMonthStr, $now) {
             $statuses = ['Draft', 'Running', 'Completed', 'Cancelled'];
+
             return [
                 'id' => Str::uuid()->toString(),
                 'brand_id' => $brandId,
                 'name' => "Benchmark Campaign #{$index}",
-                'start_date' => $todayStr . ' 08:00:00',
-                'end_date' => $nextMonthStr . ' 23:59:59',
+                'start_date' => $todayStr.' 08:00:00',
+                'end_date' => $nextMonthStr.' 23:59:59',
                 'status' => $statuses[$index % count($statuses)],
                 'pic_id' => $userId,
-                'deadline' => $nextMonthStr . ' 17:00:00',
+                'deadline' => $nextMonthStr.' 17:00:00',
                 'notes' => "Automated benchmark campaign dataset #{$index}",
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -137,6 +140,7 @@ class BenchmarkDataSeederCommand extends Command
         $this->seedTable('promotions', $perTableCount, $chunkSize, function ($index) use ($brandId, $campaignIds, $todayStr, $nextMonthStr, $now) {
             $statuses = ['Pending', 'Approved', 'Rejected', 'Partially Approved'];
             $campId = $campaignIds[$index % count($campaignIds)];
+
             return [
                 'id' => Str::uuid()->toString(),
                 'code' => "PRM-BENCH-{$index}",
@@ -144,8 +148,8 @@ class BenchmarkDataSeederCommand extends Command
                 'campaign_id' => $campId,
                 'name' => "Benchmark Promotion #{$index}",
                 'description' => "Automated promotion dataset #{$index}",
-                'start_date' => $todayStr . ' 00:00:00',
-                'end_date' => $nextMonthStr . ' 23:59:59',
+                'start_date' => $todayStr.' 00:00:00',
+                'end_date' => $nextMonthStr.' 23:59:59',
                 'status' => $statuses[$index % count($statuses)],
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -156,6 +160,7 @@ class BenchmarkDataSeederCommand extends Command
         $this->info("5/5 Seeding ~{$perTableCount} Activity Logs...");
         $this->seedTable('activity_logs', $perTableCount, $chunkSize, function ($index) use ($userId, $now) {
             $actions = ['created', 'updated', 'status_changed', 'approved'];
+
             return [
                 'id' => Str::uuid()->toString(),
                 'loggable_type' => 'App\\Models\\Campaign',
@@ -173,11 +178,11 @@ class BenchmarkDataSeederCommand extends Command
         });
 
         // Flush all cache tags after bulk seeding
-        $this->info("Flushing Redis/Memory cache tags...");
+        $this->info('Flushing Redis/Memory cache tags...');
         app(CacheService::class)->flushTags(['dashboard', 'products', 'campaigns', 'promotions', 'variants', 'catalog', 'settings']);
 
         $duration = round(microtime(true) - $startTime, 2);
-        $this->info("Benchmark seeding completed successfully! Inserted ~" . ($perTableCount * 5) . " records in {$duration} seconds.");
+        $this->info('Benchmark seeding completed successfully! Inserted ~'.($perTableCount * 5)." records in {$duration} seconds.");
 
         return Command::SUCCESS;
     }

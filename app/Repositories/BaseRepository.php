@@ -3,6 +3,8 @@
 namespace App\Repositories;
 
 use App\Contracts\Repositories\RepositoryInterface;
+use App\Models\User;
+use App\Services\Authorization\DataScopeService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -36,16 +38,22 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $query = $this->model->newQuery();
 
-        if (!empty($this->with)) {
+        if (! empty($this->with)) {
             $query->with($this->with);
         }
 
         return $query;
     }
 
+    protected function scopeForUser(Builder $query, User $user): Builder
+    {
+        return app(DataScopeService::class)->scope($query, $user);
+    }
+
     public function with(array|string $relations): static
     {
         $this->with = is_string($relations) ? func_get_args() : $relations;
+
         return $this;
     }
 
@@ -53,7 +61,7 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $query = $this->newQuery();
 
-        if (!empty($relations)) {
+        if (! empty($relations)) {
             $query->with($relations);
         }
 
@@ -64,7 +72,7 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $query = $this->newQuery();
 
-        if (!empty($relations)) {
+        if (! empty($relations)) {
             $query->with($relations);
         }
 
@@ -75,7 +83,7 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $query = $this->newQuery();
 
-        if (!empty($relations)) {
+        if (! empty($relations)) {
             $query->with($relations);
         }
 
@@ -86,7 +94,7 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $query = $this->newQuery();
 
-        if (!empty($relations)) {
+        if (! empty($relations)) {
             $query->with($relations);
         }
 
@@ -97,7 +105,7 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $model = $this->model->create($data);
 
-        if (!empty($this->with)) {
+        if (! empty($this->with)) {
             $model->load($this->with);
         }
 
@@ -112,7 +120,7 @@ abstract class BaseRepository implements RepositoryInterface
 
         $model->update($data);
 
-        if (!empty($this->with)) {
+        if (! empty($this->with)) {
             $model->load($this->with);
         }
 

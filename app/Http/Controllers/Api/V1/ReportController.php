@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\Brand;
 use App\Repositories\AnalyticsRepository;
+use App\Services\Authorization\DataScopeService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +18,8 @@ class ReportController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected AnalyticsRepository $analytics = new AnalyticsRepository()
+        protected AnalyticsRepository $analytics = new AnalyticsRepository,
+        protected DataScopeService $dataScope = new DataScopeService
     ) {}
 
     /**
@@ -26,14 +29,14 @@ class ReportController extends Controller
     {
         $request->validate([
             'date_from' => ['required', 'date'],
-            'date_to'   => ['required', 'date', 'after_or_equal:date_from'],
+            'date_to' => ['required', 'date', 'after_or_equal:date_from'],
         ]);
 
-        $companyId = $request->user()->company_id;
+        $scope = $this->reportScope($request);
         $data = $this->analytics->getApprovalPerformanceReport(
             $request->input('date_from'),
             $request->input('date_to'),
-            $companyId
+            $scope
         );
 
         return $this->success('Approval performance report generated.', $data);
@@ -46,14 +49,14 @@ class ReportController extends Controller
     {
         $request->validate([
             'date_from' => ['required', 'date'],
-            'date_to'   => ['required', 'date', 'after_or_equal:date_from'],
+            'date_to' => ['required', 'date', 'after_or_equal:date_from'],
         ]);
 
-        $companyId = $request->user()->company_id;
+        $scope = $this->reportScope($request);
         $data = $this->analytics->getPromotionEffectivenessReport(
             $request->input('date_from'),
             $request->input('date_to'),
-            $companyId
+            $scope
         );
 
         return $this->success('Promotion effectiveness report generated.', $data);
@@ -66,8 +69,13 @@ class ReportController extends Controller
     {
         $request->validate([
             'date_from' => ['required', 'date'],
-            'date_to'   => ['required', 'date', 'after_or_equal:date_from'],
+            'date_to' => ['required', 'date', 'after_or_equal:date_from'],
         ]);
+
+        $brand = Brand::findOrFail($brandId);
+        if (! $this->dataScope->canAccess($request->user(), $brand)) {
+            abort(404);
+        }
 
         $data = $this->analytics->getBrandActivityReport(
             $brandId,
@@ -76,5 +84,17 @@ class ReportController extends Controller
         );
 
         return $this->success('Brand activity report generated.', $data);
+    }
+
+    /** @return array<int, string>|null */
+    private function reportScope(Request $request): ?array
+    {
+        $user = $request->user();
+
+        if ($this->dataScope->hasGlobalScope($user)) {
+            return null;
+        }
+
+        return $this->dataScope->effectiveBrandIds($user)->all();
     }
 }

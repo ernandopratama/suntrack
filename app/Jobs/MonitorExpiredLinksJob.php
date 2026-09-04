@@ -20,7 +20,7 @@ class MonitorExpiredLinksJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info(" [Scheduler:MonitorExpiredLinksJob] Scanning for expired secure public links...");
+        Log::info(' [Scheduler:MonitorExpiredLinksJob] Scanning for expired secure public links...');
 
         $expiredLinks = SecureLink::where('status', 'Active')
             ->whereNotNull('expires_at')
@@ -39,7 +39,7 @@ class MonitorExpiredLinksJob implements ShouldQueue
                 loggable: $link->linkable,
                 properties: [
                     'secure_link_id' => $link->id,
-                    'expired_at'     => $link->expires_at->toIso8601String(),
+                    'expired_at' => $link->expires_at->toIso8601String(),
                 ]
             );
             $count++;

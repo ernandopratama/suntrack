@@ -145,7 +145,7 @@
           </div>
 
           <!-- Edit Button -->
-          <div class="shrink-0">
+          <div v-if="$can('promotion.update')" class="shrink-0">
             <button
               type="button"
               @click="isModalOpen = true"

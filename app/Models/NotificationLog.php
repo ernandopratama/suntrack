@@ -24,13 +24,13 @@ class NotificationLog extends Model
     ];
 
     protected $casts = [
-        'metadata'       => 'array',
-        'processing_at'  => 'datetime',
-        'sent_at'        => 'datetime',
-        'delivered_at'   => 'datetime',
-        'failed_at'      => 'datetime',
-        'cancelled_at'   => 'datetime',
-        'scheduled_at'   => 'datetime',
+        'metadata' => 'array',
+        'processing_at' => 'datetime',
+        'sent_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'failed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'scheduled_at' => 'datetime',
     ];
 
     /** Allowed status values */
@@ -51,8 +51,8 @@ class NotificationLog extends Model
     public function markSent(?array $meta = null): void
     {
         $this->update([
-            'status'   => 'sent',
-            'sent_at'  => now(),
+            'status' => 'sent',
+            'sent_at' => now(),
             'metadata' => $meta ?? $this->metadata,
         ]);
     }
@@ -61,9 +61,9 @@ class NotificationLog extends Model
     public function markDelivered(?array $meta = null): void
     {
         $this->update([
-            'status'       => 'delivered',
+            'status' => 'delivered',
             'delivered_at' => now(),
-            'metadata'     => $meta ?? $this->metadata,
+            'metadata' => $meta ?? $this->metadata,
         ]);
     }
 
@@ -71,10 +71,10 @@ class NotificationLog extends Model
     public function markFailed(string $reason, ?array $meta = null): void
     {
         $this->update([
-            'status'         => 'failed',
-            'failed_at'      => now(),
+            'status' => 'failed',
+            'failed_at' => now(),
             'failure_reason' => $reason,
-            'metadata'       => $meta ?? $this->metadata,
+            'metadata' => $meta ?? $this->metadata,
         ]);
     }
 

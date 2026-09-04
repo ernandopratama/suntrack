@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 class UserPreferenceService
 {
     public function __construct(
-        protected CacheService $cache = new CacheService()
+        protected CacheService $cache = new CacheService
     ) {}
 
     /**
@@ -42,6 +42,7 @@ class UserPreferenceService
         ])));
 
         $this->cache->flushTags(['user_preferences']);
+
         return $pref->fresh();
     }
 
@@ -72,10 +73,10 @@ class UserPreferenceService
         }
 
         return SavedFilter::create([
-            'user_id'    => $userId,
-            'module'     => $module,
-            'name'       => $name,
-            'filters'    => $filters,
+            'user_id' => $userId,
+            'module' => $module,
+            'name' => $name,
+            'filters' => $filters,
             'is_default' => $isDefault,
         ]);
     }
@@ -88,6 +89,7 @@ class UserPreferenceService
         $filter = SavedFilter::where('id', $filterId)->where('user_id', $userId)->firstOrFail();
         SavedFilter::where('user_id', $userId)->where('module', $filter->module)->update(['is_default' => false]);
         $filter->update(['is_default' => true]);
+
         return $filter->fresh();
     }
 
@@ -103,12 +105,12 @@ class UserPreferenceService
     {
         return [
             'default_landing_page' => '/dashboard',
-            'default_page_size'    => 15,
-            'theme'                => 'dark',
-            'locale'               => 'id',
-            'timezone'             => 'Asia/Jakarta',
-            'dashboard_widgets'    => null,
-            'extended'             => null,
+            'default_page_size' => 15,
+            'theme' => 'dark',
+            'locale' => 'id',
+            'timezone' => 'Asia/Jakarta',
+            'dashboard_widgets' => null,
+            'extended' => null,
         ];
     }
 }

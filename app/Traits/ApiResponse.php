@@ -9,34 +9,28 @@ trait ApiResponse
     /**
      * Return a standardized success JSON response.
      *
-     * @param string $message
-     * @param mixed $data
-     * @param int $code
-     * @return JsonResponse
+     * @param  mixed  $data
      */
     protected function success(string $message, $data = [], int $code = 200): JsonResponse
     {
         return response()->json([
             'success' => true,
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ], $code);
     }
 
     /**
      * Return a standardized error JSON response.
      *
-     * @param string $message
-     * @param mixed $errors
-     * @param int $code
-     * @return JsonResponse
+     * @param  mixed  $errors
      */
     protected function error(string $message, $errors = [], int $code = 400): JsonResponse
     {
         return response()->json([
             'success' => false,
             'message' => $message,
-            'errors'  => $errors,
+            'errors' => $errors,
         ], $code);
     }
 }

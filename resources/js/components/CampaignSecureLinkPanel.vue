@@ -379,6 +379,7 @@
 
           <!-- Controls -->
           <div
+            v-if="$can('campaign.update')"
             class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50/70 p-4 lg:flex-row lg:items-end lg:justify-between"
           >
             <!-- Expiry -->
@@ -488,6 +489,7 @@
           </p>
 
           <button
+            v-if="$can('campaign.update')"
             type="button"
             @click="handleGenerate"
             :disabled="loading"

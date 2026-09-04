@@ -9,22 +9,26 @@ use App\Http\Resources\PromotionProductResource;
 use App\Models\Promotion;
 use App\Models\Variant;
 use App\Services\ActivityLogger;
+use App\Services\Authorization\DataScopeService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PromotionVariantController extends Controller
 {
     use ApiResponse;
+
+    public function __construct(
+        protected DataScopeService $dataScope
+    ) {}
 
     /**
      * List all variants mapped to this promotion, with promotion-specific pricing.
      */
     public function index(Promotion $promotion, Request $request): JsonResponse
     {
-        if (! $this->isAccessible($promotion, $request)) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('view', $promotion);
 
         $variants = $promotion->variants()
             ->with('product')
@@ -42,26 +46,27 @@ class PromotionVariantController extends Controller
      */
     public function store(PromotionVariantRequest $request, Promotion $promotion): JsonResponse
     {
-        if (! $this->isAccessible($promotion, $request)) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('update', $promotion);
 
         // Validation is fully centralized in PromotionVariantRequest
         $variant = Variant::findOrFail($request->variant_id);
+        if (! $this->dataScope->canAccess($request->user(), $variant) || $variant->product->brand_id !== $promotion->brand_id) {
+            abort(404);
+        }
         $user = $request->user();
 
         // Check if this variant is already in the promotion
         $alreadyMapped = $promotion->variants()->where('variant_id', $variant->id)->exists();
 
         $pivotData = [
-            'id'                   => (string) \Illuminate\Support\Str::uuid(),
-            'campaign_price'        => $request->campaign_price,
-            'bottom_price'          => $request->bottom_price,
+            'id' => (string) Str::uuid(),
+            'campaign_price' => $request->campaign_price,
+            'bottom_price' => $request->bottom_price,
             'normal_price_snapshot' => $variant->normal_price, // Snapshot master price NOW
-            'discount_price'        => $request->discount_price,
-            'promotion_stock'       => $request->promotion_stock,
-            'purchase_limit'        => $request->purchase_limit,
-            'notes'                 => $request->notes,
+            'discount_price' => $request->discount_price,
+            'promotion_stock' => $request->promotion_stock,
+            'purchase_limit' => $request->purchase_limit,
+            'notes' => $request->notes,
         ];
 
         if ($alreadyMapped) {
@@ -99,8 +104,9 @@ class PromotionVariantController extends Controller
      */
     public function destroy(Promotion $promotion, Variant $variant, Request $request): JsonResponse
     {
-        if (! $this->isAccessible($promotion, $request)) {
-            return $this->error('Unauthorized.', [], 403);
+        $this->authorize('update', $promotion);
+        if (! $this->dataScope->canAccess($request->user(), $variant)) {
+            abort(404);
         }
 
         $promotion->variants()->detach($variant->id);
@@ -116,10 +122,5 @@ class PromotionVariantController extends Controller
         );
 
         return $this->success('Variant removed from promotion successfully.');
-    }
-
-    private function isAccessible(Promotion $promotion, Request $request): bool
-    {
-        return $promotion->brand->company_id === $request->user()->company_id;
     }
 }

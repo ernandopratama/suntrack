@@ -8,9 +8,12 @@ use App\Http\Requests\StorePromotionRequest;
 use App\Http\Requests\UpdatePromotionRequest;
 use App\Http\Resources\PromotionResource;
 use App\Models\ApprovalHistory;
+use App\Models\Brand;
+use App\Models\Campaign;
 use App\Models\Promotion;
 use App\Repositories\PromotionRepository;
 use App\Services\ActivityLogger;
+use App\Services\Authorization\DataScopeService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +24,8 @@ class PromotionController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected PromotionRepository $repository
+        protected PromotionRepository $repository,
+        protected DataScopeService $dataScope
     ) {}
 
     /**
@@ -30,10 +34,12 @@ class PromotionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Promotion::class);
+
         $user = $request->user();
 
         $promotions = $this->repository->getFilteredPaginated(
-            companyId: $user->hasRole('Super Admin') ? null : $user->company_id,
+            scope: $user,
             filters: $request->only(['search', 'status', 'campaign_id']),
             perPage: (int) $request->get('per_page', 15)
         );
@@ -48,16 +54,29 @@ class PromotionController extends Controller
      */
     public function store(StorePromotionRequest $request): JsonResponse
     {
+        $this->authorize('create', Promotion::class);
+
         $user = $request->user();
         $data = $request->validated();
 
-        // Default brand to first brand in user's company if not specified
         if (empty($data['brand_id'])) {
-            $brand = \App\Models\Brand::where('company_id', $user->company_id)->first();
-            $data['brand_id'] = $brand?->id;
+            $data['brand_id'] = $this->dataScope->scopeBrands(Brand::query(), $user)->value('id');
         }
 
-        $promotion = Promotion::create($data);
+        if (empty($data['brand_id']) || ! $this->dataScope->canAccessBrandId($user, $data['brand_id'])) {
+            abort(404);
+        }
+
+        if (! empty($data['campaign_id'])) {
+            $campaign = Campaign::findOrFail($data['campaign_id']);
+            if (! $this->dataScope->canAccess($user, $campaign) || $campaign->brand_id !== $data['brand_id']) {
+                abort(404);
+            }
+        }
+
+        $promotion = new Promotion;
+        $promotion->fill($data);
+        $promotion->save();
         $promotion->load(['campaign', 'brand']);
 
         ActivityLogger::log(
@@ -79,9 +98,7 @@ class PromotionController extends Controller
      */
     public function show(Promotion $promotion, Request $request): JsonResponse
     {
-        if (! $this->isAccessible($promotion, $request)) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('view', $promotion);
 
         $promotion->load(['campaign', 'brand', 'variants', 'comments', 'approvalHistories', 'secureLinks']);
 
@@ -96,13 +113,18 @@ class PromotionController extends Controller
      */
     public function update(UpdatePromotionRequest $request, Promotion $promotion): JsonResponse
     {
-        if (! $this->isAccessible($promotion, $request)) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('update', $promotion);
 
         $user = $request->user();
         $oldStatus = $promotion->status;
         $oldCampaignId = $promotion->campaign_id;
+
+        if ($request->filled('campaign_id')) {
+            $campaign = Campaign::findOrFail($request->input('campaign_id'));
+            if (! $this->dataScope->canAccess($user, $campaign) || $campaign->brand_id !== $promotion->brand_id) {
+                abort(404);
+            }
+        }
 
         $promotion->update($request->validated());
 
@@ -122,8 +144,8 @@ class PromotionController extends Controller
         // Log campaign link/unlink change
         if ($oldCampaignId !== $promotion->campaign_id) {
             $action = $promotion->campaign_id
-                ? ActivityType::Created->value . ' (Linked to Campaign)'
-                : ActivityType::Updated->value . ' (Unlinked from Campaign)';
+                ? ActivityType::Created->value.' (Linked to Campaign)'
+                : ActivityType::Updated->value.' (Unlinked from Campaign)';
 
             ActivityLogger::log(
                 action: $action,
@@ -159,14 +181,13 @@ class PromotionController extends Controller
      */
     public function batchApproval(Request $request, Promotion $promotion): JsonResponse
     {
-        if (! $this->isAccessible($promotion, $request)) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('update', $promotion);
+        abort_unless($request->user()->can('promotion.approve'), 403);
 
         $request->validate([
-            'action'          => ['required', Rule::in(['approve_selected', 'reject_selected', 'approve_all', 'reject_all'])],
-            'variant_ids'     => ['required_if:action,approve_selected,reject_selected', 'array'],
-            'variant_ids.*'   => ['uuid'],
+            'action' => ['required', Rule::in(['approve_selected', 'reject_selected', 'approve_all', 'reject_all'])],
+            'variant_ids' => ['required_if:action,approve_selected,reject_selected', 'array'],
+            'variant_ids.*' => ['uuid'],
             'rejection_notes' => ['required_if:action,reject_selected,reject_all', 'nullable', 'string', 'max:500'],
         ]);
 
@@ -197,33 +218,33 @@ class PromotionController extends Controller
 
             // Create immutable approval history
             ApprovalHistory::create([
-                'promotion_id'      => $promotion->id,
-                'variant_id'        => $variant->id,
-                'reviewer_name'     => $user->name . ' (Admin)',
+                'promotion_id' => $promotion->id,
+                'variant_id' => $variant->id,
+                'reviewer_name' => $user->name.' (Admin)',
                 'reviewer_position' => 'Internal Admin',
-                'old_status'        => $oldStatus,
-                'new_status'        => $targetStatus,
-                'notes'             => $notes,
+                'old_status' => $oldStatus,
+                'new_status' => $targetStatus,
+                'notes' => $notes,
             ]);
 
             $updatedCount++;
         }
 
         // Dynamic status recalculation
-        $promotion->recalculateApprovalStatus($user->name . ' (Admin)', 'Internal Admin');
+        $promotion->recalculateApprovalStatus($user->name.' (Admin)', 'Internal Admin');
 
         ActivityLogger::log(
             action: 'Batch Approval Executed',
-            description: "Admin {$user->name} executed [{$action}]: marked {$updatedCount} variants as {$targetStatus}." . ($notes ? " (Note: {$notes})" : ""),
+            description: "Admin {$user->name} executed [{$action}]: marked {$updatedCount} variants as {$targetStatus}.".($notes ? " (Note: {$notes})" : ''),
             actorType: 'Admin',
             actorName: $user->name,
             loggable: $promotion,
             actorId: $user->id,
             properties: [
-                'action'         => $action,
-                'target_status'  => $targetStatus,
-                'updated_count'  => $updatedCount,
-                'rejection_notes'=> $notes,
+                'action' => $action,
+                'target_status' => $targetStatus,
+                'updated_count' => $updatedCount,
+                'rejection_notes' => $notes,
             ]
         );
 
@@ -234,15 +255,23 @@ class PromotionController extends Controller
         ]);
     }
 
-    /**
-     * Check if the current user has access to the given promotion.
-     */
-    private function isAccessible(Promotion $promotion, Request $request): bool
+    public function destroy(Promotion $promotion): JsonResponse
     {
-        if ($request->user()->hasRole('Super Admin')) {
-            return true;
-        }
-        return $promotion->brand->company_id === $request->user()->company_id;
+        $this->authorize('delete', $promotion);
+
+        $user = request()->user();
+        $promotionName = "{$promotion->code} - {$promotion->name}";
+        $promotion->delete();
+
+        ActivityLogger::log(
+            action: ActivityType::Deleted->value,
+            description: "Promotion '{$promotionName}' was deleted.",
+            actorType: 'Admin',
+            actorName: $user->name,
+            loggable: $promotion,
+            actorId: $user->id
+        );
+
+        return $this->success('Promotion deleted successfully.');
     }
 }
-

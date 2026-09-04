@@ -7,13 +7,13 @@ interface SearchDriverInterface
     /**
      * Execute a search query across one or more entity types.
      *
-     * @param  string  $query      Search term
+     * @param  string  $query  Search term
      * @param  array<string>  $types  Entity types to search (e.g. ['campaign','product'])
-     * @param  int     $limit      Max results per entity type
-     * @param  int|string  $companyId  Tenant isolation boundary
+     * @param  int  $limit  Max results per entity type
+     * @param  int|string|null  $companyId  Optional Company scope; null means global access
      * @return array<string, array<int, array<string, mixed>>>
      */
-    public function search(string $query, array $types, int $limit, int|string $companyId): array;
+    public function search(string $query, array $types, int $limit, int|string|null $companyId): array;
 
     /**
      * Check whether this driver is available/configured in the current environment.

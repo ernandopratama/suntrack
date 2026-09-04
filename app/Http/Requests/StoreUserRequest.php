@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\Rbac\RbacRegistry;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class StoreUserRequest extends FormRequest
@@ -16,21 +18,18 @@ class StoreUserRequest extends FormRequest
     {
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'company_id' => ['required', 'uuid', 'exists:companies,id'],
-            'type' => ['required', 'in:admin,company'],
+            'company_ids' => ['sometimes', 'array'],
+            'company_ids.*' => ['uuid', 'distinct', 'exists:companies,id'],
+            'brand_ids' => ['sometimes', 'array'],
+            'brand_ids.*' => ['uuid', 'distinct', 'exists:brands,id'],
+            'permissions' => ['sometimes', 'array'],
+            'permissions.*' => ['string', 'distinct', Rule::in(RbacRegistry::TEAM_ALLOWED_PERMISSIONS)],
+            'type' => ['sometimes', Rule::in(['admin', 'team'])],
+            'role' => ['sometimes', Rule::in(RbacRegistry::ROLES)],
+            'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/', 'unique:users,username'],
+            'email' => ['required', 'email', 'unique:users,email'],
+            'password' => ['required', Password::defaults()],
         ];
-
-        // Admin wajib email & password
-        if ($this->input('type') === 'admin') {
-            $rules['username'] = ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/', 'unique:users,username'];
-            $rules['email'] = ['required', 'email', 'unique:users,email'];
-            $rules['password'] = ['required', Password::defaults()];
-        } else {
-            // Company tidak perlu email & password
-            $rules['username'] = ['nullable', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/', 'unique:users,username'];
-            $rules['email'] = ['nullable', 'email', 'unique:users,email'];
-            $rules['password'] = ['nullable'];
-        }
 
         return $rules;
     }

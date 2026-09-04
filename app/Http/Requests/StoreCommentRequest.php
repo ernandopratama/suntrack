@@ -13,7 +13,7 @@ class StoreCommentRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if (!$this->filled('author_name') && $this->user()) {
+        if (! $this->filled('author_name') && $this->user()) {
             $this->merge([
                 'author_name' => $this->user()->name,
             ]);

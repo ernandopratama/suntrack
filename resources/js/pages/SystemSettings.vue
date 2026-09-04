@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="mx-auto max-w-6xl space-y-6">
 
@@ -526,13 +525,25 @@
                 WhatsApp API Key / Token
               </label>
 
-              <input
-                v-model="settingsForm['notification.wa_token']"
-                :disabled="!canUpdate"
-                type="password"
-                placeholder="••••••••••••••••"
-                class="settings-input"
-              />
+              <div class="relative mt-1.5">
+                <input
+                  v-model="settingsForm['notification.wa_token']"
+                  :disabled="!canUpdate"
+                  :type="showWaToken ? 'text' : 'password'"
+                  placeholder="••••••••••••••••"
+                  class="settings-input settings-password-input !mt-0"
+                />
+                <button
+                  type="button"
+                  class="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-content-muted transition hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="!canUpdate"
+                  :aria-label="showWaToken ? 'Sembunyikan token WhatsApp' : 'Tampilkan token WhatsApp'"
+                  :aria-pressed="showWaToken"
+                  @click="showWaToken = !showWaToken"
+                >
+                  <i :class="showWaToken ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -803,6 +814,7 @@ const authStore = useAuthStore();
 const loading = ref(true);
 const saving = ref(false);
 const activeTab = ref('general');
+const showWaToken = ref(false);
 
 const tabs = [
   { id: 'general', label: 'General' },
@@ -834,20 +846,7 @@ const notification = reactive({
 });
 
 const canUpdate = computed(() => {
-  const user = authStore.user;
-
-  if (!user) return true;
-
-  if (user.roles && user.roles.includes('Super Admin')) return true;
-
-  if (
-    user.permissions &&
-    user.permissions.includes('settings.update')
-  ) {
-    return true;
-  }
-
-  return true;
+  return authStore.can('settings.update');
 });
 
 const showNotification = (message, type = 'success') => {
@@ -1034,6 +1033,10 @@ onMounted(() => {
   cursor: not-allowed;
   background-color: var(--ui-surface-muted);
   color: var(--ui-content-muted);
+}
+
+.settings-password-input {
+  padding-right: 3rem;
 }
 
 .settings-help {

@@ -23,6 +23,7 @@
       </div>
 
       <button
+        v-if="$can('promotion.update')"
         @click="isAddModalOpen = true"
         type="button"
         class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4274D9] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#293681] hover:shadow-md focus:outline-none focus:ring-4 focus:ring-[#95CCDD]/40"
@@ -222,6 +223,7 @@
               <td class="px-5 py-4">
                 <div class="flex items-center justify-end gap-2">
                   <button
+                    v-if="$can('promotion.update')"
                     @click="openEditPricing(v)"
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-[#95CCDD]/60 bg-white px-3 py-2 text-xs font-bold text-[#4274D9] transition-all duration-200 hover:border-[#4274D9] hover:bg-[#D0E7E6]/40 hover:text-[#293681]"
@@ -231,6 +233,7 @@
                   </button>
 
                   <button
+                    v-if="$can('promotion.update')"
                     @click="removeVariant(v.id)"
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-600 transition-all duration-200 hover:border-rose-200 hover:bg-rose-100 hover:text-rose-700"
@@ -505,6 +508,7 @@
           </button>
 
           <button
+            v-if="$can('promotion.update')"
             type="submit"
             form="promo-product-form"
             :disabled="addLoading"

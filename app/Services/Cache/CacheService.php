@@ -2,6 +2,7 @@
 
 namespace App\Services\Cache;
 
+use Illuminate\Cache\TaggedCache;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -18,9 +19,11 @@ class CacheService
             if ($this->supportsTags()) {
                 return Cache::tags($tags)->remember($key, $ttlSeconds, $callback);
             }
+
             return Cache::remember($key, $ttlSeconds, $callback);
         } catch (\Throwable $e) {
-            Log::warning("CacheService remember error for key [{$key}]: " . $e->getMessage());
+            Log::warning("CacheService remember error for key [{$key}]: ".$e->getMessage());
+
             return $callback();
         }
     }
@@ -36,9 +39,11 @@ class CacheService
             if ($this->supportsTags()) {
                 return Cache::tags($tags)->rememberForever($key, $callback);
             }
+
             return Cache::rememberForever($key, $callback);
         } catch (\Throwable $e) {
-            Log::warning("CacheService rememberForever error for key [{$key}]: " . $e->getMessage());
+            Log::warning("CacheService rememberForever error for key [{$key}]: ".$e->getMessage());
+
             return $callback();
         }
     }
@@ -54,9 +59,11 @@ class CacheService
             if ($this->supportsTags()) {
                 return (bool) Cache::tags($tags)->forget($key);
             }
+
             return (bool) Cache::forget($key);
         } catch (\Throwable $e) {
-            Log::warning("CacheService forget error for key [{$key}]: " . $e->getMessage());
+            Log::warning("CacheService forget error for key [{$key}]: ".$e->getMessage());
+
             return false;
         }
     }
@@ -72,9 +79,11 @@ class CacheService
             if ($this->supportsTags()) {
                 return (bool) Cache::tags($tags)->flush();
             }
+
             return true;
         } catch (\Throwable $e) {
-            Log::warning("CacheService flushTags error for tags [" . implode(',', $tags) . "]: " . $e->getMessage());
+            Log::warning('CacheService flushTags error for tags ['.implode(',', $tags).']: '.$e->getMessage());
+
             return false;
         }
     }
@@ -85,7 +94,7 @@ class CacheService
     protected function supportsTags(): bool
     {
         try {
-            return Cache::getStore() instanceof \Illuminate\Cache\TaggedCache
+            return Cache::getStore() instanceof TaggedCache
                 || method_exists(Cache::getStore(), 'tags')
                 || (method_exists(Cache::getFacadeRoot(), 'supportsTags') && Cache::supportsTags());
         } catch (\Throwable $e) {

@@ -47,6 +47,7 @@
 
       <!-- Create Promotion -->
       <button
+        v-if="$can('promotion.create')"
         @click="openCreateModal"
         type="button"
         class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#4274D9] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#293681] hover:shadow-md focus:outline-none focus:ring-4 focus:ring-[#95CCDD]/40 sm:w-auto"
@@ -284,6 +285,7 @@
 
           <!-- Edit -->
           <button
+            v-if="$can('promotion.update')"
             @click="openEditModal(row)"
             type="button"
             class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 shadow-sm transition-all duration-200 hover:border-[#95CCDD] hover:bg-[#D0E7E6]/30 hover:text-[#293681]"

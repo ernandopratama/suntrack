@@ -5,25 +5,27 @@
         <div
     class="relative overflow-visible rounded-2xl bg-gray-950 border border-gray-800 shadow-xl"
         >
-            <!-- Decorative Background -->
-            <div
-                class="absolute -top-32 -right-24 w-80 h-80 rounded-full bg-blue-600/10 blur-3xl pointer-events-none"
-            ></div>
+            <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+                <!-- Decorative Background -->
+                <div
+                    class="absolute -top-32 -right-24 w-80 h-80 rounded-full bg-blue-600/10 blur-3xl"
+                ></div>
 
-            <div
-                class="absolute -bottom-32 left-1/3 w-72 h-72 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none"
-            ></div>
+                <div
+                    class="absolute -bottom-32 left-1/3 w-72 h-72 rounded-full bg-indigo-600/10 blur-3xl"
+                ></div>
 
-            <!-- Subtle Grid -->
-            <div
-                class="absolute inset-0 opacity-[0.035] pointer-events-none"
-                style="
-                    background-image:
-                        linear-gradient(rgba(255,255,255,.8) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,.8) 1px, transparent 1px);
-                    background-size: 32px 32px;
-                "
-            ></div>
+                <!-- Subtle Grid -->
+                <div
+                    class="absolute inset-0 opacity-[0.035]"
+                    style="
+                        background-image:
+                            linear-gradient(rgba(255,255,255,.8) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255,255,255,.8) 1px, transparent 1px);
+                        background-size: 32px 32px;
+                    "
+                ></div>
+            </div>
 
             <div
                 class="relative z-10 p-5 sm:p-6 lg:p-7"
@@ -113,7 +115,7 @@
                         <!-- ============================================= -->
                         <!-- EXPORT REPORT -->
                         <!-- ============================================= -->
-                        <div class="relative group flex-1 z-50">
+                        <div v-if="$can('report.export')" class="relative group flex-1 z-50">
 
                             <button
                                 type="button"

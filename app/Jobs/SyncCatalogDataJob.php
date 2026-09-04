@@ -20,7 +20,7 @@ class SyncCatalogDataJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info(" [Queue:SyncCatalogDataJob] Starting background master catalog sync...");
+        Log::info(' [Queue:SyncCatalogDataJob] Starting background master catalog sync...');
 
         $productCount = Product::count();
         $variantCount = Variant::count();
@@ -33,10 +33,10 @@ class SyncCatalogDataJob implements ShouldQueue
             properties: [
                 'total_products' => $productCount,
                 'total_variants' => $variantCount,
-                'synced_at'      => now()->toIso8601String(),
+                'synced_at' => now()->toIso8601String(),
             ]
         );
 
-        Log::info(" [Queue:SyncCatalogDataJob] Catalog sync complete.");
+        Log::info(' [Queue:SyncCatalogDataJob] Catalog sync complete.');
     }
 }

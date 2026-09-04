@@ -26,7 +26,7 @@ return new class extends Migration
             $suffix = 1;
 
             while (DB::table('users')->where('username', $username)->exists()) {
-                $username = Str::limit($base, 42, '') . '_' . $suffix++;
+                $username = Str::limit($base, 42, '').'_'.$suffix++;
             }
 
             DB::table('users')->where('id', $user->id)->update(['username' => $username]);

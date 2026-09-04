@@ -5,7 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class Task extends Model
@@ -24,7 +27,7 @@ class Task extends Model
         'visual_file_path',
         'visual_file_name',
         'submitted_by',
-        'submitted_at'
+        'submitted_at',
     ];
 
     protected $casts = [
@@ -34,12 +37,14 @@ class Task extends Model
         'submitted_at' => 'datetime',
     ];
 
-    public function campaign()
+    /** @return BelongsTo<Campaign, $this> */
+    public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
     }
 
-    public function activityLogs()
+    /** @return MorphMany<ActivityLog, $this> */
+    public function activityLogs(): MorphMany
     {
         return $this->morphMany(ActivityLog::class, 'loggable');
     }
@@ -54,7 +59,7 @@ class Task extends Model
                     }
                 } catch (\Exception $e) {
                     // don't block deletion: just log
-                    \Illuminate\Support\Facades\Log::warning('Failed to delete task visual on model delete: ' . $e->getMessage(), ['task_id' => $task->id]);
+                    Log::warning('Failed to delete task visual on model delete: '.$e->getMessage(), ['task_id' => $task->id]);
                 }
             }
         });

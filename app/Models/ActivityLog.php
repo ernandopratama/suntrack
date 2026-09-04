@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ActivityLog extends Model
 {
@@ -19,7 +20,7 @@ class ActivityLog extends Model
         'actor_id',
         'actor_name',
         'actor_position',
-        'properties'
+        'properties',
     ];
 
     protected $casts = [
@@ -29,12 +30,14 @@ class ActivityLog extends Model
     // Activity Logs are immutable, they only have created_at.
     const UPDATED_AT = null;
 
-    public function loggable()
+    /** @return MorphTo<Model, $this> */
+    public function loggable(): MorphTo
     {
         return $this->morphTo();
     }
 
-    public function actor()
+    /** @return MorphTo<Model, $this> */
+    public function actor(): MorphTo
     {
         return $this->morphTo();
     }

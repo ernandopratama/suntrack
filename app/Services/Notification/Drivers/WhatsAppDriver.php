@@ -14,13 +14,13 @@ class WhatsAppDriver implements NotificationDriverInterface
      */
     public function send(string $recipient, string $message, array $metadata = []): bool
     {
-        $apiUrl = config('services.whatsapp.url', env('WHATSAPP_API_URL'));
-        $apiKey = config('services.whatsapp.key', env('WHATSAPP_API_KEY'));
+        $apiUrl = config('services.whatsapp.url');
+        $apiKey = config('services.whatsapp.key');
         $status = 'sent_log_mode';
         $isLive = false;
 
         // Attempt live gateway dispatch if configured
-        if (!empty($apiUrl) && !empty($apiKey)) {
+        if (! empty($apiUrl) && ! empty($apiKey)) {
             try {
                 $response = Http::withToken($apiKey)->timeout(10)->post($apiUrl, [
                     'phone' => $recipient,
@@ -33,7 +33,7 @@ class WhatsAppDriver implements NotificationDriverInterface
                     $isLive = true;
                 } else {
                     $status = 'sent_log_mode_fallback';
-                    Log::warning(" [Notification:WhatsApp] Live gateway returned HTTP " . $response->status() . ". Falling back to Log Mode.");
+                    Log::warning(' [Notification:WhatsApp] Live gateway returned HTTP '.$response->status().'. Falling back to Log Mode.');
                 }
             } catch (\Exception $e) {
                 $status = 'sent_log_mode_fallback';
@@ -42,14 +42,14 @@ class WhatsAppDriver implements NotificationDriverInterface
         }
 
         $payload = array_merge([
-            'channel'           => 'whatsapp',
-            'recipient'         => $recipient,
-            'subject'           => $metadata['subject'] ?? 'WhatsApp Notification',
-            'message'           => $message,
-            'status'            => $status,
-            'is_live_gateway'   => $isLive,
-            'sent_at'           => now()->toIso8601String(),
-            'related_entity'    => $metadata['related_entity'] ?? null,
+            'channel' => 'whatsapp',
+            'recipient' => $recipient,
+            'subject' => $metadata['subject'] ?? 'WhatsApp Notification',
+            'message' => $message,
+            'status' => $status,
+            'is_live_gateway' => $isLive,
+            'sent_at' => now()->toIso8601String(),
+            'related_entity' => $metadata['related_entity'] ?? null,
             'related_entity_id' => $metadata['related_entity_id'] ?? null,
         ], $metadata);
 
@@ -58,7 +58,7 @@ class WhatsAppDriver implements NotificationDriverInterface
 
         ActivityLogger::log(
             action: 'Notification:WhatsApp',
-            description: "WhatsApp notification sent to {$recipient} (Subject: {$payload['subject']}) [" . strtoupper($status) . "]",
+            description: "WhatsApp notification sent to {$recipient} (Subject: {$payload['subject']}) [".strtoupper($status).']',
             actorType: 'System',
             actorName: 'NotificationService',
             properties: $payload

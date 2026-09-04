@@ -29,12 +29,13 @@ class RunPerformanceBenchmarkCommand extends Command
      */
     public function handle(): int
     {
-        $this->info("Initiating SunTrack Enterprise Performance Benchmarking Suite...");
+        $this->info('Initiating SunTrack Enterprise Performance Benchmarking Suite...');
         $this->newLine();
 
         $company = Company::first();
-        if (!$company) {
+        if (! $company) {
             $this->error("No Company found. Please run 'php artisan suntrack:benchmark-seed' first.");
+
             return Command::FAILURE;
         }
 
@@ -119,8 +120,8 @@ class RunPerformanceBenchmarkCommand extends Command
         $tableData = array_map(function ($row) {
             return [
                 $row['test'],
-                $row['latency_ms'] . ' ms',
-                '<= ' . $row['target_ms'] . ' ms',
+                $row['latency_ms'].' ms',
+                '<= '.$row['target_ms'].' ms',
                 $row['status'] === 'PASS' ? '<info>PASS</info>' : ($row['status'] === 'WARN' ? '<comment>WARN</comment>' : '<error>FAIL</error>'),
             ];
         }, $results);
@@ -129,14 +130,14 @@ class RunPerformanceBenchmarkCommand extends Command
         $this->newLine();
 
         // Calculate summary metrics
-        $allPassed = !in_array('FAIL', array_column($results, 'status'));
+        $allPassed = ! in_array('FAIL', array_column($results, 'status'));
         $avgLatency = round(array_sum(array_column($results, 'latency_ms')) / count($results), 2);
 
         $this->info("Average Latency across test suite: {$avgLatency} ms");
         if ($allPassed) {
-            $this->info("ALL BENCHMARK SLA TARGETS PASSED!");
+            $this->info('ALL BENCHMARK SLA TARGETS PASSED!');
         } else {
-            $this->warn("Some benchmark targets did not meet SLA thresholds.");
+            $this->warn('Some benchmark targets did not meet SLA thresholds.');
         }
 
         if ($this->option('json') || $this->option('output')) {
@@ -149,7 +150,7 @@ class RunPerformanceBenchmarkCommand extends Command
 
             if ($this->option('output')) {
                 File::put($this->option('output'), $jsonOutput);
-                $this->info("Results saved to: " . $this->option('output'));
+                $this->info('Results saved to: '.$this->option('output'));
             }
 
             if ($this->option('json')) {

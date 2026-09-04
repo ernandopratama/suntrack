@@ -16,7 +16,7 @@ class SavedFilterController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected UserPreferenceService $service = new UserPreferenceService()
+        protected UserPreferenceService $service = new UserPreferenceService
     ) {}
 
     /**
@@ -29,6 +29,7 @@ class SavedFilterController extends Controller
         ]);
 
         $filters = $this->service->getSavedFilters($request->user()->id, $request->input('module'));
+
         return $this->success('Saved filters retrieved.', ['filters' => $filters]);
     }
 
@@ -38,9 +39,9 @@ class SavedFilterController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'module'     => ['required', 'in:campaigns,promotions,products,variants,activity_logs'],
-            'name'       => ['required', 'string', 'max:100'],
-            'filters'    => ['required', 'array'],
+            'module' => ['required', 'in:campaigns,promotions,products,variants,activity_logs'],
+            'name' => ['required', 'string', 'max:100'],
+            'filters' => ['required', 'array'],
             'is_default' => ['sometimes', 'boolean'],
         ]);
 
@@ -62,7 +63,7 @@ class SavedFilterController extends Controller
     {
         $deleted = $this->service->deleteFilter($id, $request->user()->id);
 
-        if (!$deleted) {
+        if (! $deleted) {
             return $this->error('Saved filter not found or unauthorized.', [], 404);
         }
 
@@ -75,6 +76,7 @@ class SavedFilterController extends Controller
     public function setDefault(Request $request, string $id): JsonResponse
     {
         $filter = $this->service->setDefaultFilter($id, $request->user()->id);
+
         return $this->success('Default filter updated.', ['filter' => $filter]);
     }
 }

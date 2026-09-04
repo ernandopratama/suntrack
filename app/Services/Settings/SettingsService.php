@@ -12,6 +12,7 @@ class SettingsService
     public function get(string $key, mixed $default = null): mixed
     {
         $settings = $this->all();
+
         return $settings[$key] ?? $default;
     }
 
@@ -42,6 +43,7 @@ class SettingsService
             foreach (SystemSetting::all() as $setting) {
                 $settings[$setting->key] = $setting->formatted_value;
             }
+
             return $settings;
         });
     }
@@ -61,11 +63,12 @@ class SettingsService
 
     public function getPublicSettings(): array
     {
-        return Cache::rememberForever(self::CACHE_KEY . '_public', function () {
+        return Cache::rememberForever(self::CACHE_KEY.'_public', function () {
             $settings = [];
             foreach (SystemSetting::where('is_public', true)->get() as $setting) {
                 $settings[$setting->key] = $setting->formatted_value;
             }
+
             return $settings;
         });
     }
@@ -73,6 +76,6 @@ class SettingsService
     public function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY);
-        Cache::forget(self::CACHE_KEY . '_public');
+        Cache::forget(self::CACHE_KEY.'_public');
     }
 }

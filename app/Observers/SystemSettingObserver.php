@@ -9,7 +9,7 @@ use App\Services\Settings\SettingsService;
 class SystemSettingObserver
 {
     public function __construct(
-        protected CacheService $cache = new CacheService()
+        protected CacheService $cache = new CacheService
     ) {}
 
     /**

@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Models\ApprovalHistory;
 use App\Models\Brand;
 use App\Models\Promotion;
 use App\Services\Cache\CacheService;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 class AnalyticsRepository
 {
     public function __construct(
-        protected CacheService $cache = new CacheService()
+        protected CacheService $cache = new CacheService
     ) {}
 
     /**
@@ -23,17 +23,19 @@ class AnalyticsRepository
      *
      * @return array<string, mixed>
      */
-    public function getApprovalPerformanceReport(string $dateFrom, string $dateTo, int|string $companyId): array
+    public function getApprovalPerformanceReport(string $dateFrom, string $dateTo, int|string|array|null $scope): array
     {
-        $cacheKey = "bi_approval_{$companyId}_{$dateFrom}_{$dateTo}";
+        $scopeKey = md5(json_encode($scope) ?: 'global');
+        $cacheKey = "bi_approval_{$scopeKey}_{$dateFrom}_{$dateTo}";
 
-        return $this->cache->remember(['analytics', 'bi', 'approval'], $cacheKey, 600, function () use ($dateFrom, $dateTo, $companyId) {
+        return $this->cache->remember(['analytics', 'bi', 'approval'], $cacheKey, 600, function () use ($dateFrom, $dateTo, $scope) {
             $totals = DB::table('approval_histories as ah')
                 ->join('promotion_variant as pv', 'ah.promotion_variant_id', '=', 'pv.id')
                 ->join('promotions as pr', 'pv.promotion_id', '=', 'pr.id')
-                ->join('brands as b', 'pr.brand_id', '=', 'b.id')
-                ->where('b.company_id', $companyId)
-                ->whereBetween('ah.created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
+                ->join('brands as b', 'pr.brand_id', '=', 'b.id');
+            $this->applyBrandScope($totals, $scope);
+            $totals = $totals
+                ->whereBetween('ah.created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
                 ->select([
                     DB::raw('COUNT(*) as total_decisions'),
                     DB::raw('COUNT(CASE WHEN ah.new_status = "Approved" THEN 1 END) as approved'),
@@ -41,18 +43,19 @@ class AnalyticsRepository
                 ])
                 ->first();
 
-            $total    = (int) ($totals?->total_decisions ?? 0);
-            $approved = (int) ($totals?->approved ?? 0);
-            $rejected = (int) ($totals?->rejected ?? 0);
-            $rate     = $total > 0 ? round(($approved / $total) * 100, 2) : 0.0;
+            $total = (int) ($totals->total_decisions ?? 0);
+            $approved = (int) ($totals->approved ?? 0);
+            $rejected = (int) ($totals->rejected ?? 0);
+            $rate = $total > 0 ? round(($approved / $total) * 100, 2) : 0.0;
 
             // Per-brand breakdown
             $perBrand = DB::table('approval_histories as ah')
                 ->join('promotion_variant as pv', 'ah.promotion_variant_id', '=', 'pv.id')
                 ->join('promotions as pr', 'pv.promotion_id', '=', 'pr.id')
-                ->join('brands as b', 'pr.brand_id', '=', 'b.id')
-                ->where('b.company_id', $companyId)
-                ->whereBetween('ah.created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
+                ->join('brands as b', 'pr.brand_id', '=', 'b.id');
+            $this->applyBrandScope($perBrand, $scope);
+            $perBrand = $perBrand
+                ->whereBetween('ah.created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
                 ->select([
                     'b.name as brand_name',
                     DB::raw('COUNT(*) as total'),
@@ -63,22 +66,22 @@ class AnalyticsRepository
                 ->orderBy('total', 'desc')
                 ->get()
                 ->map(fn ($r) => [
-                    'brand'         => $r->brand_name,
-                    'total'         => $r->total,
-                    'approved'      => $r->approved,
-                    'rejected'      => $r->rejected,
+                    'brand' => $r->brand_name,
+                    'total' => $r->total,
+                    'approved' => $r->approved,
+                    'rejected' => $r->rejected,
                     'approval_rate' => $r->total > 0 ? round(($r->approved / $r->total) * 100, 2) : 0.0,
                 ])->values()->all();
 
             return [
-                'period'         => ['from' => $dateFrom, 'to' => $dateTo],
-                'summary'        => [
-                    'total_decisions'  => $total,
-                    'approved'         => $approved,
-                    'rejected'         => $rejected,
-                    'approval_rate_pct'=> $rate,
+                'period' => ['from' => $dateFrom, 'to' => $dateTo],
+                'summary' => [
+                    'total_decisions' => $total,
+                    'approved' => $approved,
+                    'rejected' => $rejected,
+                    'approval_rate_pct' => $rate,
                 ],
-                'by_brand'       => $perBrand,
+                'by_brand' => $perBrand,
             ];
         });
     }
@@ -88,15 +91,17 @@ class AnalyticsRepository
      *
      * @return array<string, mixed>
      */
-    public function getPromotionEffectivenessReport(string $dateFrom, string $dateTo, int|string $companyId): array
+    public function getPromotionEffectivenessReport(string $dateFrom, string $dateTo, int|string|array|null $scope): array
     {
-        $cacheKey = "bi_promo_effectiveness_{$companyId}_{$dateFrom}_{$dateTo}";
+        $scopeKey = md5(json_encode($scope) ?: 'global');
+        $cacheKey = "bi_promo_effectiveness_{$scopeKey}_{$dateFrom}_{$dateTo}";
 
-        return $this->cache->remember(['analytics', 'bi', 'promotions'], $cacheKey, 600, function () use ($dateFrom, $dateTo, $companyId) {
+        return $this->cache->remember(['analytics', 'bi', 'promotions'], $cacheKey, 600, function () use ($dateFrom, $dateTo, $scope) {
             $data = DB::table('promotions as pr')
-                ->join('brands as b', 'pr.brand_id', '=', 'b.id')
-                ->where('b.company_id', $companyId)
-                ->whereBetween('pr.created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
+                ->join('brands as b', 'pr.brand_id', '=', 'b.id');
+            $this->applyBrandScope($data, $scope);
+            $data = $data
+                ->whereBetween('pr.created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
                 ->select([
                     DB::raw('COUNT(*) as total'),
                     DB::raw('COUNT(CASE WHEN pr.status = "Approved" THEN 1 END) as approved'),
@@ -106,19 +111,19 @@ class AnalyticsRepository
                 ])
                 ->first();
 
-            $total    = (int) ($data?->total ?? 0);
-            $approved = (int) ($data?->approved ?? 0);
-            $rate     = $total > 0 ? round(($approved / $total) * 100, 2) : 0.0;
-            $covPct   = $total > 0 ? round(((int) ($data?->with_campaign ?? 0) / $total) * 100, 2) : 0.0;
+            $total = (int) ($data->total ?? 0);
+            $approved = (int) ($data->approved ?? 0);
+            $rate = $total > 0 ? round(($approved / $total) * 100, 2) : 0.0;
+            $covPct = $total > 0 ? round(((int) ($data->with_campaign ?? 0) / $total) * 100, 2) : 0.0;
 
             return [
-                'period'                   => ['from' => $dateFrom, 'to' => $dateTo],
-                'total_promotions'         => $total,
-                'approved'                 => $approved,
-                'rejected'                 => (int) ($data?->rejected ?? 0),
-                'pending'                  => (int) ($data?->pending ?? 0),
-                'approval_rate_pct'        => $rate,
-                'campaign_coverage_pct'    => $covPct,
+                'period' => ['from' => $dateFrom, 'to' => $dateTo],
+                'total_promotions' => $total,
+                'approved' => $approved,
+                'rejected' => (int) ($data->rejected ?? 0),
+                'pending' => (int) ($data->pending ?? 0),
+                'approval_rate_pct' => $rate,
+                'campaign_coverage_pct' => $covPct,
             ];
         });
     }
@@ -134,13 +139,13 @@ class AnalyticsRepository
 
         return $this->cache->remember(['analytics', 'bi', 'brand'], $cacheKey, 600, function () use ($brandId, $dateFrom, $dateTo) {
             $brand = Brand::find($brandId);
-            if (!$brand) {
+            if (! $brand) {
                 return ['error' => 'Brand not found.'];
             }
 
             $promotions = DB::table('promotions')
                 ->where('brand_id', $brandId)
-                ->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
+                ->whereBetween('created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
                 ->select([
                     DB::raw('COUNT(*) as total_submitted'),
                     DB::raw('COUNT(CASE WHEN status = "Approved" THEN 1 END) as approved'),
@@ -151,16 +156,29 @@ class AnalyticsRepository
                 ->first();
 
             return [
-                'brand'    => ['id' => $brand->id, 'name' => $brand->name],
-                'period'   => ['from' => $dateFrom, 'to' => $dateTo],
+                'brand' => ['id' => $brand->id, 'name' => $brand->name],
+                'period' => ['from' => $dateFrom, 'to' => $dateTo],
                 'promotions' => [
-                    'total_submitted'   => (int) ($promotions?->total_submitted ?? 0),
-                    'approved'          => (int) ($promotions?->approved ?? 0),
-                    'rejected'          => (int) ($promotions?->rejected ?? 0),
-                    'pending'           => (int) ($promotions?->pending ?? 0),
-                    'partially_approved'=> (int) ($promotions?->partially_approved ?? 0),
+                    'total_submitted' => (int) ($promotions->total_submitted ?? 0),
+                    'approved' => (int) ($promotions->approved ?? 0),
+                    'rejected' => (int) ($promotions->rejected ?? 0),
+                    'pending' => (int) ($promotions->pending ?? 0),
+                    'partially_approved' => (int) ($promotions->partially_approved ?? 0),
                 ],
             ];
         });
+    }
+
+    private function applyBrandScope(Builder $query, int|string|array|null $scope): void
+    {
+        if (is_array($scope)) {
+            $query->whereIn('b.id', $scope);
+
+            return;
+        }
+
+        if ($scope !== null) {
+            $query->where('b.company_id', $scope);
+        }
     }
 }

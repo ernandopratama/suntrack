@@ -2,21 +2,22 @@
 
 namespace App\Jobs;
 
-use App\Services\Reporting\ReportingService;
 use App\Services\ActivityLogger;
+use App\Services\Reporting\ReportingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class GenerateReportExportJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 2;
+
     public int $timeout = 300;
 
     public function __construct(
@@ -32,8 +33,8 @@ class GenerateReportExportJob implements ShouldQueue
 
         try {
             $data = $reportingService->generate($this->reportType, $this->filters);
-            $filename = "reports/async/suntrack_{$this->reportType}_report_" . date('Ymd_His') . "." . strtolower($this->format);
-            
+            $filename = "reports/async/suntrack_{$this->reportType}_report_".date('Ymd_His').'.'.strtolower($this->format);
+
             // For background queue, we store the generated tabular data or formatted stream to storage
             Storage::disk('local')->put($filename, json_encode($data, JSON_PRETTY_PRINT));
 

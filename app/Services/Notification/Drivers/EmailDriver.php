@@ -4,8 +4,8 @@ namespace App\Services\Notification\Drivers;
 
 use App\Contracts\Notification\NotificationDriverInterface;
 use App\Services\ActivityLogger;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class EmailDriver implements NotificationDriverInterface
 {
@@ -14,12 +14,12 @@ class EmailDriver implements NotificationDriverInterface
      */
     public function send(string $recipient, string $message, array $metadata = []): bool
     {
-        $mailer = config('mail.default', env('MAIL_MAILER', 'log'));
+        $mailer = config('mail.default', 'log');
         $status = 'sent_log_mode';
         $isLive = false;
 
         // If a live mailer (smtp, mailgun, ses, postmark) is explicitly configured
-        if ($mailer !== 'log' && $mailer !== 'array' && !empty(config('mail.mailers.' . $mailer . '.host', env('MAIL_HOST')))) {
+        if ($mailer !== 'log' && $mailer !== 'array' && ! empty(config('mail.mailers.'.$mailer.'.host'))) {
             try {
                 $subject = $metadata['subject'] ?? 'SunTrack Notification Email';
                 Mail::raw($message, function ($mail) use ($recipient, $subject) {
@@ -34,14 +34,14 @@ class EmailDriver implements NotificationDriverInterface
         }
 
         $payload = array_merge([
-            'channel'           => 'email',
-            'recipient'         => $recipient,
-            'subject'           => $metadata['subject'] ?? 'SunTrack Notification Email',
-            'message'           => $message,
-            'status'            => $status,
-            'is_live_gateway'   => $isLive,
-            'sent_at'           => now()->toIso8601String(),
-            'related_entity'    => $metadata['related_entity'] ?? null,
+            'channel' => 'email',
+            'recipient' => $recipient,
+            'subject' => $metadata['subject'] ?? 'SunTrack Notification Email',
+            'message' => $message,
+            'status' => $status,
+            'is_live_gateway' => $isLive,
+            'sent_at' => now()->toIso8601String(),
+            'related_entity' => $metadata['related_entity'] ?? null,
             'related_entity_id' => $metadata['related_entity_id'] ?? null,
         ], $metadata);
 
@@ -49,7 +49,7 @@ class EmailDriver implements NotificationDriverInterface
 
         ActivityLogger::log(
             action: 'Notification:Email',
-            description: "Email notification sent to {$recipient} (Subject: {$payload['subject']}) [" . strtoupper($status) . "]",
+            description: "Email notification sent to {$recipient} (Subject: {$payload['subject']}) [".strtoupper($status).']',
             actorType: 'System',
             actorName: 'NotificationService',
             properties: $payload

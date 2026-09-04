@@ -8,7 +8,7 @@ use App\Services\Cache\CacheService;
 class PromotionObserver
 {
     public function __construct(
-        protected CacheService $cache = new CacheService()
+        protected CacheService $cache = new CacheService
     ) {}
 
     /**

@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\Promotion;
-use App\Services\Notification\NotificationService;
 use App\Services\ActivityLogger;
+use App\Services\Notification\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -23,7 +23,7 @@ class SendApprovalReminderJob implements ShouldQueue
      */
     public function handle(NotificationService $notificationService): void
     {
-        Log::info(" [Scheduler:SendApprovalReminderJob] Scanning for pending brand review approvals...");
+        Log::info(' [Scheduler:SendApprovalReminderJob] Scanning for pending brand review approvals...');
 
         // Find promotions pending for over 48 hours
         $threshold = now()->subHours(48);
@@ -34,7 +34,7 @@ class SendApprovalReminderJob implements ShouldQueue
 
         $remindedCount = 0;
         foreach ($pendingPromotions as $promo) {
-            $brandName = $promo->brand?->name ?? 'External Brand';
+            $brandName = $promo->brand->name ?? 'External Brand';
             $promoCode = $promo->code ?? "PROMO-#{$promo->id}";
             $link = $promo->secureLinks->where('status', 'Active')->first();
             $reviewUrl = $link ? url("/review/{$link->token}") : url('/login');

@@ -46,6 +46,7 @@
 
       <!-- Create Task -->
       <button
+        v-if="$can('task.create')"
         @click="openCreateModal"
         type="button"
         class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#4274D9] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#293681] hover:shadow-md sm:w-auto"
@@ -202,6 +203,7 @@
           <div class="flex items-center justify-end gap-2">
             <!-- Edit -->
             <button
+              v-if="$can('task.update')"
               @click="openEditModal(row)"
               type="button"
               class="inline-flex items-center gap-1.5 rounded-lg border border-[#95CCDD] bg-[#D0E7E6]/50 px-3 py-2 text-xs font-bold text-[#293681] transition-all duration-200 hover:border-[#4274D9] hover:bg-[#D0E7E6] hover:text-[#293681]"
@@ -224,6 +226,7 @@
 
             <!-- Delete -->
             <button
+              v-if="$can('task.delete')"
               @click="confirmDelete(row)"
               type="button"
               class="inline-flex items-center gap-1.5 rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-600 transition-all duration-200 hover:border-rose-200 hover:bg-rose-100 hover:text-rose-700"

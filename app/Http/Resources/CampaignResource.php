@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Campaign;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\CommentResource;
 
+/** @mixin Campaign */
 class CampaignResource extends JsonResource
 {
     /**
@@ -23,7 +24,7 @@ class CampaignResource extends JsonResource
             'end_date' => $this->end_date ? $this->end_date->format('Y-m-d') : null,
             'deadline' => $this->deadline ? $this->deadline->format('Y-m-d H:i:s') : null,
             'status' => $this->status,
-            'company_id' => $this->company_id,
+            'brand_id' => $this->brand_id,
             'pic_id' => $this->pic_id,
 
             // Eager loaded relationships

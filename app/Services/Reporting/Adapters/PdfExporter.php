@@ -3,7 +3,6 @@
 namespace App\Services\Reporting\Adapters;
 
 use App\Contracts\Reporting\ReportExporterInterface;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PdfExporter implements ReportExporterInterface
 {
@@ -13,18 +12,18 @@ class PdfExporter implements ReportExporterInterface
      */
     public function export(array $data, string $format = 'pdf', ?string $filename = null): mixed
     {
-        $filename = $filename ?: 'suntrack_report_' . date('Ymd_His') . '.html';
+        $filename = $filename ?: 'suntrack_report_'.date('Ymd_His').'.html';
 
         $headers = [
-            'Content-Type'        => 'text/html; charset=UTF-8',
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
-            'Pragma'              => 'no-cache',
-            'Cache-Control'       => 'must-revalidate',
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate',
         ];
 
         return response()->stream(function () use ($data) {
             $handle = fopen('php://output', 'w');
-            
+
             $htmlHeader = '<!DOCTYPE html>
 <html>
 <head>
@@ -54,7 +53,7 @@ class PdfExporter implements ReportExporterInterface
     <div class="header">
         <div class="logo">⚡ SunTrack</div>
         <div class="meta">
-            <div>Generated: ' . now()->format('d M Y, H:i') . '</div>
+            <div>Generated: '.now()->format('d M Y, H:i').'</div>
             <div>System Operational Command Center</div>
         </div>
     </div>
@@ -67,17 +66,17 @@ class PdfExporter implements ReportExporterInterface
 
             fwrite($handle, $htmlHeader);
 
-            if (!empty($data)) {
+            if (! empty($data)) {
                 fwrite($handle, "        <thead>\n            <tr>\n");
                 foreach (array_keys($data[0]) as $colName) {
-                    fwrite($handle, '                <th>' . htmlspecialchars((string) $colName, ENT_QUOTES, 'UTF-8') . "</th>\n");
+                    fwrite($handle, '                <th>'.htmlspecialchars((string) $colName, ENT_QUOTES, 'UTF-8')."</th>\n");
                 }
                 fwrite($handle, "            </tr>\n        </thead>\n        <tbody>\n");
 
                 foreach ($data as $row) {
                     fwrite($handle, "            <tr>\n");
                     foreach ($row as $val) {
-                        fwrite($handle, '                <td>' . htmlspecialchars((string) $val, ENT_QUOTES, 'UTF-8') . "</td>\n");
+                        fwrite($handle, '                <td>'.htmlspecialchars((string) $val, ENT_QUOTES, 'UTF-8')."</td>\n");
                     }
                     fwrite($handle, "            </tr>\n");
                 }

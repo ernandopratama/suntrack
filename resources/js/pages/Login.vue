@@ -1,4 +1,3 @@
-```vue
 <template>
   <div
     class="relative flex min-h-screen items-center justify-center overflow-hidden bg-page px-4 py-10 text-content sm:px-6 lg:px-8"
@@ -178,13 +177,23 @@
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  :type="showLoginPassword ? 'text' : 'password'"
                   v-model="form.password"
                   required
                   autocomplete="current-password"
-                  class="login-input pl-11"
+                  class="login-input login-input-password pl-11"
                   placeholder="Enter your password"
                 />
+
+                <button
+                  type="button"
+                  class="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition hover:text-[#293681]"
+                  :aria-label="showLoginPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+                  :aria-pressed="showLoginPassword"
+                  @click="showLoginPassword = !showLoginPassword"
+                >
+                  <i :class="showLoginPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+                </button>
               </div>
             </div>
 
@@ -275,6 +284,7 @@ const form = ref({
 
 const loading = ref(false);
 const errorMsg = ref('');
+const showLoginPassword = ref(false);
 
 const login = async () => {
   loading.value = true;
@@ -321,6 +331,10 @@ const login = async () => {
 
 .login-input::placeholder {
   color: #94a3b8;
+}
+
+.login-input-password {
+  padding-right: 3rem;
 }
 
 .login-input:hover {

@@ -334,6 +334,7 @@
               <!-- Action -->
               <td class="px-5 py-4 text-right">
                 <button
+                  v-if="$can('promotion.update')"
                   @click="openEditPricing(v)"
                   type="button"
                   class="inline-flex items-center gap-1.5 rounded-lg border border-[#95CCDD]/60 bg-white px-3 py-2 text-xs font-bold text-[#4274D9] transition-all duration-200 hover:border-[#4274D9] hover:bg-[#D0E7E6]/40 hover:text-[#293681]"
@@ -615,6 +616,7 @@
           </button>
 
           <button
+            v-if="$can('promotion.update')"
             type="submit"
             form="promo-pricing-form"
             :disabled="saving"

@@ -7,8 +7,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class CleanTemporaryFilesJob implements ShouldQueue
 {
@@ -16,7 +16,7 @@ class CleanTemporaryFilesJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info(" [Scheduler:CleanTemporaryFilesJob] Purging temporary report files older than 24 hours...");
+        Log::info(' [Scheduler:CleanTemporaryFilesJob] Purging temporary report files older than 24 hours...');
 
         $disk = Storage::disk('local');
         if ($disk->exists('reports/async')) {
@@ -34,7 +34,7 @@ class CleanTemporaryFilesJob implements ShouldQueue
 
             Log::info(" [Scheduler:CleanTemporaryFilesJob] Purged {$deletedCount} temporary export files.");
         } else {
-            Log::info(" [Scheduler:CleanTemporaryFilesJob] No temporary reports directory found. Clean.");
+            Log::info(' [Scheduler:CleanTemporaryFilesJob] No temporary reports directory found. Clean.');
         }
     }
 }

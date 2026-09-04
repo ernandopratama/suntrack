@@ -2,43 +2,34 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Campaign;
+use App\Models\Promotion;
+use App\Models\Variant;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @mixin Campaign
+ * @mixin Promotion
+ */
 class PublicReviewResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $isPromotion = ($this->linkable_type === 'App\Models\Promotion' || $this->code !== null);
+        $isPromotion = $this->resource instanceof Promotion;
 
         $variants = $isPromotion ? $this->variants : $this->promotions->load('variants')->pluck('variants')->flatten();
         $totalVariants = $variants->count();
         $approved = $variants->where('pivot.approval_status', 'Approved')->count();
         $rejected = $variants->where('pivot.approval_status', 'Rejected')->count();
-        $pending  = $variants->where('pivot.approval_status', 'Pending')->count();
+        $pending = $variants->where('pivot.approval_status', 'Pending')->count();
         $completionPercentage = $totalVariants > 0 ? round(($approved + $rejected) / $totalVariants * 100, 1) : 0;
 
         $lastHistory = $isPromotion ? $this->approvalHistories()->first() : null;
 
-        $variantsData = $variants->map(function ($variant) {
-            return [
-                'id' => $variant->id,
-                'product_id' => $variant->product_id,
-                'product_name' => $variant->product ? $variant->product->name : 'Unknown Product',
-                'name' => $variant->name,
-                'sku' => $variant->sku,
-                'normal_price_snapshot' => (float) $variant->pivot->normal_price_snapshot,
-                'campaign_price' => (float) $variant->pivot->campaign_price,
-                'discount_price' => (float) $variant->pivot->discount_price,
-                'bottom_price' => (float) $variant->pivot->bottom_price,
-                'promotion_stock' => (int) $variant->pivot->promotion_stock,
-                'purchase_limit' => (int) $variant->pivot->purchase_limit,
-                'approval_status' => $variant->pivot->approval_status ?? 'Pending',
-                'rejection_notes' => $variant->pivot->rejection_notes,
-                'notes' => $variant->pivot->notes,
-            ];
-        });
+        $variantsData = $variants->map(fn (Variant $variant) => $this->formatVariant($variant, true));
 
         $timeline = $this->activityLogs()->get()->map(function ($log) {
             return [
@@ -54,7 +45,7 @@ class PublicReviewResource extends JsonResource
         });
 
         // For Campaign: collect promotions with their variants and product info
-        $promotionsData = !$isPromotion ? $this->promotions->map(function ($promo) {
+        $promotionsData = ! $isPromotion ? $this->promotions->map(function (Promotion $promo) {
             return [
                 'id' => $promo->id,
                 'code' => $promo->code,
@@ -63,23 +54,7 @@ class PublicReviewResource extends JsonResource
                 'start_date' => $promo->start_date ? $promo->start_date->toIso8601String() : null,
                 'end_date' => $promo->end_date ? $promo->end_date->toIso8601String() : null,
                 'status' => $promo->status,
-                'variants' => $promo->variants->map(function ($variant) {
-                    return [
-                        'id' => $variant->id,
-                        'product_id' => $variant->product_id,
-                        'product_name' => $variant->product ? $variant->product->name : 'Unknown Product',
-                        'name' => $variant->name,
-                        'sku' => $variant->sku,
-                        'normal_price_snapshot' => (float) $variant->pivot->normal_price_snapshot,
-                        'campaign_price' => (float) $variant->pivot->campaign_price,
-                        'discount_price' => (float) $variant->pivot->discount_price,
-                        'bottom_price' => (float) $variant->pivot->bottom_price,
-                        'promotion_stock' => (int) $variant->pivot->promotion_stock,
-                        'purchase_limit' => (int) $variant->pivot->purchase_limit,
-                        'approval_status' => $variant->pivot->approval_status ?? 'Pending',
-                        'rejection_notes' => $variant->pivot->rejection_notes,
-                    ];
-                }),
+                'variants' => $promo->variants->map(fn (Variant $variant) => $this->formatVariant($variant, false)),
             ];
         }) : collect([]);
 
@@ -117,7 +92,7 @@ class PublicReviewResource extends JsonResource
             ],
             'variants' => $variantsData,
             'promotions' => $promotionsData,
-            'tasks' => !$isPromotion ? $this->tasks->map(function ($task) {
+            'tasks' => ! $isPromotion ? $this->tasks->map(function ($task) {
                 return [
                     'id' => $task->id,
                     'name' => $task->name,
@@ -138,5 +113,43 @@ class PublicReviewResource extends JsonResource
             'comments' => CommentResource::collection($this->comments()->get()),
             'timeline' => $timeline,
         ];
+    }
+
+    /** @return array<string, mixed> */
+    private function formatVariant(Variant $variant, bool $includeNotes): array
+    {
+        $pivot = $variant->getRelationValue('pivot');
+        $pivot = $pivot instanceof Pivot ? $pivot : null;
+
+        $data = [
+            'id' => $variant->id,
+            'product_id' => $variant->product_id,
+            'product_name' => $variant->product ? $variant->product->name : 'Unknown Product',
+            'name' => $variant->name,
+            'sku' => $variant->sku,
+            'normal_price_snapshot' => (float) $this->pivotValue($pivot, 'normal_price_snapshot', 0),
+            'campaign_price' => (float) $this->pivotValue($pivot, 'campaign_price', 0),
+            'discount_price' => (float) $this->pivotValue($pivot, 'discount_price', 0),
+            'bottom_price' => (float) $this->pivotValue($pivot, 'bottom_price', 0),
+            'promotion_stock' => (int) $this->pivotValue($pivot, 'promotion_stock', 0),
+            'purchase_limit' => (int) $this->pivotValue($pivot, 'purchase_limit', 0),
+            'approval_status' => $this->pivotValue($pivot, 'approval_status', 'Pending'),
+            'rejection_notes' => $this->pivotValue($pivot, 'rejection_notes'),
+        ];
+
+        if ($includeNotes) {
+            $data['notes'] = $this->pivotValue($pivot, 'notes');
+        }
+
+        return $data;
+    }
+
+    private function pivotValue(?Pivot $pivot, string $key, mixed $default = null): mixed
+    {
+        if ($pivot === null) {
+            return $default;
+        }
+
+        return $pivot->getAttribute($key) ?? $default;
     }
 }

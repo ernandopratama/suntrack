@@ -31,6 +31,7 @@
 
             <!-- Create Brand -->
             <button
+                v-if="$can('brand.create')"
                 @click="openCreateModal"
                 type="button"
                 class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-sm hover:shadow-md transition-all duration-200"
@@ -138,6 +139,7 @@
 
                         <!-- Edit -->
                         <button
+                            v-if="$can('brand.update')"
                             @click="openEditModal(row)"
                             type="button"
                             title="Edit brand"
@@ -150,6 +152,7 @@
 
                         <!-- Delete -->
                         <button
+                            v-if="$can('brand.delete')"
                             @click="confirmDelete(row)"
                             type="button"
                             title="Delete brand"

@@ -2,12 +2,20 @@
 
 namespace Tests\Feature;
 
+use App\Models\Brand;
 use App\Models\Campaign;
+use App\Models\Company;
 use App\Models\NotificationLog;
+use App\Models\Product;
+use App\Models\Promotion;
 use App\Models\SavedFilter;
 use App\Models\User;
-use App\Models\UserPreference;
+use App\Models\Variant;
+use App\Support\Rbac\RbacRegistry;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -16,6 +24,14 @@ use Tests\TestCase;
 class Sprint11EnterpriseIntelligenceTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(RolePermissionSeeder::class);
+        User::created(fn (User $user) => $user->assignRole(RbacRegistry::SUPER_ADMIN));
+    }
 
     // -------------------------------------------------------
     // 1. Global Search Engine Tests
@@ -52,6 +68,79 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
 
         $data = $response->json('data.driver');
         $this->assertEquals('database', $data);
+    }
+
+    public function test_global_search_for_admin_roles_is_not_limited_by_legacy_user_company(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('search-test')->plainTextToken;
+        $companies = collect(['A', 'B'])->map(function (string $suffix) {
+            $company = Company::create(['name' => "Company {$suffix}"]);
+            $brand = Brand::create(['company_id' => $company->id, 'name' => "Brand {$suffix}"]);
+
+            Campaign::create([
+                'brand_id' => $brand->id,
+                'name' => "Global Needle {$suffix}",
+                'status' => 'Draft',
+            ]);
+
+            return $company;
+        });
+
+        $this->assertCount(2, $companies);
+
+        $this->withToken($token)
+            ->getJson('/api/v1/admin/search?q=Global%20Needle&types[]=campaign&limit=10')
+            ->assertOk()
+            ->assertJsonCount(2, 'data.results.campaigns');
+    }
+
+    public function test_pricing_analytics_for_admin_roles_uses_global_scope(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('pricing-test')->plainTextToken;
+
+        foreach (['A', 'B'] as $suffix) {
+            $company = Company::create(['name' => "Pricing Company {$suffix}"]);
+            $brand = Brand::create(['company_id' => $company->id, 'name' => "Pricing Brand {$suffix}"]);
+            $product = Product::create([
+                'brand_id' => $brand->id,
+                'code' => "PRODUCT-{$suffix}",
+                'name' => "Product {$suffix}",
+            ]);
+            $variant = Variant::create([
+                'product_id' => $product->id,
+                'code' => "VARIANT-{$suffix}",
+                'name' => "Variant {$suffix}",
+                'normal_price' => 100,
+                'bottom_price' => 50,
+                'current_stock' => 10,
+            ]);
+            $promotion = Promotion::create([
+                'brand_id' => $brand->id,
+                'name' => "Promotion {$suffix}",
+            ]);
+
+            DB::table('promotion_variant')->insert([
+                'id' => (string) Str::uuid(),
+                'promotion_id' => $promotion->id,
+                'variant_id' => $variant->id,
+                'campaign_price' => 100,
+                'bottom_price' => 50,
+                'normal_price_snapshot' => 100,
+                'discount_price' => 60,
+                'promotion_stock' => 10,
+                'purchase_limit' => 1,
+                'approval_status' => 'Pending',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $this->withToken($token)
+            ->getJson('/api/v1/admin/analytics/pricing/overview')
+            ->assertOk()
+            ->assertJsonPath('data.total_promotion_variant_mappings', 2);
     }
 
     // -------------------------------------------------------
@@ -98,10 +187,10 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
     {
         $user = User::factory()->create();
         NotificationLog::create([
-            'type'      => 'email',
+            'type' => 'email',
             'recipient' => 'test@suntrack.id',
-            'body'      => 'Test notification',
-            'status'    => 'sent',
+            'body' => 'Test notification',
+            'status' => 'sent',
         ]);
 
         $response = $this->actingAs($user)->getJson('/api/v1/admin/notifications');
@@ -123,11 +212,11 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
     public function test_notification_retry_rejects_non_failed_status(): void
     {
         $user = User::factory()->create();
-        $log  = NotificationLog::create([
-            'type'      => 'whatsapp',
+        $log = NotificationLog::create([
+            'type' => 'whatsapp',
             'recipient' => '+6281234567890',
-            'body'      => 'Hello',
-            'status'    => 'sent',  // Cannot retry sent notifications
+            'body' => 'Hello',
+            'status' => 'sent',  // Cannot retry sent notifications
         ]);
 
         $response = $this->actingAs($user)->postJson("/api/v1/admin/notifications/{$log->id}/retry");
@@ -138,10 +227,10 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
     public function test_notification_state_machine_transitions(): void
     {
         $log = NotificationLog::create([
-            'type'      => 'email',
+            'type' => 'email',
             'recipient' => 'test@test.com',
-            'body'      => 'Body',
-            'status'    => 'pending',
+            'body' => 'Body',
+            'status' => 'pending',
         ]);
 
         $log->markProcessing();
@@ -188,8 +277,8 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->postJson('/api/v1/admin/saved-filters', [
-            'module'  => 'campaigns',
-            'name'    => 'Active Campaigns',
+            'module' => 'campaigns',
+            'name' => 'Active Campaigns',
             'filters' => ['status' => 'Running', 'brand_id' => 'abc'],
         ]);
 
@@ -202,8 +291,8 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
         $user = User::factory()->create();
         SavedFilter::create([
             'user_id' => $user->id,
-            'module'  => 'promotions',
-            'name'    => 'Pending Promos',
+            'module' => 'promotions',
+            'name' => 'Pending Promos',
             'filters' => ['status' => 'Pending'],
         ]);
 
@@ -216,11 +305,11 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
 
     public function test_saved_filters_can_be_deleted(): void
     {
-        $user   = User::factory()->create();
+        $user = User::factory()->create();
         $filter = SavedFilter::create([
             'user_id' => $user->id,
-            'module'  => 'products',
-            'name'    => 'Active Products',
+            'module' => 'products',
+            'name' => 'Active Products',
             'filters' => ['status' => 'Active'],
         ]);
 
@@ -251,9 +340,9 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->putJson('/api/v1/admin/me/preferences', [
-            'theme'             => 'light',
+            'theme' => 'light',
             'default_page_size' => 25,
-            'locale'            => 'en',
+            'locale' => 'en',
         ]);
 
         $response->assertStatus(200)

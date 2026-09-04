@@ -20,7 +20,7 @@ class SystemMonitorController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected MetricsService $metrics = new MetricsService()
+        protected MetricsService $metrics = new MetricsService
     ) {}
 
     /**
@@ -31,18 +31,18 @@ class SystemMonitorController extends Controller
     {
         $checks = [
             'application' => $this->checkApplication(),
-            'database'    => $this->checkDatabase(),
-            'redis'       => $this->checkRedis(),
-            'queue'       => $this->checkQueue(),
-            'storage'     => $this->checkStorage(),
+            'database' => $this->checkDatabase(),
+            'redis' => $this->checkRedis(),
+            'queue' => $this->checkQueue(),
+            'storage' => $this->checkStorage(),
         ];
 
-        $allHealthy = !in_array('unhealthy', array_column($checks, 'status'));
+        $allHealthy = ! in_array('unhealthy', array_column($checks, 'status'));
 
         return $this->success('Health check complete.', [
             'overall_status' => $allHealthy ? 'healthy' : 'degraded',
-            'checks'         => $checks,
-            'timestamp'      => now()->toIso8601String(),
+            'checks' => $checks,
+            'timestamp' => now()->toIso8601String(),
         ], $allHealthy ? 200 : 503);
     }
 
@@ -52,6 +52,7 @@ class SystemMonitorController extends Controller
     public function queueStats(): JsonResponse
     {
         $data = $this->metrics->getQueueHealthStats();
+
         return $this->success('Queue statistics retrieved.', $data);
     }
 
@@ -62,10 +63,11 @@ class SystemMonitorController extends Controller
     {
         $data = [
             'hit_miss_ratio' => $this->metrics->getCacheHitMissRatio(),
-            'api_stats'      => $this->metrics->getApiResponseTimeStats(),
-            'memory'         => $this->metrics->getMemoryUsageStats(),
-            'driver'         => config('cache.default'),
+            'api_stats' => $this->metrics->getApiResponseTimeStats(),
+            'memory' => $this->metrics->getMemoryUsageStats(),
+            'driver' => config('cache.default'),
         ];
+
         return $this->success('Cache statistics retrieved.', $data);
     }
 
@@ -75,6 +77,7 @@ class SystemMonitorController extends Controller
     public function storageStats(): JsonResponse
     {
         $data = $this->metrics->getStorageStats();
+
         return $this->success('Storage statistics retrieved.', $data);
     }
 
@@ -84,6 +87,7 @@ class SystemMonitorController extends Controller
     public function dbStats(): JsonResponse
     {
         $status = $this->checkDatabase();
+
         return $this->success('Database statistics retrieved.', $status);
     }
 
@@ -103,28 +107,29 @@ class SystemMonitorController extends Controller
     protected function checkApplication(): array
     {
         return [
-            'status'      => 'healthy',
-            'app_name'    => config('app.name'),
-            'app_env'     => config('app.env'),
+            'status' => 'healthy',
+            'app_name' => config('app.name'),
+            'app_env' => config('app.env'),
             'php_version' => PHP_VERSION,
-            'laravel'     => app()->version(),
-            'memory'      => $this->metrics->getMemoryUsageStats(),
-            'timestamp'   => now()->toIso8601String(),
+            'laravel' => app()->version(),
+            'memory' => $this->metrics->getMemoryUsageStats(),
+            'timestamp' => now()->toIso8601String(),
         ];
     }
 
     protected function checkDatabase(): array
     {
         try {
-            $pdo     = DB::connection()->getPdo();
+            $pdo = DB::connection()->getPdo();
             $version = DB::selectOne('SELECT VERSION() as version');
-            $tables  = count(DB::select("SHOW TABLES")) ?: 0;
+            $tables = count(DB::select('SHOW TABLES')) ?: 0;
+
             return [
-                'status'        => 'healthy',
-                'driver'        => DB::getDriverName(),
-                'version'       => $version?->version ?? 'N/A',
-                'tables'        => $tables,
-                'connection'    => config('database.default'),
+                'status' => 'healthy',
+                'driver' => DB::getDriverName(),
+                'version' => $version->version ?? 'N/A',
+                'tables' => $tables,
+                'connection' => config('database.default'),
             ];
         } catch (\Throwable $e) {
             return ['status' => 'unhealthy', 'error' => $e->getMessage()];
@@ -134,14 +139,16 @@ class SystemMonitorController extends Controller
     protected function checkRedis(): array
     {
         try {
-            $info = cache()->store('redis')->getRedis()->connection()->info();
+            $info = Redis::connection()->command('info');
+            $info = is_array($info) ? $info : [];
+
             return [
-                'status'            => 'healthy',
-                'version'           => $info['redis_version'] ?? 'N/A',
+                'status' => 'healthy',
+                'version' => $info['redis_version'] ?? 'N/A',
                 'used_memory_human' => $info['used_memory_human'] ?? 'N/A',
                 'connected_clients' => $info['connected_clients'] ?? 0,
-                'total_commands'    => $info['total_commands_processed'] ?? 0,
-                'uptime_days'       => $info['uptime_in_days'] ?? 0,
+                'total_commands' => $info['total_commands_processed'] ?? 0,
+                'uptime_days' => $info['uptime_in_days'] ?? 0,
             ];
         } catch (\Throwable $e) {
             return ['status' => 'unhealthy', 'error' => $e->getMessage()];
@@ -152,12 +159,13 @@ class SystemMonitorController extends Controller
     {
         try {
             $pending = DB::table('jobs')->count();
-            $failed  = DB::table('failed_jobs')->count();
+            $failed = DB::table('failed_jobs')->count();
+
             return [
-                'status'         => $failed > 50 ? 'degraded' : 'healthy',
-                'pending_jobs'   => $pending,
-                'failed_jobs'    => $failed,
-                'queue_driver'   => config('queue.default'),
+                'status' => $failed > 50 ? 'degraded' : 'healthy',
+                'pending_jobs' => $pending,
+                'failed_jobs' => $failed,
+                'queue_driver' => config('queue.default'),
             ];
         } catch (\Throwable $e) {
             return ['status' => 'unhealthy', 'error' => $e->getMessage()];
@@ -169,15 +177,15 @@ class SystemMonitorController extends Controller
         try {
             $disk = Storage::disk('local');
             $logPath = storage_path('logs');
-            $logSizeKb = file_exists($logPath . '/laravel.log')
-                ? round(filesize($logPath . '/laravel.log') / 1024, 2)
+            $logSizeKb = file_exists($logPath.'/laravel.log')
+                ? round(filesize($logPath.'/laravel.log') / 1024, 2)
                 : 0.0;
 
             return [
-                'status'          => 'healthy',
-                'default_disk'    => config('filesystems.default'),
-                'log_size_kb'     => $logSizeKb,
-                'storage_driver'  => config('filesystems.default'),
+                'status' => 'healthy',
+                'default_disk' => config('filesystems.default'),
+                'log_size_kb' => $logSizeKb,
+                'storage_driver' => config('filesystems.default'),
             ];
         } catch (\Throwable $e) {
             return ['status' => 'unhealthy', 'error' => $e->getMessage()];

@@ -3,6 +3,7 @@
 namespace App\Services\Monitoring;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -32,7 +33,7 @@ class MetricsService
                 Log::warning("High Request Latency Detected: [{$endpoint}] took {$durationMs}ms (Status: {$statusCode})");
             }
         } catch (\Throwable $e) {
-            Log::error("MetricsService recordRequestLatency error: " . $e->getMessage());
+            Log::error('MetricsService recordRequestLatency error: '.$e->getMessage());
         }
     }
 
@@ -94,7 +95,7 @@ class MetricsService
             // Keep only latest 100 job metrics in cache
             Cache::put($key, array_slice($history, 0, 100), now()->addDays(7));
         } catch (\Throwable $e) {
-            Log::error("MetricsService recordQueueMetric error: " . $e->getMessage());
+            Log::error('MetricsService recordQueueMetric error: '.$e->getMessage());
         }
     }
 
@@ -116,7 +117,7 @@ class MetricsService
 
             Cache::put($key, array_slice($history, 0, 50), now()->addDays(30));
         } catch (\Throwable $e) {
-            Log::error("MetricsService recordSchedulerExecution error: " . $e->getMessage());
+            Log::error('MetricsService recordSchedulerExecution error: '.$e->getMessage());
         }
     }
 
@@ -129,7 +130,7 @@ class MetricsService
     {
         return [
             'current_mb' => round(memory_get_usage(true) / 1024 / 1024, 2),
-            'peak_mb'    => round(memory_get_peak_usage(true) / 1024 / 1024, 2),
+            'peak_mb' => round(memory_get_peak_usage(true) / 1024 / 1024, 2),
             'memory_limit' => ini_get('memory_limit') ?: 'N/A',
         ];
     }
@@ -168,24 +169,24 @@ class MetricsService
         $memory = $this->getMemoryUsageStats();
 
         $lines = [
-            "# HELP suntrack_api_requests_total Total HTTP API requests executed",
-            "# TYPE suntrack_api_requests_total counter",
+            '# HELP suntrack_api_requests_total Total HTTP API requests executed',
+            '# TYPE suntrack_api_requests_total counter',
             "suntrack_api_requests_total {$apiStats['total_requests']}",
-            "",
-            "# HELP suntrack_api_latency_avg_ms Average API request latency in milliseconds",
-            "# TYPE suntrack_api_latency_avg_ms gauge",
+            '',
+            '# HELP suntrack_api_latency_avg_ms Average API request latency in milliseconds',
+            '# TYPE suntrack_api_latency_avg_ms gauge',
             "suntrack_api_latency_avg_ms {$apiStats['average_latency_ms']}",
-            "",
-            "# HELP suntrack_cache_hit_ratio Redis/Memory cache hit ratio percentage",
-            "# TYPE suntrack_cache_hit_ratio gauge",
+            '',
+            '# HELP suntrack_cache_hit_ratio Redis/Memory cache hit ratio percentage',
+            '# TYPE suntrack_cache_hit_ratio gauge',
             "suntrack_cache_hit_ratio {$cacheRatio['ratio']}",
-            "",
-            "# HELP suntrack_memory_usage_mb Current PHP process memory usage in MB",
-            "# TYPE suntrack_memory_usage_mb gauge",
+            '',
+            '# HELP suntrack_memory_usage_mb Current PHP process memory usage in MB',
+            '# TYPE suntrack_memory_usage_mb gauge',
             "suntrack_memory_usage_mb {$memory['current_mb']}",
         ];
 
-        return implode("\n", $lines) . "\n";
+        return implode("\n", $lines)."\n";
     }
 
     /**
@@ -196,18 +197,18 @@ class MetricsService
     public function getQueueHealthStats(): array
     {
         try {
-            $pending      = \Illuminate\Support\Facades\DB::table('jobs')->count();
-            $failed       = \Illuminate\Support\Facades\DB::table('failed_jobs')->count();
-            $processing   = \Illuminate\Support\Facades\DB::table('jobs')->whereNotNull('reserved_at')->count();
-            $history      = Cache::get("{$this->prefix}queue_jobs", []);
+            $pending = DB::table('jobs')->count();
+            $failed = DB::table('failed_jobs')->count();
+            $processing = DB::table('jobs')->whereNotNull('reserved_at')->count();
+            $history = Cache::get("{$this->prefix}queue_jobs", []);
 
             return [
-                'pending_jobs'   => $pending,
-                'failed_jobs'    => $failed,
-                'processing_jobs'=> $processing,
-                'queue_driver'   => config('queue.default'),
+                'pending_jobs' => $pending,
+                'failed_jobs' => $failed,
+                'processing_jobs' => $processing,
+                'queue_driver' => config('queue.default'),
                 'recent_history' => array_slice($history, 0, 10),
-                'status'         => $failed > 50 ? 'degraded' : 'healthy',
+                'status' => $failed > 50 ? 'degraded' : 'healthy',
             ];
         } catch (\Throwable $e) {
             return ['status' => 'unknown', 'error' => $e->getMessage()];
@@ -225,10 +226,10 @@ class MetricsService
         $logSizeKb = file_exists($logPath) ? round(filesize($logPath) / 1024, 2) : 0.0;
 
         return [
-            'default_disk'   => config('filesystems.default'),
-            'log_size_kb'    => $logSizeKb,
-            'storage_path'   => storage_path(),
-            'public_path'    => public_path(),
+            'default_disk' => config('filesystems.default'),
+            'log_size_kb' => $logSizeKb,
+            'storage_path' => storage_path(),
+            'public_path' => public_path(),
         ];
     }
 

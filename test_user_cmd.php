@@ -1,1 +1,5 @@
-<?php  = 1; var_dump(); ?> 
+<?php
+
+$value = 1;
+
+var_dump($value);

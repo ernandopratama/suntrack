@@ -217,6 +217,7 @@
 
         <!-- Save -->
         <button
+          v-if="isEdit ? $can('task.update') : $can('task.create')"
           type="submit"
           form="task-form"
           :disabled="loading"

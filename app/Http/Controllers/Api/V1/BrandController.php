@@ -27,16 +27,18 @@ class BrandController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Brand::class);
+
         $user = $request->user();
 
         $brands = $this->repository->getFilteredPaginated(
-            companyId: $user->hasRole('Super Admin') ? null : $user->company_id,
+            scope: $user,
             filters: $request->only(['search']),
             perPage: (int) $request->get('per_page', 15)
         );
 
         return $this->success('Brands retrieved successfully.', [
-            'brands' => BrandResource::collection($brands)->response()->getData(true)
+            'brands' => BrandResource::collection($brands)->response()->getData(true),
         ]);
     }
 
@@ -45,13 +47,10 @@ class BrandController extends Controller
      */
     public function store(StoreBrandRequest $request): JsonResponse
     {
+        $this->authorize('create', Brand::class);
+
         $user = $request->user();
         $data = $request->validated();
-
-        // Auto-assign company_id from logged in user
-        if (!isset($data['company_id'])) {
-            $data['company_id'] = $user->company_id;
-        }
 
         $brand = Brand::create($data);
 
@@ -65,7 +64,7 @@ class BrandController extends Controller
         );
 
         return $this->success('Brand created successfully.', [
-            'brand' => new BrandResource($brand)
+            'brand' => new BrandResource($brand),
         ], 201);
     }
 
@@ -74,12 +73,10 @@ class BrandController extends Controller
      */
     public function show(Brand $brand): JsonResponse
     {
-        if (! request()->user()->hasRole('Super Admin') && $brand->company_id !== request()->user()->company_id) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('view', $brand);
 
         return $this->success('Brand retrieved successfully.', [
-            'brand' => new BrandResource($brand)
+            'brand' => new BrandResource($brand),
         ]);
     }
 
@@ -88,9 +85,7 @@ class BrandController extends Controller
      */
     public function update(UpdateBrandRequest $request, Brand $brand): JsonResponse
     {
-        if (! request()->user()->hasRole('Super Admin') && $brand->company_id !== request()->user()->company_id) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('update', $brand);
 
         $user = $request->user();
         $brand->update($request->validated());
@@ -105,7 +100,7 @@ class BrandController extends Controller
         );
 
         return $this->success('Brand updated successfully.', [
-            'brand' => new BrandResource($brand)
+            'brand' => new BrandResource($brand),
         ]);
     }
 
@@ -114,9 +109,7 @@ class BrandController extends Controller
      */
     public function destroy(Brand $brand): JsonResponse
     {
-        if (! request()->user()->hasRole('Super Admin') && $brand->company_id !== request()->user()->company_id) {
-            return $this->error('Unauthorized.', [], 403);
-        }
+        $this->authorize('delete', $brand);
 
         $user = request()->user();
         $brandName = $brand->name;

@@ -16,7 +16,7 @@ class AuditController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected AuditRepository $audit = new AuditRepository()
+        protected AuditRepository $audit = new AuditRepository
     ) {}
 
     /**
@@ -25,12 +25,12 @@ class AuditController extends Controller
     public function loginHistory(Request $request): JsonResponse
     {
         $request->validate([
-            'status'     => ['sometimes', 'in:success,failed'],
+            'status' => ['sometimes', 'in:success,failed'],
             'ip_address' => ['sometimes', 'string'],
-            'user_id'    => ['sometimes', 'uuid'],
-            'date_from'  => ['sometimes', 'date'],
-            'date_to'    => ['sometimes', 'date'],
-            'per_page'   => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'user_id' => ['sometimes', 'uuid'],
+            'date_from' => ['sometimes', 'date'],
+            'date_to' => ['sometimes', 'date'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
 
         $history = $this->audit->getLoginHistory(
@@ -47,6 +47,7 @@ class AuditController extends Controller
     public function queueHistory(Request $request): JsonResponse
     {
         $data = $this->audit->getQueueHistory($request->all());
+
         return $this->success('Queue history retrieved.', $data);
     }
 
@@ -56,7 +57,8 @@ class AuditController extends Controller
     public function errorLogs(Request $request): JsonResponse
     {
         $lines = (int) $request->input('lines', 50);
-        $data  = $this->audit->getErrorLogs(min($lines, 200));
+        $data = $this->audit->getErrorLogs(min($lines, 200));
+
         return $this->success('Error logs retrieved.', $data);
     }
 
@@ -66,6 +68,7 @@ class AuditController extends Controller
     public function summary(): JsonResponse
     {
         $data = $this->audit->getAuditSummary();
+
         return $this->success('Audit summary retrieved.', $data);
     }
 }

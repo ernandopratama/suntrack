@@ -1,12 +1,12 @@
 <?php
 
+use App\Jobs\CleanTemporaryFilesJob;
+use App\Jobs\MonitorExpiredLinksJob;
+use App\Jobs\SendApprovalReminderJob;
+use App\Jobs\SendDeadlineReminderJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-use App\Jobs\SendApprovalReminderJob;
-use App\Jobs\SendDeadlineReminderJob;
-use App\Jobs\CleanTemporaryFilesJob;
-use App\Jobs\MonitorExpiredLinksJob;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -30,4 +30,3 @@ Schedule::job(new CleanTemporaryFilesJob)->dailyAt('02:00')->name('suntrack:clea
 
 // Daily automated database backup at 01:00 AM (Sprint 9)
 Schedule::command('suntrack:backup-db')->dailyAt('01:00')->name('suntrack:backup-db')->withoutOverlapping();
-

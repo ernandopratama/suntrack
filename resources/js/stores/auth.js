@@ -6,7 +6,29 @@ export const useAuthStore = defineStore('auth', {
         user: null,
         isAuthenticated: false,
     }),
+    getters: {
+        activeRole: (state) => state.user?.role || state.user?.roles?.[0] || null,
+        permissions: (state) => state.user?.permissions || [],
+        scope: (state) => state.user?.scope || { global: false, company_ids: [], brand_ids: [] },
+        can: (state) => (permission) => state.user?.permissions?.includes(permission) === true,
+        hasRole: (state) => (role) => {
+            const roles = state.user?.roles || (state.user?.role ? [state.user.role] : []);
+            return roles.includes(role);
+        },
+    },
     actions: {
+        setUser(user) {
+            this.user = user
+                ? {
+                    ...user,
+                    roles: user.roles || (user.role ? [user.role] : []),
+                    permissions: user.permissions || [],
+                    scope: user.scope || { global: false, company_ids: [], brand_ids: [] },
+                }
+                : null;
+            this.isAuthenticated = this.user !== null;
+        },
+
         async login(credentials) {
             // Get CSRF cookie first for Sanctum SPA auth (must use same origin with credentials)
             await api.get('/sanctum/csrf-cookie', { baseURL: '/' });
@@ -14,8 +36,7 @@ export const useAuthStore = defineStore('auth', {
             const response = await api.post('/auth/login', credentials);
             
             if (response.data.success) {
-                this.user = response.data.data.user;
-                this.isAuthenticated = true;
+                this.setUser(response.data.data.user);
                 return true;
             }
             return false;
@@ -31,13 +52,14 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await api.get('/auth/user');
                 if (response.data.success) {
-                    this.user = response.data.data.user;
-                    this.isAuthenticated = true;
+                    this.setUser(response.data.data.user);
+                    return true;
                 }
             } catch (error) {
-                this.user = null;
-                this.isAuthenticated = false;
+                this.setUser(null);
             }
+
+            return false;
         }
     }
 });

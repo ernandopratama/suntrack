@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Brand;
+use App\Models\User;
 
 class BrandRepository extends BaseRepository
 {
@@ -14,12 +15,17 @@ class BrandRepository extends BaseRepository
     /**
      * Get paginated brands filtered by company.
      */
-    public function getFilteredPaginated(?string $companyId = null, array $filters = [], int $perPage = 15)
+    public function getFilteredPaginated(User|string|null $scope = null, array $filters = [], int $perPage = 15)
     {
-        $query = $this->newQuery()
-            ->when($companyId !== null, fn($q) => $q->where('company_id', $companyId));
+        $query = $this->newQuery();
 
-        if (!empty($filters['search'])) {
+        if ($scope instanceof User) {
+            $query = $this->scopeForUser($query, $scope);
+        } elseif ($scope !== null) {
+            $query->where('company_id', $scope);
+        }
+
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where('name', 'like', "%{$search}%");
         }

@@ -11,12 +11,15 @@ class UserRepository extends BaseRepository
         return User::class;
     }
 
-    public function getFilteredPaginated(?string $companyId = null, array $filters = [], int $perPage = 15)
+    public function getFilteredPaginated(?User $actor = null, array $filters = [], int $perPage = 15)
     {
-        $query = $this->newQuery()
-            ->when($companyId !== null, fn($q) => $q->where('company_id', $companyId));
+        $query = $this->newQuery()->with('roles');
 
-        if (!empty($filters['search'])) {
+        if ($actor !== null && ! $actor->hasAnyRole(['Super Admin', 'Admin'])) {
+            $query->whereRaw('1 = 0');
+        }
+
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")

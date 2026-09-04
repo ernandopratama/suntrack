@@ -1,6 +1,30 @@
 <?php
 
+use App\Http\Controllers\Api\V1\ActivityLogController;
+use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BrandController;
+use App\Http\Controllers\Api\V1\CampaignController;
+use App\Http\Controllers\Api\V1\CompanyController;
+use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\NotificationCenterController;
+use App\Http\Controllers\Api\V1\PricingAnalyticsController;
+use App\Http\Controllers\Api\V1\ProductController;
+use App\Http\Controllers\Api\V1\PromotionController;
+use App\Http\Controllers\Api\V1\PromotionVariantController;
+use App\Http\Controllers\Api\V1\PublicReviewController;
+use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\RoleController;
+use App\Http\Controllers\Api\V1\SavedFilterController;
+use App\Http\Controllers\Api\V1\SearchController;
+use App\Http\Controllers\Api\V1\SecureLinkController;
+use App\Http\Controllers\Api\V1\SystemMonitorController;
+use App\Http\Controllers\Api\V1\SystemSettingController;
+use App\Http\Controllers\Api\V1\TaskController;
+use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\UserPreferenceController;
+use App\Http\Controllers\Api\V1\VariantController;
 use Illuminate\Support\Facades\Route;
 
 // ==========================================
@@ -26,146 +50,191 @@ Route::prefix('v1')->group(function () {
     // ------------------------------------------
     Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
         // Operational Command Center & Reporting Foundation
-        Route::get('/dashboard/stats', [\App\Http\Controllers\Api\V1\DashboardController::class, 'stats']);
-        Route::get('/dashboard/export', [\App\Http\Controllers\Api\V1\DashboardController::class, 'exportReport']);
+        Route::get('/dashboard/stats', [DashboardController::class, 'stats'])
+            ->middleware('permission:campaign.view');
+        Route::get('/dashboard/export', [DashboardController::class, 'exportReport'])
+            ->middleware('permission:report.export');
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+            ->middleware('permission:activity.view');
+        Route::get('/access/options', [UserController::class, 'accessOptions'])
+            ->middleware('permission:access.view');
+        Route::get('/roles', [RoleController::class, 'index']);
+        Route::get('/roles/{role}/users', [RoleController::class, 'users']);
+        Route::put('/roles/{role}/permissions', [RoleController::class, 'updatePermissions']);
 
-        Route::apiResource('campaigns', \App\Http\Controllers\Api\V1\CampaignController::class);
+        Route::apiResource('campaigns', CampaignController::class)
+            ->middlewareFor(['index', 'show'], 'permission:campaign.view')
+            ->middlewareFor('store', 'permission:campaign.create')
+            ->middlewareFor('update', 'permission:campaign.update')
+            ->middlewareFor('destroy', 'permission:campaign.delete');
 
-        Route::get('/companies', [\App\Http\Controllers\Api\V1\CompanyController::class, 'index']);
+        Route::apiResource('companies', CompanyController::class)
+            ->middlewareFor(['index', 'show'], 'permission:company.view')
+            ->middlewareFor('store', 'permission:company.create')
+            ->middlewareFor('update', 'permission:company.update')
+            ->middlewareFor('destroy', 'permission:company.delete');
 
-        Route::apiResource('companies', \App\Http\Controllers\Api\V1\CompanyController::class);
+        Route::apiResource('brands', BrandController::class)
+            ->middlewareFor(['index', 'show'], 'permission:brand.view')
+            ->middlewareFor('store', 'permission:brand.create')
+            ->middlewareFor('update', 'permission:brand.update')
+            ->middlewareFor('destroy', 'permission:brand.delete');
 
-        Route::apiResource('brands', \App\Http\Controllers\Api\V1\BrandController::class);
+        Route::apiResource('tasks', TaskController::class)
+            ->middlewareFor(['index', 'show'], 'permission:task.view')
+            ->middlewareFor('store', 'permission:task.create')
+            ->middlewareFor('update', 'permission:task.update')
+            ->middlewareFor('destroy', 'permission:task.delete');
 
-        Route::apiResource('tasks', \App\Http\Controllers\Api\V1\TaskController::class);
+        Route::apiResource('users', UserController::class)
+            ->middlewareFor(['index', 'show'], 'permission:user.view')
+            ->middlewareFor('store', 'permission:user.create')
+            ->middlewareFor('update', 'permission:user.update')
+            ->middlewareFor('destroy', 'permission:user.delete');
 
-        Route::apiResource('users', \App\Http\Controllers\Api\V1\UserController::class);
-
-        Route::apiResource('promotions', \App\Http\Controllers\Api\V1\PromotionController::class);
+        Route::apiResource('promotions', PromotionController::class)
+            ->middlewareFor(['index', 'show'], 'permission:promotion.view')
+            ->middlewareFor('store', 'permission:promotion.create')
+            ->middlewareFor('update', 'permission:promotion.update')
+            ->middlewareFor('destroy', 'permission:promotion.delete');
 
         // Product & Variant (nested)
-        Route::post('products/import', [\App\Http\Controllers\Api\V1\ProductController::class, 'import']);
-        Route::post('products/bulk-delete', [\App\Http\Controllers\Api\V1\ProductController::class, 'bulkDestroy']);
-        Route::apiResource('products', \App\Http\Controllers\Api\V1\ProductController::class);
-        Route::apiResource('products.variants', \App\Http\Controllers\Api\V1\VariantController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
+        Route::post('products/import', [ProductController::class, 'import'])
+            ->middleware('permission:product.create');
+        Route::post('products/bulk-delete', [ProductController::class, 'bulkDestroy'])
+            ->middleware('permission:product.delete');
+        Route::apiResource('products', ProductController::class)
+            ->middlewareFor(['index', 'show'], 'permission:product.view')
+            ->middlewareFor('store', 'permission:product.create')
+            ->middlewareFor('update', 'permission:product.update')
+            ->middlewareFor('destroy', 'permission:product.delete');
+        Route::apiResource('products.variants', VariantController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->middlewareFor('index', 'permission:variant.view')
+            ->middlewareFor('store', 'permission:variant.create')
+            ->middlewareFor('update', 'permission:variant.update')
+            ->middlewareFor('destroy', 'permission:variant.delete');
 
         // Promotion Variant Mapping & Pricing
         Route::prefix('promotions/{promotion}/variants')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\PromotionVariantController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\PromotionVariantController::class, 'store']);
-            Route::delete('/{variant}', [\App\Http\Controllers\Api\V1\PromotionVariantController::class, 'destroy']);
+            Route::get('/', [PromotionVariantController::class, 'index'])
+                ->middleware('permission:promotion.view');
+            Route::post('/', [PromotionVariantController::class, 'store'])
+                ->middleware('permission:promotion.update');
+            Route::delete('/{variant}', [PromotionVariantController::class, 'destroy'])
+                ->middleware('permission:promotion.update');
         });
 
         // Secure Links & Discussions Management (Promotions)
-        Route::post('promotions/{promotion}/batch-approval', [\App\Http\Controllers\Api\V1\PromotionController::class, 'batchApproval']);
+        Route::post('promotions/{promotion}/batch-approval', [PromotionController::class, 'batchApproval'])
+            ->middleware('permission:promotion.approve');
         Route::prefix('promotions/{promotion}/secure-link')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'showPromotionLink']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'storePromotionLink']);
-            Route::put('/regenerate', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'regeneratePromotionLink']);
-            Route::delete('/', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'destroyPromotionLink']);
+            Route::get('/', [SecureLinkController::class, 'showPromotionLink'])->middleware('permission:promotion.view');
+            Route::post('/', [SecureLinkController::class, 'storePromotionLink'])->middleware('permission:promotion.update');
+            Route::put('/regenerate', [SecureLinkController::class, 'regeneratePromotionLink'])->middleware('permission:promotion.update');
+            Route::delete('/', [SecureLinkController::class, 'destroyPromotionLink'])->middleware('permission:promotion.update');
         });
-        Route::get('promotions/{promotion}/approval-histories', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'getPromotionHistories']);
-        Route::post('promotions/{promotion}/comments', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'storePromotionComment']);
-        Route::post('campaigns/{campaign}/comments', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'storeCampaignComment']);
+        Route::get('promotions/{promotion}/approval-histories', [SecureLinkController::class, 'getPromotionHistories'])->middleware('permission:promotion.view');
+        Route::post('promotions/{promotion}/comments', [SecureLinkController::class, 'storePromotionComment'])->middleware('permission:promotion.update');
+        Route::post('campaigns/{campaign}/comments', [SecureLinkController::class, 'storeCampaignComment'])->middleware('permission:campaign.update');
 
         // Secure Links & Discussions Management (Campaigns)
         Route::prefix('campaigns/{campaign}/secure-link')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'showCampaignLink']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'storeCampaignLink']);
-            Route::delete('/', [\App\Http\Controllers\Api\V1\SecureLinkController::class, 'destroyCampaignLink']);
+            Route::get('/', [SecureLinkController::class, 'showCampaignLink'])->middleware('permission:campaign.view');
+            Route::post('/', [SecureLinkController::class, 'storeCampaignLink'])->middleware('permission:campaign.update');
+            Route::delete('/', [SecureLinkController::class, 'destroyCampaignLink'])->middleware('permission:campaign.update');
         });
         // System Settings Management (Sprint 9)
-        Route::get('/settings', [\App\Http\Controllers\Api\V1\SystemSettingController::class, 'index'])->middleware('permission:settings.view');
-        Route::put('/settings', [\App\Http\Controllers\Api\V1\SystemSettingController::class, 'update'])->middleware('permission:settings.update');
+        Route::get('/settings', [SystemSettingController::class, 'index'])->middleware('permission:settings.view');
+        Route::put('/settings', [SystemSettingController::class, 'update'])->middleware('permission:settings.update');
 
         // ----------------------------------------
         // Sprint 11: Global Search Engine (ADR-028)
         // ----------------------------------------
-        Route::get('/search', \App\Http\Controllers\Api\V1\SearchController::class);
+        Route::get('/search', SearchController::class)->middleware('role:Super Admin|Admin');
 
         // ----------------------------------------
         // Sprint 11: Enterprise Audit Dashboard
         // ----------------------------------------
-        Route::prefix('audit')->group(function () {
-            Route::get('/login-history',    [\App\Http\Controllers\Api\V1\AuditController::class, 'loginHistory']);
-            Route::get('/queue-history',    [\App\Http\Controllers\Api\V1\AuditController::class, 'queueHistory']);
-            Route::get('/error-logs',       [\App\Http\Controllers\Api\V1\AuditController::class, 'errorLogs']);
-            Route::get('/summary',          [\App\Http\Controllers\Api\V1\AuditController::class, 'summary']);
+        Route::prefix('audit')->middleware('permission:audit.view')->group(function () {
+            Route::get('/login-history', [AuditController::class, 'loginHistory']);
+            Route::get('/queue-history', [AuditController::class, 'queueHistory']);
+            Route::get('/error-logs', [AuditController::class, 'errorLogs']);
+            Route::get('/summary', [AuditController::class, 'summary']);
         });
 
         // ----------------------------------------
         // Sprint 11: Notification Center (ADR-029)
         // ----------------------------------------
-        Route::prefix('notifications')->group(function () {
-            Route::get('/',                         [\App\Http\Controllers\Api\V1\NotificationCenterController::class, 'index']);
-            Route::get('/summary',                  [\App\Http\Controllers\Api\V1\NotificationCenterController::class, 'summary']);
-            Route::get('/{notification}',           [\App\Http\Controllers\Api\V1\NotificationCenterController::class, 'show']);
-            Route::post('/{notification}/retry',    [\App\Http\Controllers\Api\V1\NotificationCenterController::class, 'retry']);
-            Route::post('/{notification}/cancel',   [\App\Http\Controllers\Api\V1\NotificationCenterController::class, 'cancel']);
+        Route::prefix('notifications')->middleware('permission:system.monitor')->group(function () {
+            Route::get('/', [NotificationCenterController::class, 'index']);
+            Route::get('/summary', [NotificationCenterController::class, 'summary']);
+            Route::get('/{notification}', [NotificationCenterController::class, 'show']);
+            Route::post('/{notification}/retry', [NotificationCenterController::class, 'retry']);
+            Route::post('/{notification}/cancel', [NotificationCenterController::class, 'cancel']);
         });
 
         // ----------------------------------------
         // Sprint 11: System Monitoring Dashboard (7 categories)
         // ----------------------------------------
-        Route::prefix('system')->group(function () {
-            Route::get('/health',           [\App\Http\Controllers\Api\V1\SystemMonitorController::class, 'health']);
-            Route::get('/queue-stats',      [\App\Http\Controllers\Api\V1\SystemMonitorController::class, 'queueStats']);
-            Route::get('/cache-stats',      [\App\Http\Controllers\Api\V1\SystemMonitorController::class, 'cacheStats']);
-            Route::get('/storage-stats',    [\App\Http\Controllers\Api\V1\SystemMonitorController::class, 'storageStats']);
-            Route::get('/db-stats',         [\App\Http\Controllers\Api\V1\SystemMonitorController::class, 'dbStats']);
-            Route::get('/metrics',          [\App\Http\Controllers\Api\V1\SystemMonitorController::class, 'prometheusMetrics']);
+        Route::prefix('system')->middleware('permission:system.monitor')->group(function () {
+            Route::get('/health', [SystemMonitorController::class, 'health']);
+            Route::get('/queue-stats', [SystemMonitorController::class, 'queueStats']);
+            Route::get('/cache-stats', [SystemMonitorController::class, 'cacheStats']);
+            Route::get('/storage-stats', [SystemMonitorController::class, 'storageStats']);
+            Route::get('/db-stats', [SystemMonitorController::class, 'dbStats']);
+            Route::get('/metrics', [SystemMonitorController::class, 'prometheusMetrics']);
         });
 
         // ----------------------------------------
         // Sprint 11: Pricing Analytics & Margin Simulation
         // ----------------------------------------
-        Route::prefix('analytics/pricing')->group(function () {
-            Route::get('/overview',          [\App\Http\Controllers\Api\V1\PricingAnalyticsController::class, 'overview']);
-            Route::get('/margin-violations', [\App\Http\Controllers\Api\V1\PricingAnalyticsController::class, 'marginViolations']);
-            Route::post('/simulate',         [\App\Http\Controllers\Api\V1\PricingAnalyticsController::class, 'simulate']);
+        Route::prefix('analytics/pricing')->middleware('role:Super Admin|Admin')->group(function () {
+            Route::get('/overview', [PricingAnalyticsController::class, 'overview']);
+            Route::get('/margin-violations', [PricingAnalyticsController::class, 'marginViolations']);
+            Route::post('/simulate', [PricingAnalyticsController::class, 'simulate']);
         });
 
         // ----------------------------------------
         // Sprint 11: Saved Filters & User Preferences
         // ----------------------------------------
         Route::prefix('saved-filters')->group(function () {
-            Route::get('/',                         [\App\Http\Controllers\Api\V1\SavedFilterController::class, 'index']);
-            Route::post('/',                        [\App\Http\Controllers\Api\V1\SavedFilterController::class, 'store']);
-            Route::delete('/{id}',                  [\App\Http\Controllers\Api\V1\SavedFilterController::class, 'destroy']);
-            Route::patch('/{id}/set-default',       [\App\Http\Controllers\Api\V1\SavedFilterController::class, 'setDefault']);
+            Route::get('/', [SavedFilterController::class, 'index']);
+            Route::post('/', [SavedFilterController::class, 'store']);
+            Route::delete('/{id}', [SavedFilterController::class, 'destroy']);
+            Route::patch('/{id}/set-default', [SavedFilterController::class, 'setDefault']);
         });
-        Route::get('/me/preferences',   [\App\Http\Controllers\Api\V1\UserPreferenceController::class, 'show']);
-        Route::put('/me/preferences',   [\App\Http\Controllers\Api\V1\UserPreferenceController::class, 'update']);
+        Route::get('/me/preferences', [UserPreferenceController::class, 'show']);
+        Route::put('/me/preferences', [UserPreferenceController::class, 'update']);
 
         // ----------------------------------------
         // Sprint 11: Business Intelligence Reports
         // ----------------------------------------
-        Route::prefix('reports')->group(function () {
-            Route::get('/approval-performance',         [\App\Http\Controllers\Api\V1\ReportController::class, 'approvalPerformance']);
-            Route::get('/promotion-effectiveness',      [\App\Http\Controllers\Api\V1\ReportController::class, 'promotionEffectiveness']);
-            Route::get('/brand-activity/{brandId}',     [\App\Http\Controllers\Api\V1\ReportController::class, 'brandActivity']);
+        Route::prefix('reports')->middleware('permission:report.export')->group(function () {
+            Route::get('/approval-performance', [ReportController::class, 'approvalPerformance']);
+            Route::get('/promotion-effectiveness', [ReportController::class, 'promotionEffectiveness']);
+            Route::get('/brand-activity/{brandId}', [ReportController::class, 'brandActivity']);
         });
     });
 
     // ------------------------------------------
     // Public Routes (Secure Link & Monitoring)
     // ------------------------------------------
-    Route::get('/health', [\App\Http\Controllers\Api\V1\HealthController::class, 'check']);
-    Route::get('/public/settings', [\App\Http\Controllers\Api\V1\SystemSettingController::class, 'publicSettings']);
+    Route::get('/health', [HealthController::class, 'check']);
+    Route::get('/public/settings', [SystemSettingController::class, 'publicSettings']);
     Route::patch(
         '/public/reviews/{token}/status',
-        [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'updateStatus']
+        [PublicReviewController::class, 'updateStatus']
     );
 
     Route::prefix('public/review/{token}')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'show']);
-        Route::post('/identify', [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'identify']);
-        Route::post('/approval', [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'approveVariant']);
-        Route::post('/batch-approval', [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'batchApproval']);
-        Route::post('/comment', [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'storeComment']);
-        Route::post('/tasks/{task}/progress', [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'updateTaskProgress']);
-        Route::post('/tasks/{task}/visual', [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'submitTaskVisual']);
-        Route::delete('/tasks/{task}/visual', [\App\Http\Controllers\Api\V1\PublicReviewController::class, 'deleteTaskVisual']);
+        Route::get('/', [PublicReviewController::class, 'show']);
+        Route::post('/identify', [PublicReviewController::class, 'identify']);
+        Route::post('/approval', [PublicReviewController::class, 'approveVariant']);
+        Route::post('/batch-approval', [PublicReviewController::class, 'batchApproval']);
+        Route::post('/comment', [PublicReviewController::class, 'storeComment']);
+        Route::post('/tasks/{task}/progress', [PublicReviewController::class, 'updateTaskProgress']);
+        Route::post('/tasks/{task}/visual', [PublicReviewController::class, 'submitTaskVisual']);
+        Route::delete('/tasks/{task}/visual', [PublicReviewController::class, 'deleteTaskVisual']);
     });
 });

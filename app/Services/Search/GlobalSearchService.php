@@ -19,7 +19,7 @@ class GlobalSearchService
     protected SearchDriverInterface $driver;
 
     public function __construct(
-        protected CacheService $cache = new CacheService()
+        protected CacheService $cache = new CacheService
     ) {
         $this->driver = $this->resolveDriver();
     }
@@ -27,29 +27,27 @@ class GlobalSearchService
     /**
      * Execute a global search query, with results cached per user+query for 60 seconds.
      *
-     * @param  string  $query
      * @param  array<string>  $types
-     * @param  int  $limit
-     * @param  int|string  $companyId
+     * @param  int|string|null  $companyId  Optional Company scope; null means global access
      * @return array<string, mixed>
      */
-    public function search(string $query, array $types = [], int $limit = 5, int|string|null $companyId = 0): array
+    public function search(string $query, array $types = [], int $limit = 5, int|string|null $companyId = null): array
     {
         if (strlen(trim($query)) < 2) {
             return ['results' => [], 'driver' => $this->driver->driverName(), 'query' => $query];
         }
 
-        $companyId = $companyId ?? 0;
-        $cacheKey = 'global_search_' . md5($query . implode(',', $types) . $companyId . $limit);
-        $results  = $this->cache->remember(['search'], $cacheKey, 60, function () use ($query, $types, $limit, $companyId) {
+        $scopeKey = $companyId ?? 'global';
+        $cacheKey = 'global_search_'.md5($query.implode(',', $types).$scopeKey.$limit);
+        $results = $this->cache->remember(['search'], $cacheKey, 60, function () use ($query, $types, $limit, $companyId) {
             return $this->driver->search($query, $types, $limit, $companyId);
         });
 
         return [
             'results' => $results,
-            'driver'  => $this->driver->driverName(),
-            'query'   => $query,
-            'total'   => array_sum(array_map('count', $results)),
+            'driver' => $this->driver->driverName(),
+            'query' => $query,
+            'total' => array_sum(array_map('count', $results)),
         ];
     }
 
@@ -59,18 +57,19 @@ class GlobalSearchService
     protected function resolveDriver(): SearchDriverInterface
     {
         $drivers = [
-            new MeilisearchSearchDriver(),
-            new ElasticsearchSearchDriver(),
+            new MeilisearchSearchDriver,
+            new ElasticsearchSearchDriver,
         ];
 
         foreach ($drivers as $driver) {
             if ($driver->isAvailable()) {
                 Log::info("GlobalSearchService: using driver [{$driver->driverName()}]");
+
                 return $driver;
             }
         }
 
-        return new DatabaseSearchDriver();
+        return new DatabaseSearchDriver;
     }
 
     /**

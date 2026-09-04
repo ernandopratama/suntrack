@@ -4,8 +4,8 @@ namespace App\Jobs;
 
 use App\Models\Campaign;
 use App\Models\Promotion;
-use App\Services\Notification\NotificationService;
 use App\Services\ActivityLogger;
+use App\Services\Notification\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -24,7 +24,7 @@ class SendDeadlineReminderJob implements ShouldQueue
      */
     public function handle(NotificationService $notificationService): void
     {
-        Log::info(" [Scheduler:SendDeadlineReminderJob] Scanning for critical deadlines within 48 hours...");
+        Log::info(' [Scheduler:SendDeadlineReminderJob] Scanning for critical deadlines within 48 hours...');
 
         $startWindow = now();
         $endWindow = now()->copy()->addHours(48);

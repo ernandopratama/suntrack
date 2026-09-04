@@ -29,9 +29,10 @@ class DashboardController extends Controller
         $tomorrowStr = $now->copy()->addDay()->toDateString();
         $next7DaysStr = $now->copy()->addDays(7)->toDateString();
 
-        $kpis = $this->repository->getKpiStats($todayStr);
-        $deadlines = $this->repository->getDeadlines($todayStr, $tomorrowStr, $next7DaysStr, $now);
-        $recentActivities = $this->repository->getRecentActivities(15);
+        $user = $request->user();
+        $kpis = $this->repository->getKpiStats($todayStr, $user);
+        $deadlines = $this->repository->getDeadlines($todayStr, $tomorrowStr, $next7DaysStr, $now, $user);
+        $recentActivities = $this->repository->getRecentActivities(15, $user);
 
         $payload = [
             'kpi' => $kpis,
@@ -53,6 +54,6 @@ class DashboardController extends Controller
         $type = $request->get('type', 'campaign');
         $format = $request->get('format', 'csv');
 
-        return $reporting->export($type, $format, $request->all());
+        return $reporting->export($type, $format, $request->all(), null, $request->user());
     }
 }

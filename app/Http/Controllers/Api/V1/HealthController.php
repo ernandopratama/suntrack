@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Traits\ApiResponse;
 use App\Services\Storage\StorageService;
-use Illuminate\Support\Facades\DB;
+use App\Traits\ApiResponse;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class HealthController extends Controller
@@ -37,9 +37,9 @@ class HealthController extends Controller
         try {
             DB::connection()->getPdo();
         } catch (\Exception $e) {
-            $status['services']['database'] = 'error: ' . $e->getMessage();
+            $status['services']['database'] = 'error: '.$e->getMessage();
             $status['status'] = 'unhealthy';
-            Log::error('Health check DB failure: ' . $e->getMessage());
+            Log::error('Health check DB failure: '.$e->getMessage());
         }
 
         // 2. Check Cache / Redis
@@ -49,23 +49,23 @@ class HealthController extends Controller
                 throw new \Exception('Cache read mismatch.');
             }
         } catch (\Exception $e) {
-            $status['services']['cache'] = 'error: ' . $e->getMessage();
+            $status['services']['cache'] = 'error: '.$e->getMessage();
             $status['status'] = 'degraded';
-            Log::warning('Health check Cache failure: ' . $e->getMessage());
+            Log::warning('Health check Cache failure: '.$e->getMessage());
         }
 
         // 3. Check Storage Abstraction
         try {
-            $testPath = 'health_check/ping_' . time() . '.txt';
+            $testPath = 'health_check/ping_'.time().'.txt';
             $this->storageService->put($testPath, 'ok');
-            if (!$this->storageService->exists($testPath)) {
+            if (! $this->storageService->exists($testPath)) {
                 throw new \Exception('Storage write verified false.');
             }
             $this->storageService->delete($testPath);
         } catch (\Exception $e) {
-            $status['services']['storage'] = 'error: ' . $e->getMessage();
+            $status['services']['storage'] = 'error: '.$e->getMessage();
             $status['status'] = 'degraded';
-            Log::warning('Health check Storage failure: ' . $e->getMessage());
+            Log::warning('Health check Storage failure: '.$e->getMessage());
         }
 
         if ($status['status'] === 'unhealthy') {
