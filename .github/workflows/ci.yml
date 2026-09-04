@@ -191,6 +191,10 @@ jobs:
           DB_DATABASE: suntrack_test
           DB_USERNAME: root
           DB_PASSWORD: root
+
+          CACHE_STORE: redis
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
         run: php artisan migrate --force
 
       - name: Run Feature Test Suite
