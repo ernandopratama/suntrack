@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\Comment;
 use App\Models\Company;
+use App\Models\PerformanceReport;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\SecureLink;
@@ -47,6 +48,7 @@ class DataScopeService
             Promotion::class => $this->scopePromotions($query, $user),
             Task::class => $this->scopeTasks($query, $user),
             Product::class => $this->scopeProducts($query, $user),
+            PerformanceReport::class => $this->scopePerformanceReports($query, $user),
             Variant::class => $this->scopeVariants($query, $user),
             ActivityLog::class => $this->scopeActivityLogs($query, $user),
             ApprovalHistory::class => $this->scopeApprovalHistories($query, $user),
@@ -114,11 +116,12 @@ class DataScopeService
 
     public function scopeTasks(Builder $query, User $user): Builder
     {
-        if ($this->hasGlobalScope($user)) {
-            return $query;
-        }
+        return $this->scopeThroughBrand($query, $user, 'brand');
+    }
 
-        return $query->whereHas('campaign.brand', fn (Builder $brand) => $this->scopeBrands($brand, $user));
+    public function scopePerformanceReports(Builder $query, User $user): Builder
+    {
+        return $this->scopeThroughBrand($query, $user, 'brand');
     }
 
     public function scopeProducts(Builder $query, User $user): Builder
@@ -147,6 +150,7 @@ class DataScopeService
             $this->addMorphScope($logs, Campaign::class, $this->scopeCampaigns(Campaign::query(), $user), true);
             $this->addMorphScope($logs, Promotion::class, $this->scopePromotions(Promotion::query(), $user), true);
             $this->addMorphScope($logs, Task::class, $this->scopeTasks(Task::query(), $user), true);
+            $this->addMorphScope($logs, PerformanceReport::class, $this->scopePerformanceReports(PerformanceReport::query(), $user), true);
             $this->addMorphScope($logs, Product::class, $this->scopeProducts(Product::query(), $user), true);
             $this->addMorphScope($logs, Variant::class, $this->scopeVariants(Variant::query(), $user), true);
         });
@@ -174,6 +178,12 @@ class DataScopeService
             })->orWhere(function (Builder $promotionLinks) use ($user) {
                 $promotionLinks->where('linkable_type', Promotion::class)
                     ->whereIn('linkable_id', $this->scopePromotions(Promotion::query(), $user)->select('id'));
+            })->orWhere(function (Builder $taskLinks) use ($user) {
+                $taskLinks->where('linkable_type', Task::class)
+                    ->whereIn('linkable_id', $this->scopeTasks(Task::query(), $user)->select('id'));
+            })->orWhere(function (Builder $reportLinks) use ($user) {
+                $reportLinks->where('linkable_type', PerformanceReport::class)
+                    ->whereIn('linkable_id', $this->scopePerformanceReports(PerformanceReport::query(), $user)->select('id'));
             });
         });
     }
@@ -191,6 +201,12 @@ class DataScopeService
             })->orWhere(function (Builder $promotionComments) use ($user) {
                 $promotionComments->where('commentable_type', Promotion::class)
                     ->whereIn('commentable_id', $this->scopePromotions(Promotion::query(), $user)->select('id'));
+            })->orWhere(function (Builder $taskComments) use ($user) {
+                $taskComments->where('commentable_type', Task::class)
+                    ->whereIn('commentable_id', $this->scopeTasks(Task::query(), $user)->select('id'));
+            })->orWhere(function (Builder $reportComments) use ($user) {
+                $reportComments->where('commentable_type', PerformanceReport::class)
+                    ->whereIn('commentable_id', $this->scopePerformanceReports(PerformanceReport::query(), $user)->select('id'));
             });
         });
     }

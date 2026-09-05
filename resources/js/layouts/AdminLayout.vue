@@ -365,6 +365,20 @@
           ></span>
         </router-link>
 
+        <!-- Performance Reports -->
+        <router-link
+          v-if="$can('performance-report.view')"
+          to="/performance-reports"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="$route.path.startsWith('/performance-reports') ? 'shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'"
+          :style="$route.path.startsWith('/performance-reports') ? { background: '#D0E7E6', color: '#293681' } : {}"
+        >
+          <i class="fa-solid fa-file-chart-column w-5 text-center" :style="$route.path.startsWith('/performance-reports') ? { color: '#4274D9' } : {}"></i>
+          <span v-if="sidebarOpen" class="ml-3">Performance Reports</span>
+          <span v-if="$route.path.startsWith('/performance-reports') && sidebarOpen" class="ml-auto h-2 w-2 rounded-full" style="background: #4274d9"></span>
+        </router-link>
+
         <!-- Products -->
         <router-link
           v-if="$can('product.view')"

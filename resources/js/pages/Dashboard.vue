@@ -813,6 +813,17 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <button type="button" @click="navigateTo('/tasks')" class="rounded-2xl border border-violet-200 bg-white p-5 text-left shadow-sm transition hover:border-violet-400 hover:shadow-md">
+                    <div class="flex items-start justify-between gap-4"><div><p class="text-[10px] font-extrabold uppercase tracking-wider text-violet-600">Task Operations</p><p class="mt-2 text-3xl font-black text-gray-900">{{ stats.kpi.tasks.open }}</p><p class="text-xs text-gray-400">dari {{ stats.kpi.tasks.total }} Task masih aktif</p></div><span class="rounded-xl bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700">{{ stats.kpi.tasks.urgent }} urgent</span></div>
+                    <div class="mt-4 grid grid-cols-3 gap-2 border-t border-gray-100 pt-4 text-center text-xs"><div><strong class="block text-lg text-rose-600">{{ stats.kpi.tasks.overdue }}</strong><span class="text-gray-400">Overdue</span></div><div><strong class="block text-lg text-amber-600">{{ stats.kpi.tasks.waiting_review }}</strong><span class="text-gray-400">Review</span></div><div><strong class="block text-lg text-emerald-600">{{ stats.kpi.tasks.completed }}</strong><span class="text-gray-400">Completed</span></div></div>
+                </button>
+                <button type="button" @click="navigateTo('/performance-reports')" class="rounded-2xl border border-cyan-200 bg-white p-5 text-left shadow-sm transition hover:border-cyan-400 hover:shadow-md">
+                    <div class="flex items-start justify-between gap-4"><div><p class="text-[10px] font-extrabold uppercase tracking-wider text-cyan-700">Performance Reports</p><p class="mt-2 text-3xl font-black text-gray-900">{{ stats.kpi.performance_reports.total }}</p><p class="text-xs text-gray-400">Report dalam scope akses Anda</p></div><span class="rounded-xl bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700">{{ stats.kpi.performance_reports.published }} published</span></div>
+                    <div class="mt-4 grid grid-cols-3 gap-2 border-t border-gray-100 pt-4 text-center text-xs"><div><strong class="block text-lg text-gray-700">{{ stats.kpi.performance_reports.draft }}</strong><span class="text-gray-400">Draft</span></div><div><strong class="block text-lg text-amber-600">{{ stats.kpi.performance_reports.waiting_review }}</strong><span class="text-gray-400">Review</span></div><div><strong class="block text-lg text-emerald-600">{{ stats.kpi.performance_reports.approved }}</strong><span class="text-gray-400">Approved</span></div></div>
+                </button>
+            </div>
+
             <!-- 2. SECONDARY KPI AGGREGATION -->
             <div
                 class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden"

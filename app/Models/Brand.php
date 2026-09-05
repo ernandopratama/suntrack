@@ -39,6 +39,18 @@ class Brand extends Model
         return $this->hasMany(Campaign::class);
     }
 
+    /** @return HasMany<Task, $this> */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /** @return HasMany<PerformanceReport, $this> */
+    public function performanceReports(): HasMany
+    {
+        return $this->hasMany(PerformanceReport::class);
+    }
+
     /** @return HasMany<Promotion, $this> */
     public function promotions(): HasMany
     {

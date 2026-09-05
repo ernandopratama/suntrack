@@ -17,6 +17,12 @@ class CommentResource extends JsonResource
             'author_position' => $this->author_position,
             'author_type' => $this->author_type ?? 'Brand', // Admin or Brand
             'body' => $this->body,
+            'parent_id' => $this->parent_id,
+            'edited_at' => $this->edited_at?->toIso8601String(),
+            'attachments' => AttachmentResource::collection($this->whenLoaded('attachments')),
+            'is_read' => $request->user()
+                ? $this->readers()->whereKey($request->user()->id)->exists()
+                : true,
             'created_at' => $this->created_at ? $this->created_at->toIso8601String() : null,
         ];
     }

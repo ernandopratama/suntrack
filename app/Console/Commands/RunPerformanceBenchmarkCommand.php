@@ -106,7 +106,7 @@ class RunPerformanceBenchmarkCommand extends Command
 
         // 5. Campaign Listing & PIC Eager Loading
         $start = microtime(true);
-        $campaignRepo->getFilteredPaginated($companyId, ['status' => 'Running'], 15);
+        $campaignRepo->getFilteredPaginated($companyId, ['status' => 'in_progress'], 15);
         $campTimeMs = round((microtime(true) - $start) * 1000, 2);
 
         $results[] = [

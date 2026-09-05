@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,13 +16,15 @@ class Campaign extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'brand_id', 'name', 'description', 'start_date', 'end_date', 'status', 'pic_id', 'deadline', 'notes',
+        'brand_id', 'created_by', 'name', 'objective', 'description', 'start_date', 'end_date', 'status',
+        'priority', 'pic_id', 'deadline', 'notes', 'approval_notes', 'completed_at',
     ];
 
     protected $casts = [
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'deadline' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     /** @return BelongsTo<Brand, $this> */
@@ -34,6 +37,20 @@ class Campaign extends Model
     public function pic(): BelongsTo
     {
         return $this->belongsTo(User::class, 'pic_id');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** @return BelongsToMany<User, $this> */
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'campaign_members')
+            ->withPivot('assigned_by')
+            ->withTimestamps();
     }
 
     /** @return HasMany<Task, $this> */
@@ -58,6 +75,12 @@ class Campaign extends Model
     public function comments(): MorphMany
     {
         return $this->morphMany(Comment::class, 'commentable')->oldest();
+    }
+
+    /** @return MorphMany<Attachment, $this> */
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
     }
 
     /** @return MorphMany<ActivityLog, $this> */

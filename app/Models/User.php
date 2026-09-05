@@ -72,4 +72,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(LoginHistory::class)->latest('login_at');
     }
+
+    /** @return BelongsToMany<Campaign, $this> */
+    public function campaignMemberships(): BelongsToMany
+    {
+        return $this->belongsToMany(Campaign::class, 'campaign_members')
+            ->withPivot('assigned_by')
+            ->withTimestamps();
+    }
+
+    /** @return HasMany<Attachment, $this> */
+    public function uploadedAttachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class, 'uploaded_by');
+    }
 }

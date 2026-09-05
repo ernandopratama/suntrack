@@ -201,6 +201,13 @@
         <!-- Actions -->
         <template #cell-actions="{ row }">
           <div class="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              @click="openCollaboration(row)"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700"
+            >
+              <i class="fa-solid fa-comments"></i><span>Kolaborasi</span>
+            </button>
             <!-- Edit -->
             <button
               v-if="$can('task.update')"
@@ -480,6 +487,14 @@
       @close="closeModal"
       @saved="fetchData"
     />
+
+    <div v-if="collaborationTask" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-slate-950/60" @click="collaborationTask = null"></div>
+      <div class="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-surface p-6 shadow-2xl">
+        <div class="mb-5 flex items-center justify-between gap-3"><div><h2 class="text-lg font-bold text-content">{{ collaborationTask.name }}</h2><p class="text-xs text-content-muted">Attachment, diskusi, dan Secure Link</p></div><button type="button" class="text-content-muted" @click="collaborationTask = null"><i class="fa-solid fa-xmark"></i></button></div>
+        <CollaborationPanel entity-type="task" :entity="collaborationTask" :can-update="$can('task.update')" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -487,6 +502,7 @@
 import { ref, onMounted } from 'vue';
 import DataTable from '../components/DataTable.vue';
 import TaskForm from '../components/TaskForm.vue';
+import CollaborationPanel from '../components/CollaborationPanel.vue';
 import { useTasks } from '../composables/useTasks';
 
 const {
@@ -511,6 +527,8 @@ const isModalOpen = ref(false);
 const selectedTask = ref(null);
 const showDeleteModal = ref(false);
 const taskToDelete = ref(null);
+const collaborationTask = ref(null);
+const openCollaboration = row => { collaborationTask.value = row; };
 
 onMounted(() => fetchData());
 
@@ -575,10 +593,14 @@ const deleteTaskAction = async () => {
 
 const statusClass = (status) => {
   const map = {
-    NotStarted: 'bg-gray-100 text-gray-600',
-    InProgress: 'bg-[#D0E7E6] text-[#293681]',
-    Completed: 'bg-emerald-100 text-emerald-700',
-    OnHold: 'bg-amber-100 text-amber-700'
+    pending: 'bg-gray-100 text-gray-600',
+    assigned: 'bg-blue-100 text-blue-700',
+    in_progress: 'bg-[#D0E7E6] text-[#293681]',
+    on_hold: 'bg-amber-100 text-amber-700',
+    waiting_review: 'bg-violet-100 text-violet-700',
+    revision: 'bg-orange-100 text-orange-700',
+    completed: 'bg-emerald-100 text-emerald-700',
+    cancelled: 'bg-rose-100 text-rose-700'
   };
 
   return map[status] || 'bg-gray-100 text-gray-600';
@@ -586,10 +608,14 @@ const statusClass = (status) => {
 
 const statusLabel = (status) => {
   const map = {
-    NotStarted: 'Not Started',
-    InProgress: 'In Progress',
-    Completed: 'Completed',
-    OnHold: 'On Hold'
+    pending: 'Pending',
+    assigned: 'Assigned',
+    in_progress: 'In Progress',
+    on_hold: 'On Hold',
+    waiting_review: 'Waiting Review',
+    revision: 'Revision',
+    completed: 'Completed',
+    cancelled: 'Cancelled'
   };
 
   return map[status] || status;

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class SecureLink extends Model
@@ -37,6 +38,12 @@ class SecureLink extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /** @return HasMany<SecureLinkAccessLog, $this> */
+    public function accessLogs(): HasMany
+    {
+        return $this->hasMany(SecureLinkAccessLog::class)->latest('accessed_at');
+    }
+
     public function getStatusAttribute(): string
     {
         if ($this->revoked_at) {
@@ -54,11 +61,19 @@ class SecureLink extends Model
         return $this->status === 'Active';
     }
 
-    public function recordAccess(): void
+    /** @param array<string, mixed> $context */
+    public function recordAccess(array $context = []): void
     {
-        $this->update([
-            'last_accessed_at' => now(),
-            'view_count' => $this->view_count + 1,
+        $accessedAt = now();
+        $this->increment('view_count');
+        $this->forceFill(['last_accessed_at' => $accessedAt])->save();
+        $this->accessLogs()->create([
+            'accessed_at' => $accessedAt,
+            'ip_address' => $context['ip_address'] ?? null,
+            'user_agent' => $context['user_agent'] ?? null,
+            'referer' => $context['referer'] ?? null,
+            'visitor_hash' => $context['visitor_hash'] ?? null,
+            'metadata' => $context['metadata'] ?? null,
         ]);
     }
 }

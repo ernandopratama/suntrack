@@ -29,7 +29,7 @@ class SendDeadlineReminderJob implements ShouldQueue
         $startWindow = now();
         $endWindow = now()->copy()->addHours(48);
 
-        $campaigns = Campaign::whereIn('status', ['Running', 'Draft'])
+        $campaigns = Campaign::whereIn('status', ['draft', 'assigned', 'in_progress', 'Running', 'Draft'])
             ->whereBetween('end_date', [$startWindow, $endWindow])
             ->get();
 

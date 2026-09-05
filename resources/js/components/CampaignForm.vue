@@ -245,6 +245,22 @@
           </div>
 
           <!-- Description -->
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Objective</label>
+              <input v-model="form.objective" type="text" placeholder="Campaign objective" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10" />
+            </div>
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Priority</label>
+              <select v-model="form.priority" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10">
+                <option value="normal">Normal</option>
+                <option value="mid">Mid</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Description -->
           <div>
             <div class="mb-1.5 flex items-center justify-between">
               <label
@@ -380,14 +396,14 @@
                 required
                 class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm font-medium text-gray-900 outline-none transition hover:border-gray-300 hover:bg-white focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
               >
-                <option value="Draft">Draft</option>
-                <option value="Waiting Approval">
-                  Waiting Approval
-                </option>
-                <option value="Approved">Approved</option>
-                <option value="Running">Running</option>
-                <option value="Finished">Finished</option>
-                <option value="Cancelled">Cancelled</option>
+                <option value="draft">Draft</option>
+                <option value="assigned">Assigned</option>
+                <option value="in_progress">In Progress</option>
+                <option value="waiting_review">Waiting Review</option>
+                <option value="revision">Revision</option>
+                <option value="approved">Approved</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
               </select>
 
               <p
@@ -415,24 +431,45 @@
             <span
               class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
               :class="{
-                'bg-gray-100 text-gray-600': form.status === 'Draft',
+                'bg-gray-100 text-gray-600': form.status === 'draft',
                 'bg-amber-100 text-amber-700':
-                  form.status === 'Waiting Approval',
+                  form.status === 'waiting_review' || form.status === 'revision',
                 'bg-blue-100 text-blue-700':
-                  form.status === 'Approved',
+                  form.status === 'assigned' || form.status === 'approved',
                 'bg-emerald-100 text-emerald-700':
-                  form.status === 'Running',
+                  form.status === 'in_progress',
                 'bg-indigo-100 text-indigo-700':
-                  form.status === 'Finished',
+                  form.status === 'completed',
                 'bg-rose-100 text-rose-700':
-                  form.status === 'Cancelled'
+                  form.status === 'cancelled'
               }"
             >
               <span
                 class="h-1.5 w-1.5 rounded-full bg-current"
               ></span>
-              {{ form.status }}
+              {{ statusLabel(form.status) }}
             </span>
+          </div>
+
+          <div v-if="canManageOwnership" class="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">PIC</label>
+              <select v-model="form.pic_id" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900">
+                <option :value="null">Select PIC</option>
+                <option v-for="pic in pics" :key="pic.id" :value="pic.id">{{ pic.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Campaign Members</label>
+              <select v-model="form.member_ids" multiple class="block min-h-24 w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900">
+                <option v-for="member in teamMembers" :key="member.id" :value="member.id">{{ member.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div v-if="isEdit && form.status !== props.campaign?.status">
+            <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Transition Note</label>
+            <textarea v-model="form.transition_note" rows="2" placeholder="Required for revision or cancellation" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900" />
           </div>
         </div>
       </div>
@@ -505,6 +542,8 @@ import { reactive, ref, watch, computed } from 'vue';
 import ModalForm from './ModalForm.vue';
 import { useCampaigns } from '../composables/useCampaigns';
 import { useBrands } from '../composables/useBrands';
+import { useWorkflowOptions } from '../composables/useWorkflowOptions';
+import { useAuthStore } from '../stores/auth';
 
 const props = defineProps({
   isOpen: {
@@ -530,6 +569,9 @@ const {
 } = useCampaigns();
 
 const { brands, fetchBrands } = useBrands();
+const { pics, teamMembers, fetchWorkflowOptions } = useWorkflowOptions();
+const authStore = useAuthStore();
+const canManageOwnership = computed(() => authStore.hasRole('Super Admin') || authStore.hasRole('Admin'));
 
 const isEdit = ref(false);
 const selectedBrandId = ref(null);
@@ -539,12 +581,17 @@ const brandInputRef = ref(null);
 
 const defaultForm = () => ({
   name: '',
+  objective: '',
   description: '',
+  priority: 'normal',
   start_date: '',
   end_date: '',
   deadline: '',
-  status: 'Draft',
-  brand_id: null
+  status: 'draft',
+  brand_id: null,
+  pic_id: null,
+  member_ids: [],
+  transition_note: ''
 });
 
 const form = reactive(defaultForm());
@@ -603,7 +650,9 @@ watch(
       if (props.campaign.brand_id) {
         selectedBrandId.value =
           props.campaign.brand_id;
+        fetchWorkflowOptions(props.campaign.brand_id);
       }
+      form.member_ids = props.campaign.members?.map(member => member.id) || [];
     } else {
       isEdit.value = false;
     }
@@ -635,7 +684,14 @@ const selectBrand = (brand) => {
   form.brand_id = brand.id;
   brandSearch.value = brand.name;
   brandDropdownOpen.value = false;
+  fetchWorkflowOptions(brand.id);
 };
+
+const statusLabel = (status) => ({
+  draft: 'Draft', assigned: 'Assigned', in_progress: 'In Progress',
+  waiting_review: 'Waiting Review', revision: 'Revision', approved: 'Approved',
+  completed: 'Completed', cancelled: 'Cancelled'
+}[status] || status);
 
 const hasError = (field) => {
   return (

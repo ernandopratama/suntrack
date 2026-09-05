@@ -7,10 +7,14 @@ use App\Http\Requests\IdentifyReviewerRequest;
 use App\Http\Requests\StoreApprovalRequest;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Resources\CommentResource;
+use App\Http\Resources\PublicDeliveryResource;
 use App\Http\Resources\PublicReviewResource;
 use App\Http\Resources\TaskResource;
 use App\Models\ApprovalHistory;
+use App\Models\Attachment;
 use App\Models\Campaign;
+use App\Models\Comment;
+use App\Models\PerformanceReport;
 use App\Models\Promotion;
 use App\Models\SecureLink;
 use App\Models\Task;
@@ -62,11 +66,14 @@ class PublicReviewController extends Controller
         return $link;
     }
 
-    private function linkable(SecureLink $link): Campaign|Promotion
+    private function linkable(SecureLink $link): Campaign|Promotion|Task|PerformanceReport
     {
         $linkable = $link->linkable;
 
-        if (! ($linkable instanceof Campaign) && ! ($linkable instanceof Promotion)) {
+        if (! ($linkable instanceof Campaign)
+            && ! ($linkable instanceof Promotion)
+            && ! ($linkable instanceof Task)
+            && ! ($linkable instanceof PerformanceReport)) {
             abort(404);
         }
 
@@ -82,8 +89,16 @@ class PublicReviewController extends Controller
 
         $entity = $this->linkable($link);
 
-        $link->increment('view_count');
-        $link->update(['last_accessed_at' => now()]);
+        $link->recordAccess([
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'referer' => $request->headers->get('referer'),
+            'visitor_hash' => hash('sha256', implode('|', [
+                (string) $request->ip(),
+                (string) $request->userAgent(),
+                $request->hasSession() ? (string) $request->session()->getId() : '',
+            ])),
+        ]);
 
         // Audit log link opened (throttled in session or logged with IP/UA)
         ActivityLogger::log(
@@ -104,6 +119,16 @@ class PublicReviewController extends Controller
         // Load relationships based on linkable type:
         // - Promotion has: brand, campaign, variants, comments, activityLogs
         // - Campaign has: brand, comments, activityLogs (NOT campaign or variants)
+        if ($entity instanceof Task || $entity instanceof PerformanceReport) {
+            $entity->load(['brand', 'pic', 'attachments.uploader', 'comments.attachments.uploader']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Public delivery data retrieved successfully.',
+                'data' => new PublicDeliveryResource($entity),
+            ]);
+        }
+
         $linkableRelations = ['brand', 'comments', 'activityLogs'];
         if ($entity instanceof Promotion) {
             $linkableRelations = array_merge($linkableRelations, ['campaign', 'variants']);
@@ -159,6 +184,10 @@ class PublicReviewController extends Controller
         }
 
         $entity = $this->linkable($link);
+
+        if (! ($entity instanceof Campaign) && ! ($entity instanceof Promotion)) {
+            abort(403, 'This delivery link does not support approval actions.');
+        }
 
         if ($entity instanceof Promotion) {
             $variant = $entity->variants()->where('variant_id', $request->variant_id)->first();
@@ -263,6 +292,20 @@ class PublicReviewController extends Controller
             'body' => $request->body,
         ]);
 
+        foreach ($request->file('attachments', []) as $file) {
+            $directory = 'attachments/comment/'.$comment->id;
+            $filename = Str::uuid().($file->extension() ? '.'.$file->extension() : '');
+            $path = $file->storeAs($directory, $filename, 'local');
+            abort_unless(is_string($path), 422, 'Attachment could not be stored.');
+            $comment->attachments()->create([
+                'disk' => 'local',
+                'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
+                'size' => $file->getSize(),
+            ]);
+        }
+
         ActivityLogger::log(
             'Comment Added',
             "Brand reviewer {$request->author_name} commented: \"".Str::limit($request->body, 60).'"',
@@ -280,8 +323,25 @@ class PublicReviewController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Komentar berhasil dikirim.',
-            'data' => new CommentResource($comment),
+            'data' => new CommentResource($comment->load('attachments')),
         ]);
+    }
+
+    public function downloadAttachment(string $token, Attachment $attachment)
+    {
+        $link = $this->getSecureLink($token);
+        if (! ($link instanceof SecureLink)) {
+            return $link;
+        }
+        $entity = $this->linkable($link);
+        $direct = $attachment->attachable_type === $entity::class
+            && $attachment->attachable_id === $entity->getKey();
+        $commentAttachment = $attachment->attachable_type === Comment::class
+            && $entity->comments()->whereKey($attachment->attachable_id)->exists();
+        abort_unless($direct || $commentAttachment, 404);
+        abort_unless(Storage::disk($attachment->disk)->exists($attachment->path), 404);
+
+        return Storage::disk($attachment->disk)->download($attachment->path, $attachment->original_name);
     }
 
     /**
@@ -306,6 +366,9 @@ class PublicReviewController extends Controller
         ]);
 
         $entity = $this->linkable($link);
+        if (! ($entity instanceof Campaign) && ! ($entity instanceof Promotion)) {
+            abort(403, 'This delivery link does not support approval actions.');
+        }
         $action = $request->action;
         $targetStatus = str_starts_with($action, 'approve') ? 'Approved' : 'Rejected';
         $notes = $targetStatus === 'Rejected' ? $request->rejection_notes : null;
@@ -411,40 +474,10 @@ class PublicReviewController extends Controller
             ], 404);
         }
 
-        $request->validate([
-            'progress_status' => ['required', 'string', Rule::in(['NotStarted', 'InProgress', 'Revision', 'Completed', 'OnHold'])],
-        ]);
-
-        // Prevent marking Completed when task requires visual but none present
-        $desired = $request->progress_status;
-        if ($desired === 'Completed' && $task->requires_visual) {
-            $hasVisual = (! empty($task->visual_link) || ! empty($task->visual_file_path));
-            if (! $hasVisual) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Task ini membutuhkan visual dan belum tersedia. Kirim visual terlebih dahulu sebelum menandai selesai.',
-                ], 422);
-            }
-        }
-
-        $oldStatus = $task->progress_status;
-        $task->update(['progress_status' => $desired]);
-
-        ActivityLogger::log(
-            'Task Progress Updated',
-            "Brand reviewer updated task '{$task->name}' status from {$oldStatus} to {$request->progress_status}.",
-            'Brand',
-            $request->input('reviewer_name', 'Brand Reviewer'),
-            $task,
-            null,
-            $request->input('reviewer_position')
-        );
-
         return response()->json([
-            'success' => true,
-            'message' => 'Status pengerjaan task berhasil diperbarui.',
-            'data' => new TaskResource($task->fresh()),
-        ]);
+            'success' => false,
+            'message' => 'Status Task hanya dapat diubah oleh user internal yang berwenang.',
+        ], 403);
     }
 
     /**
@@ -498,11 +531,6 @@ class PublicReviewController extends Controller
             $path = $file->store('task-visuals', 'public');
             $data['visual_file_path'] = $path;
             $data['visual_file_name'] = $file->getClientOriginalName();
-        }
-
-        // When a visual is submitted for a requires_visual task, mark it Completed
-        if ($task->requires_visual) {
-            $data['progress_status'] = 'Completed';
         }
 
         $task->update($data);
@@ -564,11 +592,6 @@ class PublicReviewController extends Controller
             'submitted_at' => null,
         ];
 
-        // If task requires visual, revert status to NotStarted when visual removed
-        if ($task->requires_visual) {
-            $updateData['progress_status'] = 'NotStarted';
-        }
-
         $task->update($updateData);
 
         ActivityLogger::log(
@@ -604,6 +627,12 @@ class PublicReviewController extends Controller
         }
 
         $entity = $this->linkable($link);
+        if ($entity instanceof Campaign) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Status Campaign hanya dapat diubah oleh user internal yang berwenang.',
+            ], 403);
+        }
         $oldStatus = $entity->status;
         $newStatus = $request->status;
 

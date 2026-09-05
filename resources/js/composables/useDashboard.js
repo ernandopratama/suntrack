@@ -13,6 +13,8 @@ export function useDashboard() {
       campaigns: { active: 0, total: 0, completed: 0 },
       promotions: { active: 0, total: 0, pending: 0, approved: 0, partially_approved: 0, rejected: 0 },
       catalog: { total_products: 0, total_variants: 0, total_secure_links: 0, total_brand_reviews: 0 },
+      tasks: { total: 0, open: 0, urgent: 0, waiting_review: 0, overdue: 0, completed: 0 },
+      performance_reports: { total: 0, draft: 0, waiting_review: 0, approved: 0, published: 0 },
       extended: { approval_rate: 0 },
     },
     deadlines: {
@@ -40,6 +42,8 @@ export function useDashboard() {
           campaigns: { ...defaultStats.kpi.campaigns, ...(dashboard?.kpi?.campaigns || {}) },
           promotions: { ...defaultStats.kpi.promotions, ...(dashboard?.kpi?.promotions || {}) },
           catalog: { ...defaultStats.kpi.catalog, ...(dashboard?.kpi?.catalog || {}) },
+          tasks: { ...defaultStats.kpi.tasks, ...(dashboard?.kpi?.tasks || {}) },
+          performance_reports: { ...defaultStats.kpi.performance_reports, ...(dashboard?.kpi?.performance_reports || {}) },
           extended: { ...defaultStats.kpi.extended, ...(dashboard?.kpi?.extended || {}) },
         },
         deadlines: { ...defaultStats.deadlines, ...(dashboard?.deadlines || {}) },

@@ -112,7 +112,7 @@ class BenchmarkDataSeederCommand extends Command
         // 3. Seed Campaigns
         $this->info("3/5 Seeding ~{$perTableCount} Campaigns...");
         $this->seedTable('campaigns', $perTableCount, $chunkSize, function ($index) use ($brandId, $userId, $todayStr, $nextMonthStr, $now) {
-            $statuses = ['Draft', 'Running', 'Completed', 'Cancelled'];
+            $statuses = ['draft', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
             return [
                 'id' => Str::uuid()->toString(),

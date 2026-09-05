@@ -11,17 +11,38 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
+    private const ENTERPRISE_ADMIN_PERMISSIONS = [
+        'task.review',
+        'performance-report.view',
+        'performance-report.create',
+        'performance-report.update',
+        'performance-report.delete',
+        'performance-report.review',
+        'performance-report.publish',
+    ];
+
+    private const ENTERPRISE_TEAM_PERMISSIONS = [
+        'performance-report.view',
+        'performance-report.create',
+        'performance-report.update',
+        'performance-report.delete',
+    ];
+
     public function run(): void
     {
         $permissionRegistrar = app(PermissionRegistrar::class);
         $permissionRegistrar->forgetCachedPermissions();
 
         foreach (RbacRegistry::GUARDS as $guard) {
+            $createdPermissions = [];
             foreach (RbacRegistry::PERMISSIONS as $permission) {
-                Permission::firstOrCreate([
+                $permissionModel = Permission::firstOrCreate([
                     'name' => $permission,
                     'guard_name' => $guard,
                 ]);
+                if ($permissionModel->wasRecentlyCreated) {
+                    $createdPermissions[] = $permission;
+                }
             }
 
             $superAdmin = Role::firstOrCreate([
@@ -45,10 +66,24 @@ class RolePermissionSeeder extends Seeder
             $superAdmin->syncPermissions($guardPermissions);
             if ($admin->wasRecentlyCreated) {
                 $admin->syncPermissions(RbacRegistry::ADMIN_PERMISSIONS);
+            } else {
+                $admin->givePermissionTo(array_values(array_intersect(
+                    $createdPermissions,
+                    self::ENTERPRISE_ADMIN_PERMISSIONS
+                )));
             }
 
             if ($team->wasRecentlyCreated) {
                 $team->syncPermissions([]);
+            }
+            $newTeamPermissions = array_values(array_intersect(
+                $createdPermissions,
+                self::ENTERPRISE_TEAM_PERMISSIONS
+            ));
+            if ($newTeamPermissions !== []) {
+                User::role(RbacRegistry::TEAM, $guard)->each(
+                    fn (User $user) => $user->givePermissionTo($newTeamPermissions)
+                );
             }
         }
 

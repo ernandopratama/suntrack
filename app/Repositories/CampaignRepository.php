@@ -21,7 +21,7 @@ class CampaignRepository extends BaseRepository
      */
     public function getFilteredPaginated(User|string|null $scope = null, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->newQuery()->with('pic');
+        $query = $this->newQuery()->with(['brand', 'pic', 'creator', 'members']);
 
         if ($scope instanceof User) {
             $query = $this->scopeForUser($query, $scope);
@@ -36,6 +36,10 @@ class CampaignRepository extends BaseRepository
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
+        }
+
+        if (! empty($filters['priority'])) {
+            $query->where('priority', $filters['priority']);
         }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);

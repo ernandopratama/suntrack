@@ -20,6 +20,7 @@ class SecureLinkResource extends JsonResource
             'revoked_at' => $this->revoked_at ? $this->revoked_at->toIso8601String() : null,
             'last_accessed_at' => $this->last_accessed_at ? $this->last_accessed_at->toIso8601String() : null,
             'view_count' => (int) $this->view_count,
+            'access_log_count' => $this->accessLogs()->count(),
             'created_by_name' => $this->creator ? $this->creator->name : 'System Admin',
             'created_at' => $this->created_at ? $this->created_at->toIso8601String() : null,
         ];

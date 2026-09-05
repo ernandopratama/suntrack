@@ -107,24 +107,24 @@
                   <span
                     class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
                     :class="{
-                      'bg-gray-100 text-gray-600': campaign.status === 'Draft',
+                      'bg-gray-100 text-gray-600': campaign.status === 'draft',
                       'bg-amber-100 text-amber-700':
-                        campaign.status === 'Waiting Approval',
+                        campaign.status === 'waiting_review' || campaign.status === 'revision',
                       'bg-blue-100 text-blue-700':
-                        campaign.status === 'Approved',
+                        campaign.status === 'assigned' || campaign.status === 'approved',
                       'bg-emerald-100 text-emerald-700':
-                        campaign.status === 'Running',
+                        campaign.status === 'in_progress',
                       'bg-indigo-100 text-indigo-700':
-                        campaign.status === 'Finished',
+                        campaign.status === 'completed',
                       'bg-rose-100 text-rose-700':
-                        campaign.status === 'Cancelled'
+                        campaign.status === 'cancelled'
                     }"
                   >
                     <span
                       class="h-1.5 w-1.5 rounded-full bg-current"
                     ></span>
 
-                    {{ campaign.status }}
+                    {{ campaign.status_label || campaign.status }}
                   </span>
                 </div>
               </div>
@@ -1425,30 +1425,42 @@ const confirmDeleteTask = (task) => {
 // Task status helpers (Added taskStatusDot for modern UI)
 const taskStatusDot = (status) => {
   const map = {
-    NotStarted: 'bg-slate-300',
-    InProgress: 'bg-blue-500 animate-pulse',
-    Completed: 'bg-emerald-500',
-    OnHold: 'bg-amber-500'
+    pending: 'bg-slate-300',
+    assigned: 'bg-blue-400',
+    in_progress: 'bg-blue-500 animate-pulse',
+    waiting_review: 'bg-violet-500',
+    revision: 'bg-orange-500',
+    completed: 'bg-emerald-500',
+    on_hold: 'bg-amber-500',
+    cancelled: 'bg-rose-500'
   };
   return map[status] || 'bg-slate-300';
 };
 
 const taskStatusClass = (status) => {
   const map = {
-    NotStarted: 'bg-slate-100 text-slate-700',
-    InProgress: 'bg-blue-50 text-blue-700 border border-blue-200',
-    Completed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    OnHold: 'bg-amber-50 text-amber-700 border border-amber-200'
+    pending: 'bg-slate-100 text-slate-700',
+    assigned: 'bg-blue-50 text-blue-700 border border-blue-200',
+    in_progress: 'bg-blue-50 text-blue-700 border border-blue-200',
+    waiting_review: 'bg-violet-50 text-violet-700 border border-violet-200',
+    revision: 'bg-orange-50 text-orange-700 border border-orange-200',
+    completed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    on_hold: 'bg-amber-50 text-amber-700 border border-amber-200',
+    cancelled: 'bg-rose-50 text-rose-700 border border-rose-200'
   };
   return map[status] || 'bg-slate-100 text-slate-700';
 };
 
 const taskStatusLabel = (status) => {
   const map = {
-    NotStarted: 'Not Started',
-    InProgress: 'In Progress',
-    Completed: 'Completed',
-    OnHold: 'On Hold'
+    pending: 'Pending',
+    assigned: 'Assigned',
+    in_progress: 'In Progress',
+    waiting_review: 'Waiting Review',
+    revision: 'Revision',
+    completed: 'Completed',
+    on_hold: 'On Hold',
+    cancelled: 'Cancelled'
   };
   return map[status] || status;
 };

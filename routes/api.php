@@ -5,10 +5,12 @@ use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CampaignController;
+use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\NotificationCenterController;
+use App\Http\Controllers\Api\V1\PerformanceReportController;
 use App\Http\Controllers\Api\V1\PricingAnalyticsController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\PromotionController;
@@ -25,6 +27,7 @@ use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\UserPreferenceController;
 use App\Http\Controllers\Api\V1\VariantController;
+use App\Http\Controllers\Api\V1\WorkflowOptionController;
 use Illuminate\Support\Facades\Route;
 
 // ==========================================
@@ -56,6 +59,7 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:report.export');
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])
             ->middleware('permission:activity.view');
+        Route::get('/workflow/options', WorkflowOptionController::class);
         Route::get('/access/options', [UserController::class, 'accessOptions'])
             ->middleware('permission:access.view');
         Route::get('/roles', [RoleController::class, 'index']);
@@ -67,6 +71,8 @@ Route::prefix('v1')->group(function () {
             ->middlewareFor('store', 'permission:campaign.create')
             ->middlewareFor('update', 'permission:campaign.update')
             ->middlewareFor('destroy', 'permission:campaign.delete');
+        Route::post('campaigns/{campaign}/transition', [CampaignController::class, 'transition'])
+            ->middleware('permission:campaign.update');
 
         Route::apiResource('companies', CompanyController::class)
             ->middlewareFor(['index', 'show'], 'permission:company.view')
@@ -85,6 +91,44 @@ Route::prefix('v1')->group(function () {
             ->middlewareFor('store', 'permission:task.create')
             ->middlewareFor('update', 'permission:task.update')
             ->middlewareFor('destroy', 'permission:task.delete');
+        Route::post('tasks/{task}/transition', [TaskController::class, 'transition'])
+            ->middleware('permission:task.update');
+        Route::prefix('tasks/{task}')->group(function () {
+            Route::get('comments', [CollaborationController::class, 'taskComments'])->middleware('permission:task.view');
+            Route::post('comments', [CollaborationController::class, 'storeTaskComment'])->middleware('permission:task.update');
+            Route::post('comments/read', [CollaborationController::class, 'readTaskComments'])->middleware('permission:task.view');
+            Route::get('attachments', [CollaborationController::class, 'taskAttachments'])->middleware('permission:task.view');
+            Route::post('attachments', [CollaborationController::class, 'storeTaskAttachments'])->middleware('permission:task.update');
+            Route::get('attachments/{attachment}/download', [CollaborationController::class, 'downloadTaskAttachment'])->middleware('permission:task.view');
+            Route::delete('attachments/{attachment}', [CollaborationController::class, 'destroyTaskAttachment'])->middleware('permission:task.update');
+            Route::get('secure-link', [SecureLinkController::class, 'showTaskLink'])->middleware('permission:task.view');
+            Route::post('secure-link', [SecureLinkController::class, 'storeTaskLink'])->middleware('permission:task.update');
+            Route::delete('secure-link', [SecureLinkController::class, 'destroyTaskLink'])->middleware('permission:task.update');
+            Route::get('secure-link/access-logs', [SecureLinkController::class, 'taskAccessLogs'])->middleware('permission:task.view');
+        });
+
+        Route::apiResource('performance-reports', PerformanceReportController::class)
+            ->middlewareFor(['index', 'show'], 'permission:performance-report.view')
+            ->middlewareFor('store', 'permission:performance-report.create')
+            ->middlewareFor('update', 'permission:performance-report.update')
+            ->middlewareFor('destroy', 'permission:performance-report.delete');
+        Route::post('performance-reports/{performanceReport}/transition', [PerformanceReportController::class, 'transition'])
+            ->middleware('permission:performance-report.update');
+        Route::post('performance-reports/{performanceReport}/versions', [PerformanceReportController::class, 'createVersion'])
+            ->middleware('permission:performance-report.update');
+        Route::prefix('performance-reports/{performanceReport}')->group(function () {
+            Route::get('comments', [CollaborationController::class, 'reportComments'])->middleware('permission:performance-report.view');
+            Route::post('comments', [CollaborationController::class, 'storeReportComment'])->middleware('permission:performance-report.update');
+            Route::post('comments/read', [CollaborationController::class, 'readReportComments'])->middleware('permission:performance-report.view');
+            Route::get('attachments', [CollaborationController::class, 'reportAttachments'])->middleware('permission:performance-report.view');
+            Route::post('attachments', [CollaborationController::class, 'storeReportAttachments'])->middleware('permission:performance-report.update');
+            Route::get('attachments/{attachment}/download', [CollaborationController::class, 'downloadReportAttachment'])->middleware('permission:performance-report.view');
+            Route::delete('attachments/{attachment}', [CollaborationController::class, 'destroyReportAttachment'])->middleware('permission:performance-report.update');
+            Route::get('secure-link', [SecureLinkController::class, 'showReportLink'])->middleware('permission:performance-report.view');
+            Route::post('secure-link', [SecureLinkController::class, 'storeReportLink'])->middleware('permission:performance-report.update');
+            Route::delete('secure-link', [SecureLinkController::class, 'destroyReportLink'])->middleware('permission:performance-report.update');
+            Route::get('secure-link/access-logs', [SecureLinkController::class, 'reportAccessLogs'])->middleware('permission:performance-report.view');
+        });
 
         Route::apiResource('users', UserController::class)
             ->middlewareFor(['index', 'show'], 'permission:user.view')
@@ -137,6 +181,12 @@ Route::prefix('v1')->group(function () {
         Route::get('promotions/{promotion}/approval-histories', [SecureLinkController::class, 'getPromotionHistories'])->middleware('permission:promotion.view');
         Route::post('promotions/{promotion}/comments', [SecureLinkController::class, 'storePromotionComment'])->middleware('permission:promotion.update');
         Route::post('campaigns/{campaign}/comments', [SecureLinkController::class, 'storeCampaignComment'])->middleware('permission:campaign.update');
+        Route::prefix('campaigns/{campaign}/attachments')->group(function () {
+            Route::get('/', [CollaborationController::class, 'campaignAttachments'])->middleware('permission:campaign.view');
+            Route::post('/', [CollaborationController::class, 'storeCampaignAttachments'])->middleware('permission:campaign.update');
+            Route::get('{attachment}/download', [CollaborationController::class, 'downloadCampaignAttachment'])->middleware('permission:campaign.view');
+            Route::delete('{attachment}', [CollaborationController::class, 'destroyCampaignAttachment'])->middleware('permission:campaign.update');
+        });
 
         // Secure Links & Discussions Management (Campaigns)
         Route::prefix('campaigns/{campaign}/secure-link')->group(function () {
@@ -233,6 +283,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/approval', [PublicReviewController::class, 'approveVariant']);
         Route::post('/batch-approval', [PublicReviewController::class, 'batchApproval']);
         Route::post('/comment', [PublicReviewController::class, 'storeComment']);
+        Route::get('/attachments/{attachment}/download', [PublicReviewController::class, 'downloadAttachment']);
         Route::post('/tasks/{task}/progress', [PublicReviewController::class, 'updateTaskProgress']);
         Route::post('/tasks/{task}/visual', [PublicReviewController::class, 'submitTaskVisual']);
         Route::delete('/tasks/{task}/visual', [PublicReviewController::class, 'deleteTaskVisual']);

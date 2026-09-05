@@ -27,25 +27,33 @@
         </div>
       </div>
 
+      <!-- Brand -->
+      <div>
+        <label class="mb-1.5 block text-xs font-bold text-gray-700">Brand <span class="text-rose-500">*</span></label>
+        <select v-model="form.brand_id" required @change="handleBrandChange" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700">
+          <option value="" disabled>Select brand...</option>
+          <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
+        </select>
+        <p v-if="hasError('brand_id')" class="mt-1.5 text-xs font-medium text-rose-600">{{ getError('brand_id') }}</p>
+      </div>
+
       <!-- Campaign -->
       <div v-if="!campaignId">
         <label class="mb-1.5 block text-xs font-bold text-gray-700">
-          Campaign
-          <span class="text-rose-500">*</span>
+          Campaign <span class="text-gray-400">(optional)</span>
         </label>
 
         <div class="relative">
           <select
             v-model="form.campaign_id"
-            required
             class="block w-full appearance-none rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 pr-10 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
           >
-            <option value="" disabled>
-              Select campaign...
+            <option value="">
+              Standalone task
             </option>
 
             <option
-              v-for="c in campaigns"
+              v-for="c in availableCampaigns"
               :key="c.id"
               :value="c.id"
             >
@@ -59,6 +67,11 @@
             <i class="fa-solid fa-chevron-down text-[10px]"></i>
           </div>
         </div>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-xs font-bold text-gray-700">Description / Instruction</label>
+        <textarea v-model="form.description" rows="3" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" placeholder="Describe the work to complete" />
       </div>
 
       <!-- Task Name -->
@@ -99,21 +112,14 @@
               v-model="form.progress_status"
               class="block w-full appearance-none rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 pr-10 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
             >
-              <option value="NotStarted">
-                Not Started
-              </option>
-
-              <option value="InProgress">
-                In Progress
-              </option>
-
-              <option value="Completed">
-                Completed
-              </option>
-
-              <option value="OnHold">
-                On Hold
-              </option>
+              <option value="pending">Pending</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="on_hold">On Hold</option>
+              <option value="waiting_review">Waiting Review</option>
+              <option value="revision">Revision</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
 
             <div
@@ -144,6 +150,37 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-xs font-bold text-gray-700">Priority</label>
+          <select v-model="form.priority" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
+            <option value="normal">Normal</option><option value="mid">Mid</option><option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div v-if="canManageOwnership">
+          <label class="mb-1.5 block text-xs font-bold text-gray-700">PIC</label>
+          <select v-model="form.pic_id" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
+            <option :value="null">Select PIC</option><option v-for="pic in pics" :key="pic.id" :value="pic.id">{{ pic.name }}</option>
+          </select>
+        </div>
+        <div v-if="canManageOwnership">
+          <label class="mb-1.5 block text-xs font-bold text-gray-700">Assignee Tim</label>
+          <select v-model="form.assignee_id" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
+            <option :value="null">Select assignee</option><option v-for="member in teamMembers" :key="member.id" :value="member.id">{{ member.name }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div v-if="isEdit">
+        <label class="mb-1.5 block text-xs font-bold text-gray-700">Completion Summary</label>
+        <textarea v-model="form.completion_summary" rows="2" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" />
+      </div>
+
+      <div v-if="isEdit && form.progress_status !== props.task?.progress_status">
+        <label class="mb-1.5 block text-xs font-bold text-gray-700">Transition Note</label>
+        <textarea v-model="form.transition_note" rows="2" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" placeholder="Required for hold, revision, or cancellation" />
       </div>
 
       <!-- Requires Visual -->
@@ -244,10 +281,13 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch, onMounted } from 'vue';
+import { computed, reactive, ref, watch, onMounted } from 'vue';
 import ModalForm from './ModalForm.vue';
 import { useTasks } from '../composables/useTasks';
 import { useCampaigns } from '../composables/useCampaigns';
+import { useBrands } from '../composables/useBrands';
+import { useWorkflowOptions } from '../composables/useWorkflowOptions';
+import { useAuthStore } from '../stores/auth';
 
 const props = defineProps({
   isOpen: { type: Boolean, required: true },
@@ -259,21 +299,38 @@ const emit = defineEmits(['close', 'saved']);
 
 const { createTask, updateTask, loading, error } = useTasks();
 const { campaigns, fetchCampaigns } = useCampaigns();
+const { brands, fetchBrands } = useBrands();
+const { pics, teamMembers, fetchWorkflowOptions } = useWorkflowOptions();
+const authStore = useAuthStore();
+const canManageOwnership = computed(() => authStore.hasRole('Super Admin') || authStore.hasRole('Admin'));
+const availableCampaigns = computed(() => campaigns.value.filter(campaign => !form.brand_id || campaign.brand_id === form.brand_id));
 
 const isEdit = ref(false);
 
 const form = reactive({
   name: '',
+  description: '',
+  brand_id: '',
   campaign_id: props.campaignId || '',
-  progress_status: 'NotStarted',
+  pic_id: null,
+  assignee_id: null,
+  progress_status: 'pending',
+  priority: 'normal',
+  completion_summary: '',
+  transition_note: '',
   requires_visual: false,
   visual_type: '',
   deadline: ''
 });
 
-onMounted(() => {
-  if (!props.campaignId) {
-    fetchCampaigns({ per_page: 100 });
+onMounted(async () => {
+  await Promise.all([fetchBrands({ per_page: 100 }), fetchCampaigns({ per_page: 100 })]);
+  if (props.campaignId) {
+    const campaign = campaigns.value.find(item => item.id === props.campaignId);
+    if (campaign) {
+      form.brand_id = campaign.brand_id;
+      fetchWorkflowOptions(campaign.brand_id);
+    }
   }
 });
 
@@ -283,8 +340,15 @@ watch(() => props.isOpen, (open) => {
   if (props.task) {
     isEdit.value = true;
     form.name = props.task.name;
+    form.description = props.task.description || '';
+    form.brand_id = props.task.brand_id || '';
     form.campaign_id = props.task.campaign_id;
-    form.progress_status = props.task.progress_status || 'NotStarted';
+    form.pic_id = props.task.pic_id || null;
+    form.assignee_id = props.task.assignee_id || null;
+    form.progress_status = props.task.progress_status || 'pending';
+    form.priority = props.task.priority || 'normal';
+    form.completion_summary = props.task.completion_summary || '';
+    form.transition_note = '';
     form.requires_visual = props.task.requires_visual || false;
     form.visual_type = props.task.visual_type || '';
     form.deadline = props.task.deadline
@@ -293,15 +357,34 @@ watch(() => props.isOpen, (open) => {
   } else {
     isEdit.value = false;
     form.name = '';
+    form.description = '';
+    form.brand_id = '';
     form.campaign_id = props.campaignId || '';
-    form.progress_status = 'NotStarted';
+    form.progress_status = 'pending';
+    form.priority = 'normal';
+    form.pic_id = null;
+    form.assignee_id = null;
+    form.completion_summary = '';
+    form.transition_note = '';
     form.requires_visual = false;
     form.visual_type = '';
     form.deadline = '';
+    if (props.campaignId) {
+      const campaign = campaigns.value.find(item => item.id === props.campaignId);
+      form.brand_id = campaign?.brand_id || '';
+    }
   }
 
   error.value = null;
+  if (form.brand_id) fetchWorkflowOptions(form.brand_id);
 });
+
+const handleBrandChange = () => {
+  if (form.campaign_id && !availableCampaigns.value.some(campaign => campaign.id === form.campaign_id)) {
+    form.campaign_id = '';
+  }
+  fetchWorkflowOptions(form.brand_id);
+};
 
 const hasError = (field) =>
   error.value &&

@@ -3,6 +3,7 @@
 namespace App\Services\Notification;
 
 use App\Contracts\Notification\NotificationDriverInterface;
+use App\Models\NotificationLog;
 use App\Services\Notification\Drivers\EmailDriver;
 use App\Services\Notification\Drivers\InAppDriver;
 use App\Services\Notification\Drivers\WebhookDriver;
@@ -46,7 +47,34 @@ class NotificationService
             throw new InvalidArgumentException("Notification driver [{$channel}] is not registered.");
         }
 
-        return $this->drivers[$channel]->send($recipient, $message, $metadata);
+        $log = NotificationLog::create([
+            'type' => $channel,
+            'recipient' => $recipient,
+            'subject' => $metadata['subject'] ?? null,
+            'body' => $message,
+            'status' => 'processing',
+            'attempts' => 1,
+            'processing_at' => now(),
+            'metadata' => $metadata,
+            'notifiable_type' => isset($metadata['related_entity'], $metadata['related_entity_id'])
+                && class_exists((string) $metadata['related_entity']) ? $metadata['related_entity'] : null,
+            'notifiable_id' => isset($metadata['related_entity'], $metadata['related_entity_id'])
+                && class_exists((string) $metadata['related_entity']) ? $metadata['related_entity_id'] : null,
+        ]);
+
+        try {
+            $sent = $this->drivers[$channel]->send($recipient, $message, $metadata);
+            if ($sent) {
+                $log->markSent();
+            } else {
+                $log->markFailed('Notification driver returned false.');
+            }
+
+            return $sent;
+        } catch (\Throwable $exception) {
+            $log->markFailed($exception->getMessage());
+            throw $exception;
+        }
     }
 
     /**

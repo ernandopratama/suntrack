@@ -26,7 +26,10 @@ class StoreCommentRequest extends FormRequest
             'body' => ['required', 'string', 'max:2000'],
             'author_name' => ['required', 'string', 'max:150'],
             'author_position' => ['nullable', 'string', 'max:150'],
-            'author_type' => ['nullable', 'string', 'in:Admin,Brand'],
+            'author_type' => ['nullable', 'string', 'in:Admin,Tim,Brand'],
+            'parent_id' => ['nullable', 'uuid', 'exists:comments,id'],
+            'attachments' => ['nullable', 'array', 'max:5'],
+            'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,csv,txt,zip'],
         ];
     }
 

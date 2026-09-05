@@ -106,6 +106,72 @@
       </div>
     </div>
 
+    <div v-else-if="reviewData && isDelivery" class="mx-auto max-w-5xl space-y-6 px-4 pb-12">
+      <section class="rounded-3xl border border-[#E3E9E6] bg-white p-6 shadow-sm sm:p-8">
+        <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.15em] text-[#315F60]">
+              {{ reviewData.type === 'Task' ? 'Task Delivery' : 'Performance Report' }}
+            </p>
+            <h1 class="mt-2 text-2xl font-extrabold text-[#293331] sm:text-3xl">{{ reviewData.name }}</h1>
+            <p class="mt-2 text-sm text-[#687572]">{{ reviewData.brand?.name }} · {{ reviewData.pic?.name || 'SUNTRACK' }}</p>
+          </div>
+          <span class="rounded-full bg-[#86BCBD]/20 px-4 py-2 text-xs font-bold uppercase text-[#315F60]">
+            {{ String(reviewData.status || '').replaceAll('_', ' ') }}
+          </span>
+        </div>
+
+        <template v-if="reviewData.type === 'Task'">
+          <div class="mt-7 grid gap-4 sm:grid-cols-3">
+            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Priority</p><p class="mt-1 font-bold capitalize text-[#293331]">{{ reviewData.priority }}</p></div>
+            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Deadline</p><p class="mt-1 font-bold text-[#293331]">{{ formatDate(reviewData.deadline) }}</p></div>
+            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Completed</p><p class="mt-1 font-bold text-[#293331]">{{ formatDate(reviewData.completed_at) }}</p></div>
+          </div>
+          <div class="mt-6 space-y-4 text-sm leading-7 text-[#52605E]">
+            <div v-if="reviewData.description"><h2 class="font-bold text-[#293331]">Instruksi</h2><p>{{ reviewData.description }}</p></div>
+            <div v-if="reviewData.completion_summary"><h2 class="font-bold text-[#293331]">Ringkasan Hasil</h2><p>{{ reviewData.completion_summary }}</p></div>
+            <div v-if="reviewData.completion_details"><h2 class="font-bold text-[#293331]">Detail Pekerjaan</h2><p>{{ reviewData.completion_details }}</p></div>
+          </div>
+        </template>
+
+        <template v-else>
+          <p class="mt-5 text-sm font-semibold text-[#52605E]">Periode {{ reviewData.period_start }} — {{ reviewData.period_end }} · Versi {{ reviewData.version }}</p>
+          <div v-if="reviewData.executive_summary" class="mt-5 rounded-2xl bg-[#F8FAF9] p-5 text-sm leading-7 text-[#52605E]">{{ reviewData.executive_summary }}</div>
+          <div class="prose mt-6 max-w-none text-[#52605E]" v-html="reviewData.content"></div>
+        </template>
+      </section>
+
+      <section class="grid gap-6 lg:grid-cols-2">
+        <div class="rounded-3xl border border-[#E3E9E6] bg-white p-6">
+          <h2 class="text-lg font-extrabold text-[#293331]">Attachment</h2>
+          <div v-if="!reviewData.attachments?.length" class="mt-4 text-sm text-[#899492]">Tidak ada attachment.</div>
+          <a
+            v-for="attachment in reviewData.attachments || []"
+            :key="attachment.id"
+            :href="`/api/v1/public/review/${token}/attachments/${attachment.id}/download`"
+            class="mt-3 flex items-center justify-between rounded-xl border border-[#E3E9E6] p-3 text-sm font-semibold text-[#315F60] hover:bg-[#F8FAF9]"
+          >
+            <span class="truncate">{{ attachment.original_name }}</span><span class="ml-3 text-xs">Unduh</span>
+          </a>
+        </div>
+
+        <div class="rounded-3xl border border-[#E3E9E6] bg-white p-6">
+          <h2 class="text-lg font-extrabold text-[#293331]">Diskusi</h2>
+          <div class="mt-4 max-h-72 space-y-3 overflow-y-auto">
+            <div v-for="comment in reviewData.comments || []" :key="comment.id" class="rounded-xl bg-[#F8FAF9] p-3">
+              <div class="flex justify-between gap-3 text-xs"><strong class="text-[#293331]">{{ comment.author_name }}</strong><span class="text-[#899492]">{{ formatDate(comment.created_at) }}</span></div>
+              <p class="mt-2 text-sm text-[#52605E]">{{ comment.body }}</p>
+            </div>
+          </div>
+          <form class="mt-5 space-y-3" @submit.prevent="handleDeliveryComment">
+            <input v-model="reviewerIdentity.name" required maxlength="150" placeholder="Nama Anda" class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm" />
+            <textarea v-model="newCommentBody" required maxlength="2000" rows="3" placeholder="Tulis komentar" class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm"></textarea>
+            <button :disabled="loading" class="rounded-xl bg-[#315F60] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">Kirim Komentar</button>
+          </form>
+        </div>
+      </section>
+    </div>
+
     <!-- =========================================================
          MAIN CONTENT
     ========================================================== -->
@@ -846,38 +912,8 @@
                 </p>
               </div>
 
-              <div class="shrink-0 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  @click="handleTaskStatus(task, 'Completed')"
-                  :disabled="
-                    taskBusy(task.id) ||
-                    taskIsLocked(task) ||
-                    (task.requires_visual && !hasVisualForTask(task))
-                  "
-                  :class="
-                    task.progress_status === 'Completed'
-                      ? 'bg-[#A4CE8B] text-[#304A27] border-[#A4CE8B]'
-                      : 'bg-[#A4CE8B]/15 text-[#527842] border-[#A4CE8B]/50 hover:bg-[#A4CE8B]/30'
-                  "
-                  class="px-3.5 py-2 rounded-xl text-xs font-bold transition border"
-                >
-                  ✓ Sudah Dikerjakan
-                </button>
-
-                <button
-                  type="button"
-                  @click="handleTaskStatus(task, 'NotStarted')"
-                  :disabled="taskBusy(task.id) || taskIsLocked(task)"
-                  :class="
-                    task.progress_status === 'NotStarted'
-                      ? 'bg-[#293331] text-white border-[#293331]'
-                      : 'bg-white text-[#687572] border-[#D5DDDA] hover:bg-[#F1F4F3]'
-                  "
-                  class="px-3.5 py-2 rounded-xl text-xs font-bold transition border"
-                >
-                  ✕ Belum Dikerjakan
-                </button>
+              <div class="shrink-0 rounded-xl border border-[#D5DDDA] bg-white px-3.5 py-2 text-xs font-medium text-[#687572]">
+                Status dikelola oleh Tim dan PIC SUNTRACK
               </div>
             </div>
 
@@ -1750,6 +1786,14 @@ const newCommentBody = ref('');
 const selectedVariantIds = ref([]);
 const batchLoading = ref(false);
 const pendingAction = ref(null);
+const isDelivery = computed(() => ['Task', 'PerformanceReport'].includes(reviewData.value?.type));
+
+const handleDeliveryComment = async () => {
+  if (!reviewerIdentity.name?.trim() || !newCommentBody.value.trim()) return;
+  localStorage.setItem('suntrack_reviewer_name', reviewerIdentity.name.trim());
+  await submitComment(token, newCommentBody.value.trim());
+  newCommentBody.value = '';
+};
 
 const taskBusyIds = ref(new Set());
 const taskVisualFiles = ref({});
@@ -2245,24 +2289,27 @@ const getStatusBadgeClass = (status) => {
 
 const getTaskStatusLabel = (status) => {
   const map = {
-    NotStarted: 'Belum Dikerjakan',
-    InProgress: 'Sedang Dikerjakan',
-    Revision: 'Revisi',
-    Completed: 'Selesai',
-    OnHold: 'Ditunda',
+    pending: 'Menunggu',
+    assigned: 'Ditugaskan',
+    in_progress: 'Sedang Dikerjakan',
+    waiting_review: 'Menunggu Review',
+    revision: 'Revisi',
+    completed: 'Selesai',
+    on_hold: 'Ditunda',
+    cancelled: 'Dibatalkan',
   };
   return map[status] || status || 'Belum Dikerjakan';
 };
 
 const getTaskStatusBadgeClass = (status) => {
   switch (status) {
-    case 'Completed':
+    case 'completed':
       return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
-    case 'InProgress':
+    case 'in_progress':
       return 'bg-blue-100 text-blue-800 border border-blue-200';
-    case 'Revision':
+    case 'revision':
       return 'bg-amber-100 text-amber-800 border border-amber-200';
-    case 'OnHold':
+    case 'on_hold':
       return 'bg-slate-100 text-slate-700 border border-slate-200';
     default:
       return 'bg-slate-100 text-slate-700 border border-slate-200';

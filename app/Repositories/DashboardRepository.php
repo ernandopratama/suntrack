@@ -6,9 +6,11 @@ use App\Models\ActivityLog;
 use App\Models\ApprovalHistory;
 use App\Models\Campaign;
 use App\Models\Comment;
+use App\Models\PerformanceReport;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\SecureLink;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\Variant;
 use App\Services\Authorization\DataScopeService;
@@ -39,14 +41,16 @@ class DashboardRepository
             $products = $this->scoped(Product::query(), $user);
             $variants = $this->scoped(Variant::query(), $user);
             $secureLinks = $this->scoped(SecureLink::query(), $user);
+            $tasks = $this->scoped(Task::query(), $user);
+            $reports = $this->scoped(PerformanceReport::query(), $user);
             $approvalHistories = $this->scoped(ApprovalHistory::query(), $user);
             $comments = $this->scoped(Comment::query(), $user);
             $activityLogs = $this->scoped(ActivityLog::query(), $user);
 
             $campaignStats = [
                 'total' => (clone $campaigns)->count(),
-                'active' => (clone $campaigns)->where('status', 'Running')->count(),
-                'completed' => (clone $campaigns)->where('status', 'Completed')->count(),
+                'active' => (clone $campaigns)->whereIn('status', ['assigned', 'in_progress', 'Running'])->count(),
+                'completed' => (clone $campaigns)->whereIn('status', ['completed', 'Finished', 'Completed'])->count(),
             ];
 
             $promotionStats = [
@@ -65,6 +69,24 @@ class DashboardRepository
                 'total_brand_reviews' => (clone $approvalHistories)->count(),
             ];
 
+            $taskStats = [
+                'total' => (clone $tasks)->count(),
+                'open' => (clone $tasks)->whereNotIn('progress_status', ['completed', 'cancelled'])->count(),
+                'urgent' => (clone $tasks)->where('priority', 'urgent')->whereNotIn('progress_status', ['completed', 'cancelled'])->count(),
+                'waiting_review' => (clone $tasks)->where('progress_status', 'waiting_review')->count(),
+                'overdue' => (clone $tasks)->whereNotIn('progress_status', ['completed', 'cancelled'])
+                    ->whereNotNull('deadline')->where('deadline', '<', now())->count(),
+                'completed' => (clone $tasks)->where('progress_status', 'completed')->count(),
+            ];
+
+            $reportStats = [
+                'total' => (clone $reports)->count(),
+                'draft' => (clone $reports)->where('status', 'draft')->count(),
+                'waiting_review' => (clone $reports)->where('status', 'waiting_review')->count(),
+                'approved' => (clone $reports)->where('status', 'approved')->count(),
+                'published' => (clone $reports)->where('status', 'published')->count(),
+            ];
+
             $totalDecisions = (clone $approvalHistories)->count();
             $approvedDecisions = (clone $approvalHistories)->where('new_status', 'Approved')->count();
             $approvalRate = $totalDecisions > 0 ? round(($approvedDecisions / $totalDecisions) * 100, 1) : 0.0;
@@ -79,6 +101,8 @@ class DashboardRepository
                 'campaigns' => $campaignStats,
                 'promotions' => $promotionStats,
                 'catalog' => $catalogStats,
+                'tasks' => $taskStats,
+                'performance_reports' => $reportStats,
                 'extended' => $extensibleKpis,
             ];
         });
@@ -137,6 +161,22 @@ class DashboardRepository
                 ];
             });
 
+        $tasks = $this->scoped(Task::with('brand'), $user)
+            ->whereNotIn('progress_status', ['completed', 'cancelled'])
+            ->whereBetween('deadline', [$startStr.' 00:00:00', $endStr.' 23:59:59'])
+            ->orderBy('deadline')
+            ->get()
+            ->map(fn (Task $task) => [
+                'id' => $task->id,
+                'type' => 'Task',
+                'title' => $task->name,
+                'subtitle' => $task->brand->name,
+                'deadline' => $task->deadline?->format('Y-m-d H:i'),
+                'status' => $task->progress_status,
+                'status_code' => $task->priority === 'urgent' ? 'red' : ($category === 'today' ? 'yellow' : 'green'),
+                'url' => "/tasks?task={$task->id}",
+            ]);
+
         $promotions = $this->scoped(Promotion::with(['brand', 'campaign']), $user)
             ->whereBetween('end_date', [$startStr.' 00:00:00', $endStr.' 23:59:59'])
             ->orderBy('end_date', 'asc')
@@ -154,14 +194,14 @@ class DashboardRepository
                 ];
             });
 
-        return $campaigns->concat($promotions)->values();
+        return $campaigns->concat($promotions)->concat($tasks)->sortBy('deadline')->values();
     }
 
     protected function getOverdueCampaigns(string $todayStr, ?User $user = null): Collection
     {
-        return $this->scoped(Campaign::with('brand'), $user)
+        $campaigns = $this->scoped(Campaign::with('brand'), $user)
             ->whereDate('end_date', '<', $todayStr)
-            ->whereNotIn('status', ['Completed', 'Archived', 'Cancelled'])
+            ->whereNotIn('status', ['completed', 'cancelled', 'Completed', 'Finished', 'Archived', 'Cancelled'])
             ->orderBy('end_date', 'asc')
             ->get()
             ->map(fn ($c) => [
@@ -174,6 +214,25 @@ class DashboardRepository
                 'status_code' => 'red',
                 'url' => "/campaigns/{$c->id}",
             ]);
+
+        $tasks = $this->scoped(Task::with('brand'), $user)
+            ->whereNotIn('progress_status', ['completed', 'cancelled'])
+            ->whereNotNull('deadline')
+            ->whereDate('deadline', '<', $todayStr)
+            ->orderBy('deadline')
+            ->get()
+            ->map(fn (Task $task) => [
+                'id' => $task->id,
+                'type' => 'Task',
+                'title' => $task->name,
+                'subtitle' => $task->brand->name,
+                'deadline' => $task->deadline?->format('Y-m-d H:i'),
+                'status' => $task->progress_status,
+                'status_code' => 'red',
+                'url' => "/tasks?task={$task->id}",
+            ]);
+
+        return $campaigns->concat($tasks)->sortBy('deadline')->values();
     }
 
     protected function getExpiringLinks(Carbon $now, ?User $user = null): Collection
@@ -220,7 +279,11 @@ class DashboardRepository
     {
         $linkable = $link->linkable;
 
-        return $linkable instanceof Campaign || $linkable instanceof Promotion
+        if ($linkable instanceof PerformanceReport) {
+            return $linkable->title;
+        }
+
+        return $linkable instanceof Campaign || $linkable instanceof Promotion || $linkable instanceof Task
             ? $linkable->name
             : 'Public Review Link';
     }

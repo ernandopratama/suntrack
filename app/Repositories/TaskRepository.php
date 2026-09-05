@@ -14,12 +14,12 @@ class TaskRepository extends BaseRepository
 
     public function getFilteredPaginated(User|string|null $scope = null, ?string $campaignId = null, array $filters = [], int $perPage = 15)
     {
-        $query = $this->newQuery()->with('campaign.brand');
+        $query = $this->newQuery()->with(['brand', 'campaign', 'pic', 'assignee', 'creator']);
 
         if ($scope instanceof User) {
             $query = $this->scopeForUser($query, $scope);
         } elseif ($scope !== null) {
-            $query->whereHas('campaign.brand', fn ($brand) => $brand->where('company_id', $scope));
+            $query->whereHas('brand', fn ($brand) => $brand->where('company_id', $scope));
         }
 
         if ($campaignId) {
@@ -33,6 +33,10 @@ class TaskRepository extends BaseRepository
 
         if (! empty($filters['status'])) {
             $query->where('progress_status', $filters['status']);
+        }
+
+        if (! empty($filters['priority'])) {
+            $query->where('priority', $filters['priority']);
         }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);

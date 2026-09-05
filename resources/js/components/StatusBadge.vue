@@ -1,6 +1,6 @@
 <template>
   <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', colorClass]">
-    {{ status }}
+    {{ label }}
   </span>
 </template>
 
@@ -19,4 +19,8 @@ const colorClass = computed(() => {
   if (s.includes('progress')) return 'bg-blue-100 text-blue-800';
   return 'bg-gray-100 text-gray-800'; // Default for Pending, Draft, Not Started
 });
+
+const label = computed(() => props.status
+  .replaceAll('_', ' ')
+  .replace(/\b\w/g, character => character.toUpperCase()));
 </script>

@@ -17,8 +17,20 @@ class Task extends Model
 
     protected $fillable = [
         'campaign_id',
+        'brand_id',
+        'created_by',
+        'pic_id',
+        'assignee_id',
         'name',
+        'description',
         'progress_status',
+        'priority',
+        'notes',
+        'hold_reason',
+        'revision_notes',
+        'completion_summary',
+        'completion_details',
+        'completed_at',
         'requires_visual',
         'visual_type',
         'creative_brief',
@@ -28,6 +40,9 @@ class Task extends Model
         'visual_file_name',
         'submitted_by',
         'submitted_at',
+        'next_reminder_at',
+        'last_reminded_at',
+        'reminder_count',
     ];
 
     protected $casts = [
@@ -35,12 +50,58 @@ class Task extends Model
         'creative_brief' => 'array',
         'deadline' => 'datetime',
         'submitted_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'next_reminder_at' => 'datetime',
+        'last_reminded_at' => 'datetime',
+        'reminder_count' => 'integer',
     ];
 
     /** @return BelongsTo<Campaign, $this> */
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
+    }
+
+    /** @return BelongsTo<Brand, $this> */
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function pic(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pic_id');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    /** @return MorphMany<SecureLink, $this> */
+    public function secureLinks(): MorphMany
+    {
+        return $this->morphMany(SecureLink::class, 'linkable');
+    }
+
+    /** @return MorphMany<Comment, $this> */
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable')->oldest();
+    }
+
+    /** @return MorphMany<Attachment, $this> */
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
     }
 
     /** @return MorphMany<ActivityLog, $this> */

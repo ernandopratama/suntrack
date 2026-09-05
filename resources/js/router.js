@@ -60,6 +60,12 @@ const routes = [
                 meta: { permission: 'task.view' },
             },
             {
+                path: 'performance-reports',
+                name: 'PerformanceReports',
+                component: () => import('./pages/PerformanceReports.vue'),
+                meta: { permission: 'performance-report.view' },
+            },
+            {
                 path: 'campaigns/:id',
                 name: 'CampaignDetail',
                 component: () => import('./pages/CampaignDetail.vue'),

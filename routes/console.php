@@ -4,6 +4,7 @@ use App\Jobs\CleanTemporaryFilesJob;
 use App\Jobs\MonitorExpiredLinksJob;
 use App\Jobs\SendApprovalReminderJob;
 use App\Jobs\SendDeadlineReminderJob;
+use App\Jobs\SendTaskPriorityReminderJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -21,6 +22,8 @@ Schedule::job(new SendApprovalReminderJob)->dailyAt('08:00')->name('suntrack:rem
 
 // Daily Deadline alerts at 09:00 AM
 Schedule::job(new SendDeadlineReminderJob)->dailyAt('09:00')->name('suntrack:remind-deadlines')->withoutOverlapping();
+
+Schedule::job(new SendTaskPriorityReminderJob)->everyFifteenMinutes()->name('suntrack:remind-priority-tasks')->withoutOverlapping();
 
 // Hourly monitoring of expired secure public links
 Schedule::job(new MonitorExpiredLinksJob)->hourly()->name('suntrack:monitor-links')->withoutOverlapping();

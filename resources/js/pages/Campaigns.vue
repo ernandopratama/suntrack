@@ -97,14 +97,14 @@
               class="block min-w-[180px] appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm outline-none transition-all hover:border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
             >
               <option value="">All Statuses</option>
-              <option value="Draft">Draft</option>
-              <option value="Waiting Approval">
-                Waiting Approval
-              </option>
-              <option value="Approved">Approved</option>
-              <option value="Running">Running</option>
-              <option value="Finished">Finished</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="draft">Draft</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="waiting_review">Waiting Review</option>
+              <option value="revision">Revision</option>
+              <option value="approved">Approved</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
 
             <div
