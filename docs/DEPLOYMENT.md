@@ -201,3 +201,17 @@ sudo -u sunrise git pull --ff-only origin main
 - Document root tidak boleh menunjuk ke root repository.
 - Password dan secret tidak disimpan di Git.
 - Redis memakai database `2` untuk queue/session dan database `3` untuk cache agar terpisah dari LMS.
+
+## 7. Deployment pembaruan
+
+Jalankan setelah commit tersedia di branch `main` dan seluruh stage CI lulus:
+
+```bash
+cd /home/sunrise/suntrack-app
+bash deploy/webuzo/deploy.sh
+```
+
+Script membuat backup `.env` dan PostgreSQL, mengambil perubahan dengan
+fast-forward, memasang dependency, membangun frontend, menjalankan migration dan
+`ProductionSeeder`, memperbarui cache, memulai ulang service, serta memeriksa
+health endpoint. Deployment berhasil bila terminal menampilkan `DEPLOY_SUCCESS`.
