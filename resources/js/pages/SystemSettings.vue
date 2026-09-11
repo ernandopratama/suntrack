@@ -357,6 +357,49 @@
           </div>
         </div>
 
+        <!-- Workflow -->
+        <div
+          v-if="activeTab === 'workflow'"
+          class="space-y-6"
+        >
+          <div class="flex items-start gap-4 border-b border-slate-100 pb-5">
+            <div
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              style="background: #d0e7e6"
+            >
+              <i class="fa-solid fa-list-check text-lg" style="color: #293681"></i>
+            </div>
+
+            <div>
+              <h3 class="text-lg font-bold" style="color: #293681">
+                Workflow Monitoring
+              </h3>
+              <p class="mt-1 text-sm text-slate-500">
+                Configure derived monitoring indicators used by operational modules.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <label class="settings-label">
+                Campaign Approaching Deadline (Days)
+              </label>
+              <input
+                v-model="settingsForm.campaign_approaching_deadline_days"
+                :disabled="!canUpdate"
+                type="number"
+                min="1"
+                max="365"
+                class="settings-input"
+              />
+              <p class="settings-help">
+                Active Campaigns inside this interval receive an approaching deadline indicator.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- Branding -->
         <div
           v-if="activeTab === 'branding'"
@@ -818,6 +861,7 @@ const showWaToken = ref(false);
 
 const tabs = [
   { id: 'general', label: 'General' },
+  { id: 'workflow', label: 'Workflow' },
   { id: 'branding', label: 'Branding' },
   { id: 'notification', label: 'Notification Gateway' },
   { id: 'storage', label: 'Media Storage' },
@@ -829,6 +873,7 @@ const settingsForm = reactive({
   'app.support_email': 'support@suntrack.local',
   'app.currency': 'Rp',
   'app.maintenance': false,
+  campaign_approaching_deadline_days: 7,
   'branding.logo_url': '/logo.svg',
   'branding.primary_color': '#4F46E5',
   'notification.default_driver': 'log',
@@ -911,6 +956,14 @@ const saveSettings = async () => {
         type: 'boolean',
         group: 'general',
         is_public: true
+      },
+      {
+        key: 'campaign_approaching_deadline_days',
+        value: Math.min(365, Math.max(1, parseInt(settingsForm.campaign_approaching_deadline_days) || 7)),
+        type: 'integer',
+        group: 'workflow',
+        description: 'Number of days before a Campaign deadline is marked as approaching.',
+        is_public: false
       },
       {
         key: 'branding.logo_url',

@@ -59,7 +59,12 @@ class WorkflowTransitionService
             if ($to === 'approved') {
                 abort_unless($actor->can('campaign.approve'), 403);
             }
-            if (in_array($to, ['revision', 'cancelled'], true)) {
+            if ($to === 'waiting_review' && ! $campaign->attachments()->exists()) {
+                throw ValidationException::withMessages([
+                    'attachments' => 'At least one Campaign attachment is required before review.',
+                ]);
+            }
+            if (in_array($to, ['revision', 'completed', 'cancelled'], true)) {
                 $this->requireNote($note);
             }
 

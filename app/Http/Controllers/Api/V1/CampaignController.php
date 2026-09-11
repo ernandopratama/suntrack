@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\ActivityType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexCampaignRequest;
 use App\Http\Requests\StoreCampaignRequest;
 use App\Http\Requests\UpdateCampaignRequest;
 use App\Http\Requests\WorkflowTransitionRequest;
@@ -17,7 +18,6 @@ use App\Services\Workflow\WorkflowAssignmentService;
 use App\Services\Workflow\WorkflowTransitionService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CampaignController extends Controller
@@ -34,7 +34,7 @@ class CampaignController extends Controller
     /**
      * Display a listing of the campaigns.
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexCampaignRequest $request): JsonResponse
     {
         $this->authorize('viewAny', Campaign::class);
 
@@ -42,7 +42,14 @@ class CampaignController extends Controller
 
         $campaigns = $this->repository->getFilteredPaginated(
             scope: $user,
-            filters: $request->only(['search', 'status', 'priority']),
+            filters: $request->safe()->only([
+                'search',
+                'status',
+                'priority',
+                'monitoring',
+                'sort_by',
+                'sort_direction',
+            ]),
             perPage: (int) $request->get('per_page', 15)
         );
 
@@ -98,7 +105,7 @@ class CampaignController extends Controller
         );
 
         return $this->success('Campaign created successfully.', [
-            'campaign' => new CampaignResource($campaign->load(['pic', 'creator', 'members'])),
+            'campaign' => new CampaignResource($campaign->load(['brand', 'pic', 'creator', 'members'])),
         ], 201);
     }
 

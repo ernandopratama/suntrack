@@ -72,6 +72,20 @@ export function useCampaigns() {
         }
     };
 
+    const deleteCampaign = async (id) => {
+        loading.value = true;
+        error.value = null;
+        try {
+            const response = await api.delete(`/admin/campaigns/${id}`);
+            return response.data.success;
+        } catch (e) {
+            error.value = e.response?.data?.message || 'Error deleting campaign';
+            return false;
+        } finally {
+            loading.value = false;
+        }
+    };
+
     return {
         campaigns,
         campaign,
@@ -82,5 +96,6 @@ export function useCampaigns() {
         fetchCampaign,
         createCampaign,
         updateCampaign,
+        deleteCampaign,
     };
 }

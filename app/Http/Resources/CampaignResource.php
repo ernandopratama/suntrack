@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\CampaignStatus;
 use App\Models\Campaign;
+use App\Services\Workflow\CampaignDeadlineService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,6 +18,8 @@ class CampaignResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $deadlineState = app(CampaignDeadlineService::class)->state($this->resource);
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -25,6 +28,12 @@ class CampaignResource extends JsonResource
             'start_date' => $this->start_date ? $this->start_date->format('Y-m-d') : null,
             'end_date' => $this->end_date ? $this->end_date->format('Y-m-d') : null,
             'deadline' => $this->deadline ? $this->deadline->format('Y-m-d H:i:s') : null,
+            'deadline_state' => $deadlineState,
+            'deadline_state_label' => match ($deadlineState) {
+                'overdue' => 'Overdue',
+                'approaching_deadline' => 'Approaching Deadline',
+                default => null,
+            },
             'status' => $this->status,
             'status_label' => CampaignStatus::tryFrom($this->status)?->label() ?? $this->status,
             'priority' => $this->priority,
@@ -36,6 +45,10 @@ class CampaignResource extends JsonResource
             'completed_at' => $this->completed_at?->format('Y-m-d H:i:s'),
 
             // Eager loaded relationships
+            'brand' => $this->whenLoaded('brand', fn () => $this->brand ? [
+                'id' => $this->brand->id,
+                'name' => $this->brand->name,
+            ] : null),
             'pic' => $this->whenLoaded('pic', function () {
                 return $this->pic ? [
                     'id' => $this->pic->id,

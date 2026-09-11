@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ActivityLog;
+use App\Models\Attachment;
 use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\Company;
@@ -86,6 +87,17 @@ class EnterpriseWorkflowTest extends TestCase
             ->postJson("/api/v1/admin/campaigns/{$campaign->id}/transition", ['status' => 'in_progress'])
             ->assertOk();
 
+        Attachment::create([
+            'attachable_type' => Campaign::class,
+            'attachable_id' => $campaign->id,
+            'uploaded_by' => $this->team->id,
+            'disk' => 'local',
+            'path' => 'attachments/campaign/evidence.pdf',
+            'original_name' => 'evidence.pdf',
+            'mime_type' => 'application/pdf',
+            'size' => 1024,
+        ]);
+
         $this->actingAs($this->team)
             ->postJson("/api/v1/admin/campaigns/{$campaign->id}/transition", ['status' => 'waiting_review'])
             ->assertOk();
@@ -111,6 +123,12 @@ class EnterpriseWorkflowTest extends TestCase
             ->assertOk();
         $this->actingAs($this->admin)
             ->postJson("/api/v1/admin/campaigns/{$campaign->id}/transition", ['status' => 'completed'])
+            ->assertUnprocessable();
+        $this->actingAs($this->admin)
+            ->postJson("/api/v1/admin/campaigns/{$campaign->id}/transition", [
+                'status' => 'completed',
+                'note' => 'Final delivery confirmed by Client.',
+            ])
             ->assertOk();
 
         $this->assertNotNull($campaign->fresh()->completed_at);

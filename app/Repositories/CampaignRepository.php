@@ -4,10 +4,16 @@ namespace App\Repositories;
 
 use App\Models\Campaign;
 use App\Models\User;
+use App\Services\Workflow\CampaignDeadlineService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class CampaignRepository extends BaseRepository
 {
+    public function __construct(private CampaignDeadlineService $deadlines)
+    {
+        parent::__construct();
+    }
+
     protected function getModelClass(): string
     {
         return Campaign::class;
@@ -42,6 +48,11 @@ class CampaignRepository extends BaseRepository
             $query->where('priority', $filters['priority']);
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $query = $this->deadlines->applyMonitoringFilter($query, $filters['monitoring'] ?? null);
+
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortDirection = $filters['sort_direction'] ?? 'desc';
+
+        return $query->orderBy($sortBy, $sortDirection)->paginate($perPage);
     }
 }

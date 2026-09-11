@@ -145,8 +145,9 @@ class DashboardRepository
     protected function getDeadlineItems(string $startStr, string $endStr, string $category, ?User $user = null): Collection
     {
         $campaigns = $this->scoped(Campaign::with('brand'), $user)
-            ->whereBetween('end_date', [$startStr.' 00:00:00', $endStr.' 23:59:59'])
-            ->orderBy('end_date', 'asc')
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->whereBetween('deadline', [$startStr.' 00:00:00', $endStr.' 23:59:59'])
+            ->orderBy('deadline', 'asc')
             ->get()
             ->map(function ($c) use ($category) {
                 return [
@@ -154,7 +155,7 @@ class DashboardRepository
                     'type' => 'Campaign',
                     'title' => $c->name,
                     'subtitle' => $c->brand->name ?? 'Standalone',
-                    'deadline' => $c->end_date->format('Y-m-d'),
+                    'deadline' => $c->deadline->format('Y-m-d H:i'),
                     'status' => $c->status,
                     'status_code' => $category === 'today' ? 'yellow' : 'green',
                     'url' => "/campaigns/{$c->id}",
@@ -200,16 +201,17 @@ class DashboardRepository
     protected function getOverdueCampaigns(string $todayStr, ?User $user = null): Collection
     {
         $campaigns = $this->scoped(Campaign::with('brand'), $user)
-            ->whereDate('end_date', '<', $todayStr)
+            ->whereNotNull('deadline')
+            ->whereDate('deadline', '<', $todayStr)
             ->whereNotIn('status', ['completed', 'cancelled', 'Completed', 'Finished', 'Archived', 'Cancelled'])
-            ->orderBy('end_date', 'asc')
+            ->orderBy('deadline', 'asc')
             ->get()
             ->map(fn ($c) => [
                 'id' => $c->id,
                 'type' => 'Campaign',
                 'title' => $c->name,
                 'subtitle' => $c->brand->name ?? 'Standalone',
-                'deadline' => $c->end_date->format('Y-m-d'),
+                'deadline' => $c->deadline->format('Y-m-d H:i'),
                 'status' => $c->status,
                 'status_code' => 'red',
                 'url' => "/campaigns/{$c->id}",

@@ -80,31 +80,22 @@
       @sort="handleSort"
     >
 
-      <!-- Status Filter -->
+      <!-- Campaign Filters -->
       <template #actions>
-        <div class="flex items-center gap-2">
-
-          <span
-            class="hidden text-xs font-semibold text-gray-400 sm:inline"
-          >
-            Status
-          </span>
-
+        <div class="flex flex-wrap items-center gap-2">
           <div class="relative">
             <select
-              v-model="statusFilter"
-              @change="handleFilter"
-              class="block min-w-[180px] appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm outline-none transition-all hover:border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+              v-model="monitoringFilter"
+              @change="handleMonitoringFilter"
+              class="block min-w-[190px] appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm outline-none transition-all hover:border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
             >
-              <option value="">All Statuses</option>
-              <option value="draft">Draft</option>
-              <option value="assigned">Assigned</option>
-              <option value="in_progress">In Progress</option>
+              <option value="">All Campaigns</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="approaching_deadline">Approaching Deadline</option>
+              <option value="overdue">Overdue</option>
               <option value="waiting_review">Waiting Review</option>
               <option value="revision">Revision</option>
-              <option value="approved">Approved</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
             </select>
 
             <div
@@ -125,6 +116,55 @@
               </svg>
             </div>
           </div>
+
+          <div class="relative">
+            <select
+              v-model="statusFilter"
+              @change="handleStatusFilter"
+              class="block min-w-[160px] appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm outline-none transition-all hover:border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+            >
+              <option value="">All Statuses</option>
+              <option value="draft">Draft</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="waiting_review">Waiting Review</option>
+              <option value="revision">Revision</option>
+              <option value="approved">Approved</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+              <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </div>
+          </div>
+
+          <div class="relative">
+            <select
+              v-model="priorityFilter"
+              @change="handleFilter"
+              class="block min-w-[140px] appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm outline-none transition-all hover:border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+            >
+              <option value="">All Priorities</option>
+              <option value="normal">Normal</option>
+              <option value="mid">Mid</option>
+              <option value="urgent">Urgent</option>
+            </select>
+
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+              <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </div>
+          </div>
+
+          <button
+            v-if="hasActiveFilters"
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs font-bold text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
+            @click="clearFilters"
+          >
+            <i class="fa-solid fa-xmark text-[10px]"></i>
+            Clear
+          </button>
         </div>
       </template>
 
@@ -157,7 +197,8 @@
               </div>
 
               <div class="mt-0.5 text-[11px] text-gray-400">
-                Promotional Campaign
+                {{ row.brand?.name || 'Unknown Brand' }}
+                <span v-if="row.pic?.name"> · PIC {{ row.pic.name }}</span>
               </div>
             </div>
 
@@ -206,11 +247,37 @@
             />
           </svg>
 
-          <span class="font-semibold text-gray-700">
-            {{ row.deadline }}
-          </span>
+          <div>
+            <span class="font-semibold text-gray-700">
+              {{ row.deadline || 'No deadline' }}
+            </span>
+
+            <span
+              v-if="row.deadline_state"
+              class="mt-1 block w-fit rounded-full px-2 py-0.5 text-[10px] font-bold"
+              :class="row.deadline_state === 'overdue'
+                ? 'bg-rose-50 text-rose-700'
+                : 'bg-amber-50 text-amber-700'"
+            >
+              {{ row.deadline_state_label }}
+            </span>
+          </div>
 
         </div>
+      </template>
+
+      <!-- Priority -->
+      <template #cell-priority="{ row }">
+        <span
+          class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide"
+          :class="{
+            'bg-gray-100 text-gray-600': row.priority === 'normal',
+            'bg-amber-50 text-amber-700': row.priority === 'mid',
+            'bg-rose-50 text-rose-700': row.priority === 'urgent'
+          }"
+        >
+          {{ row.priority || 'normal' }}
+        </span>
       </template>
 
       <!-- Status -->
@@ -275,6 +342,18 @@
             </svg>
 
             <span>Edit</span>
+          </button>
+
+          <!-- Delete -->
+          <button
+            v-if="$can('campaign.delete')"
+            type="button"
+            @click="confirmDelete(row)"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-600 transition-all duration-200 hover:bg-red-100 hover:text-red-700"
+            title="Delete Campaign"
+          >
+            <i class="fa-solid fa-trash-can text-[11px]"></i>
+            <span>Delete</span>
           </button>
 
         </div>
@@ -438,7 +517,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import DataTable from '../components/DataTable.vue';
 import StatusBadge from '../components/StatusBadge.vue';
 import CampaignForm from '../components/CampaignForm.vue';
@@ -448,7 +527,8 @@ const {
   campaigns,
   loading,
   pagination,
-  fetchCampaigns
+  fetchCampaigns,
+  deleteCampaign
 } = useCampaigns();
 
 const columns = [
@@ -468,6 +548,11 @@ const columns = [
     sortable: true
   },
   {
+    key: 'priority',
+    label: 'Priority',
+    sortable: true
+  },
+  {
     key: 'status',
     label: 'Status',
     sortable: true
@@ -481,6 +566,13 @@ const columns = [
 
 const searchQuery = ref('');
 const statusFilter = ref('');
+const monitoringFilter = ref('');
+const priorityFilter = ref('');
+const sortBy = ref('created_at');
+const sortDirection = ref('desc');
+const hasActiveFilters = computed(() => Boolean(
+  statusFilter.value || monitoringFilter.value || priorityFilter.value
+));
 
 const isModalOpen = ref(false);
 const selectedCampaign = ref(null);
@@ -493,7 +585,11 @@ const fetchData = async () => {
   await fetchCampaigns({
     page: pagination.value.current_page || 1,
     search: searchQuery.value,
-    status: statusFilter.value
+    status: statusFilter.value,
+    monitoring: monitoringFilter.value,
+    priority: priorityFilter.value,
+    sort_by: sortBy.value,
+    sort_direction: sortDirection.value
   });
 };
 
@@ -503,13 +599,33 @@ const handleSearch = (value) => {
   fetchData();
 };
 
-const handleSort = () => {
+const handleSort = ({ key, order }) => {
+  sortBy.value = key;
+  sortDirection.value = order;
+  pagination.value.current_page = 1;
   fetchData();
 };
 
 const handleFilter = () => {
   pagination.value.current_page = 1;
   fetchData();
+};
+
+const handleMonitoringFilter = () => {
+  statusFilter.value = '';
+  handleFilter();
+};
+
+const handleStatusFilter = () => {
+  monitoringFilter.value = '';
+  handleFilter();
+};
+
+const clearFilters = () => {
+  statusFilter.value = '';
+  monitoringFilter.value = '';
+  priorityFilter.value = '';
+  handleFilter();
 };
 
 const prevPage = () => {
@@ -544,5 +660,16 @@ const closeModal = () => {
 const handleSaved = () => {
   closeModal();
   fetchData();
+};
+
+const confirmDelete = async (campaign) => {
+  if (!window.confirm(`Delete campaign "${campaign.name}"?`)) return;
+
+  if (await deleteCampaign(campaign.id)) {
+    if (campaigns.value.length === 1 && pagination.value.current_page > 1) {
+      pagination.value.current_page--;
+    }
+    fetchData();
+  }
 };
 </script>

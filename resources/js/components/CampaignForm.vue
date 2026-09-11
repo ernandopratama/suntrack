@@ -469,7 +469,7 @@
 
           <div v-if="isEdit && form.status !== props.campaign?.status">
             <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Transition Note</label>
-            <textarea v-model="form.transition_note" rows="2" placeholder="Required for revision or cancellation" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900" />
+            <textarea v-model="form.transition_note" rows="2" placeholder="Required for revision, completion confirmation, or cancellation" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900" />
           </div>
         </div>
       </div>
