@@ -11,8 +11,8 @@
   "theme_color": "#293681",
   "icons": [
     {
-      "src": "/favicon.png",
-      "sizes": "634x633",
+      "src": "/images/PWA_icon.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }

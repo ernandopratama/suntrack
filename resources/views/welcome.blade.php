@@ -9,7 +9,7 @@
         <meta name="apple-mobile-web-app-title" content="SunTrack">
         <title>SunTrack</title>
         <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
-        <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
+        <link rel="apple-touch-icon" href="{{ asset('images/PWA_icon.png') }}">
         <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
         <script>
             (() => {
