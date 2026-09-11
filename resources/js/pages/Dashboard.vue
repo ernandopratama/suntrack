@@ -66,7 +66,7 @@
                         <h1
                             class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight"
                         >
-                            Selamat Datang, Admin SunTrack
+                            Selamat Datang, {{ authStore.user?.name || "Pengguna" }}
                         </h1>
 
                         <!-- Description -->
@@ -1608,8 +1608,10 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useDashboard } from "../composables/useDashboard";
+import { useAuthStore } from "../stores/auth";
 
 const router = useRouter();
+const authStore = useAuthStore();
 const {
     stats,
     loading,

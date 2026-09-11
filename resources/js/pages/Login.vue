@@ -58,10 +58,6 @@
             SunTrack
           </h1>
 
-          <p class="mt-1.5 text-sm font-medium text-slate-500">
-            Admin Portal
-          </p>
-
           <p class="mt-4 text-sm leading-6 text-slate-400">
             Sign in to manage your SunTrack workspace.
           </p>
@@ -182,7 +178,7 @@
                   required
                   autocomplete="current-password"
                   class="login-input login-input-password pl-11"
-                  placeholder="Enter your password"
+                  placeholder="Masukkan password"
                 />
 
                 <button
@@ -254,7 +250,7 @@
             ></div>
 
             <p class="ml-1 text-xs text-slate-400">
-              SunTrack Admin Portal
+              SunTrack Portal
             </p>
           </div>
         </div>
@@ -278,8 +274,8 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const form = ref({
-  login: 'admin',
-  password: 'password',
+  login: '',
+  password: '',
 });
 
 const loading = ref(false);

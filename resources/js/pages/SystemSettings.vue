@@ -71,7 +71,17 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            @click="installPwa"
+            :disabled="isInstalled"
+            class="inline-flex items-center gap-2 rounded-xl border border-[#4274d9] bg-white px-4 py-2.5 text-sm font-semibold text-[#293681] shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+          >
+            <i :class="isInstalled ? 'fa-solid fa-circle-check' : 'fa-solid fa-mobile-screen-button'"></i>
+            <span>{{ isInstalled ? 'Sudah Terpasang' : 'Tambahkan ke Smartphone' }}</span>
+          </button>
+
           <button
             @click="fetchSettings"
             :disabled="loading"
@@ -140,6 +150,35 @@
           );
         "
       ></div>
+    </div>
+
+    <div
+      v-if="showInstallGuide"
+      class="rounded-2xl border border-blue-100 bg-blue-50 p-5 text-sm text-slate-700"
+    >
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="font-bold text-[#293681]">Pasang SunTrack di smartphone</p>
+          <ol v-if="isIos" class="mt-2 list-decimal space-y-1 pl-5">
+            <li>Buka halaman ini melalui Safari.</li>
+            <li>Tekan tombol Bagikan.</li>
+            <li>Pilih Tambahkan ke Layar Utama, lalu tekan Tambah.</li>
+          </ol>
+          <ol v-else class="mt-2 list-decimal space-y-1 pl-5">
+            <li>Buka menu browser.</li>
+            <li>Pilih Instal aplikasi atau Tambahkan ke layar utama.</li>
+            <li>Konfirmasi pemasangan SunTrack.</li>
+          </ol>
+        </div>
+        <button
+          type="button"
+          aria-label="Tutup petunjuk instalasi"
+          class="text-slate-400 hover:text-slate-700"
+          @click="showInstallGuide = false"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Permission Warning -->
@@ -852,12 +891,15 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
+import { usePwaInstall } from '../pwa';
 
 const authStore = useAuthStore();
 const loading = ref(true);
 const saving = ref(false);
 const activeTab = ref('general');
 const showWaToken = ref(false);
+const showInstallGuide = ref(false);
+const { isInstalled, isIos, requestInstall } = usePwaInstall();
 
 const tabs = [
   { id: 'general', label: 'General' },
@@ -902,6 +944,27 @@ const showNotification = (message, type = 'success') => {
   setTimeout(() => {
     notification.show = false;
   }, 4000);
+};
+
+const installPwa = async () => {
+  const result = await requestInstall();
+
+  if (result === 'accepted') {
+    showNotification('Permintaan instalasi SunTrack diterima.');
+    return;
+  }
+
+  if (result === 'dismissed') {
+    showNotification('Instalasi SunTrack dibatalkan.', 'error');
+    return;
+  }
+
+  if (result === 'installed') {
+    showNotification('SunTrack sudah terpasang di perangkat ini.');
+    return;
+  }
+
+  showInstallGuide.value = true;
 };
 
 const fetchSettings = async () => {

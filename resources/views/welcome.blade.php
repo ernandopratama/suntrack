@@ -4,8 +4,13 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#f8fafc">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="SunTrack">
         <title>SunTrack</title>
         <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
+        <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
+        <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
         <script>
             (() => {
                 let theme = 'light';

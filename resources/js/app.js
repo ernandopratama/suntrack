@@ -6,6 +6,7 @@ import App from './App.vue';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { useAuthStore } from './stores/auth';
 import { useThemeStore } from './stores/theme';
+import { initializePwa } from './pwa';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -18,5 +19,6 @@ app.config.globalProperties.$can = (permission) => authStore.can(permission);
 app.config.globalProperties.$hasRole = (role) => authStore.hasRole(role);
 
 useThemeStore(pinia).initialize();
+initializePwa();
 
 app.mount('#app');
