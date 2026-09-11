@@ -1,0 +1,16 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/ernando2/suntrack-app
+    - /bin/mkdir -p $DEPLOYPATH
+    - /usr/bin/test -f $DEPLOYPATH/.env
+    - /usr/bin/rsync -a --delete --exclude=.git/ --exclude=.env --exclude=storage/ --exclude=node_modules/ --exclude=vendor/ ./ $DEPLOYPATH/
+    - /bin/mkdir -p $DEPLOYPATH/storage/framework/cache/data $DEPLOYPATH/storage/framework/sessions $DEPLOYPATH/storage/framework/views $DEPLOYPATH/storage/logs
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php84/root/usr/bin/php /opt/cpanel/composer/bin/composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+    - cd $DEPLOYPATH && /usr/bin/npm ci --no-audit --no-fund
+    - cd $DEPLOYPATH && /usr/bin/npm run build
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php84/root/usr/bin/php artisan optimize:clear
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php84/root/usr/bin/php artisan migrate --force --no-interaction
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php84/root/usr/bin/php artisan db:seed --class=ProductionSeeder --force --no-interaction
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php84/root/usr/bin/php artisan storage:link
+    - cd $DEPLOYPATH && /opt/cpanel/ea-php84/root/usr/bin/php artisan optimize
