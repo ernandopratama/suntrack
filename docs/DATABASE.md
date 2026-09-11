@@ -1,6 +1,6 @@
 # SunTrack Database Performance & Scaling Architecture (ADR-022)
 
-This document defines SunTrack's database performance strategy, covering indexes, query optimization patterns, and scaling preparation. PostgreSQL 18 is the production database. MySQL remains covered for compatibility in CI.
+This document defines SunTrack's database performance strategy, covering indexes, query optimization patterns, and scaling preparation. MySQL 8 is the production database.
 
 ---
 

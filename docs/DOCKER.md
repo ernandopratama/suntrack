@@ -15,7 +15,7 @@ Repository hanya menyediakan `Dockerfile` untuk membuktikan image produksi dapat
 ### Runtime
 
 - Base image: PHP 8.4 FPM Bookworm.
-- Database extensions: `pdo_mysql` dan `pdo_pgsql`.
+- Database extension: `pdo_mysql`.
 - Runtime extensions: `bcmath`, `gd`, `intl`, `mbstring`, `opcache`, `pcntl`, `redis`, dan `zip`.
 - Composer dependency dipasang tanpa development packages.
 
@@ -27,4 +27,4 @@ Stage Docker menjalankan:
 docker buildx build --target production --load .
 ```
 
-Image ini belum dipublikasikan ke registry dan tidak menjalankan Nginx, queue worker, scheduler, database, atau Redis. Komponen tersebut dikelola langsung oleh Webuzo, PostgreSQL, Redis, dan systemd pada produksi.
+Image ini belum dipublikasikan ke registry dan tidak menjalankan Nginx, queue worker, scheduler, database, atau Redis. Komponen tersebut dikelola langsung oleh Webuzo, MySQL, Redis, dan systemd pada produksi.

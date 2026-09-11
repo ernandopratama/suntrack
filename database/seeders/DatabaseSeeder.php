@@ -15,21 +15,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $company = Company::create([
+        $company = Company::firstOrCreate([
             'name' => 'SunTrack Enterprise',
         ]);
 
-        $brand = Brand::create([
+        Brand::firstOrCreate([
             'company_id' => $company->id,
             'name' => 'Acme Corp (Brand A)',
         ]);
 
-        User::create([
-            'name' => 'Super Admin',
-            'username' => 'admin',
-            'email' => 'admin@suntrack.com',
-            'password' => Hash::make('password'),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@suntrack.com'],
+            [
+                'name' => 'Super Admin',
+                'username' => 'admin',
+                'password' => Hash::make('password'),
+            ]
+        );
 
         $this->call(RolePermissionSeeder::class);
 

@@ -205,9 +205,9 @@ This document serves as the single source of truth for all important architectur
 **Status:** Superseded
 **Context:** Consistent environments across local development, CI/CD testing, and staging/production deployments are critical to eliminate "it works on my machine" defects. Relying on host-installed PHP, Node.js, Composer, or web servers creates environment drift and onboarding friction.
 **Decision:**
-1. **Production Runtime:** Run SunTrack on Webuzo using Nginx, Apache, PHP-FPM 8.4, PostgreSQL, Redis, and systemd-managed queue and scheduler services.
+1. **Production Runtime:** Run SunTrack on Webuzo using Nginx, Apache, PHP-FPM 8.4, MySQL, Redis, and systemd-managed queue and scheduler services.
 2. **Docker Verification:** Keep the multi-stage Dockerfile as a CI build target. No Docker Compose production stack is currently tracked.
-3. **Database Verification:** Run feature tests against MySQL and PostgreSQL. PostgreSQL is the production database.
+3. **Database Verification:** Run feature tests against MySQL. MySQL is the production database.
 **Rationale:** Matches the available VPS infrastructure while retaining reproducible build verification in CI.
 **Related Components:** Architecture, Docker, DevOps, Infrastructure
 

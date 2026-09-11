@@ -26,15 +26,9 @@ return new class extends Migration
 
         $this->dropTokenableIndex();
 
-        match (DB::getDriverName()) {
-            'pgsql' => DB::statement(
-                'ALTER TABLE personal_access_tokens ALTER COLUMN tokenable_id TYPE uuid USING tokenable_id::text::uuid'
-            ),
-            'mysql', 'mariadb' => DB::statement(
-                'ALTER TABLE personal_access_tokens MODIFY tokenable_id CHAR(36) NOT NULL'
-            ),
-            default => null,
-        };
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            DB::statement('ALTER TABLE personal_access_tokens MODIFY tokenable_id CHAR(36) NOT NULL');
+        }
 
         $this->createTokenableIndex();
     }
@@ -62,15 +56,9 @@ return new class extends Migration
 
         $this->dropTokenableIndex();
 
-        match (DB::getDriverName()) {
-            'pgsql' => DB::statement(
-                'ALTER TABLE personal_access_tokens ALTER COLUMN tokenable_id TYPE bigint USING tokenable_id::text::bigint'
-            ),
-            'mysql', 'mariadb' => DB::statement(
-                'ALTER TABLE personal_access_tokens MODIFY tokenable_id BIGINT UNSIGNED NOT NULL'
-            ),
-            default => null,
-        };
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            DB::statement('ALTER TABLE personal_access_tokens MODIFY tokenable_id BIGINT UNSIGNED NOT NULL');
+        }
 
         $this->createTokenableIndex();
     }

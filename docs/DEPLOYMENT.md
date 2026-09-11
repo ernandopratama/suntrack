@@ -1,6 +1,6 @@
 # SunTrack - Runbook Deployment Webuzo
 
-Dokumen ini adalah sumber utama deployment produksi SunTrack ke VPS Webuzo. Target produksi menggunakan PostgreSQL dan Redis tanpa Docker Compose.
+Dokumen ini adalah sumber utama deployment produksi SunTrack ke VPS Webuzo. Target produksi menggunakan MySQL dan Redis tanpa Docker Compose.
 
 ## 1. Arsitektur produksi
 
@@ -8,7 +8,7 @@ Dokumen ini adalah sumber utama deployment produksi SunTrack ke VPS Webuzo. Targ
 - Project: `/home/sunrise/suntrack-app`
 - Document root: `/home/sunrise/suntrack-app/public`
 - Web: Nginx Webuzo ke Apache, lalu PHP-FPM 8.4
-- Database: PostgreSQL pada `127.0.0.1:5432`
+- Database: MySQL 8 pada `127.0.0.1:3306`
 - Cache, session, dan queue: Redis pada `127.0.0.1:6379`
 - Queue worker: `suntrack-queue.service`
 - Scheduler: `suntrack-scheduler.timer`
@@ -17,24 +17,38 @@ PHP 8.4.1 atau lebih baru diperlukan oleh dependency Symfony yang terkunci di `c
 
 ## 2. Persiapan server satu kali
 
-### 2.1 PostgreSQL
+### 2.1 MySQL
 
 Buat role dan database melalui Terminal admin Webuzo. Ganti password sebelum menjalankan perintah.
 
 ```bash
-sudo -u postgres psql -c "CREATE USER sunrise_nando45 WITH PASSWORD 'CHANGE_ME';"
-sudo -u postgres psql -c "CREATE DATABASE sunrise_suntrack OWNER sunrise_nando45;"
+mysql -u root -p -e "CREATE DATABASE sunrise_suntrack CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p -e "CREATE USER 'sunrise_nando45'@'127.0.0.1' IDENTIFIED BY 'CHANGE_ME';"
+mysql -u root -p -e "GRANT ALL PRIVILEGES ON sunrise_suntrack.* TO 'sunrise_nando45'@'127.0.0.1'; FLUSH PRIVILEGES;"
 ```
 
 Database yang sudah ada tidak perlu dibuat ulang.
+
+Simpan kredensial akun MySQL yang memiliki akses backup pada `/root/.my.cnf` agar script deployment tidak menerima password melalui command line:
+
+```ini
+[client]
+host=127.0.0.1
+port=3306
+user=MYSQL_BACKUP_USER
+password=CHANGE_ME
+```
+
+```bash
+chmod 600 /root/.my.cnf
+```
 
 ### 2.2 PHP 8.4
 
 Aktifkan ekstensi berikut di `/usr/local/apps/php84/etc/php.d/extra.ini`:
 
 ```ini
-extension=pgsql.so
-extension=pdo_pgsql.so
+extension=pdo_mysql.so
 extension=igbinary.so
 extension=redis.so
 session.gc_divisor=100
@@ -43,7 +57,7 @@ session.gc_divisor=100
 Pastikan ekstensi runtime tersedia:
 
 ```bash
-/usr/local/apps/php84/bin/php -m | grep -E 'bcmath|gd|igbinary|intl|mbstring|pdo_pgsql|pgsql|redis|zip'
+/usr/local/apps/php84/bin/php -m | grep -E 'bcmath|gd|igbinary|intl|mbstring|pdo_mysql|redis|zip'
 systemctl restart php-fpm84.service
 ```
 
@@ -121,9 +135,9 @@ Hasil akhir yang berhasil adalah `DEPLOY_SUCCESS`. Jika commit server sudah sama
 
 Script melakukan langkah berikut secara berurutan:
 
-1. Memastikan repository bersih, environment produksi benar, PostgreSQL tersambung, serta ekstensi PHP tersedia.
+1. Memastikan repository bersih, environment produksi benar, MySQL tersambung, serta ekstensi PHP tersedia.
 2. Mengambil referensi terbaru `origin/main` dan berhenti bila tidak ada update.
-3. Mencadangkan `.env` dan PostgreSQL ke `/root/suntrack-deploy-backups`.
+3. Mencadangkan `.env` dan MySQL ke `/root/suntrack-deploy-backups`.
 4. Mengaktifkan maintenance mode dan menghentikan queue worker.
 5. Melakukan fast-forward source, Composer install, dan Vite build.
 6. Menjalankan seluruh migration yang masih pending.
@@ -185,7 +199,7 @@ systemctl restart suntrack-queue.service
 sudo -u sunrise /usr/local/apps/php84/bin/php artisan up
 ```
 
-Jangan menjalankan `migrate:rollback` otomatis di produksi. Jika schema atau data sudah berubah secara tidak kompatibel, pulihkan dump PostgreSQL setelah menghentikan aplikasi dan memastikan target database benar.
+Jangan menjalankan `migrate:rollback` otomatis di produksi. Jika schema atau data sudah berubah secara tidak kompatibel, pulihkan dump MySQL setelah menghentikan aplikasi dan memastikan target database benar.
 
 Untuk kembali mengikuti branch utama:
 
@@ -211,7 +225,7 @@ cd /home/sunrise/suntrack-app
 bash deploy/webuzo/deploy.sh
 ```
 
-Script membuat backup `.env` dan PostgreSQL, mengambil perubahan dengan
+Script membuat backup `.env` dan MySQL, mengambil perubahan dengan
 fast-forward, memasang dependency, membangun frontend, menjalankan migration dan
 `ProductionSeeder`, memperbarui cache, memulai ulang service, serta memeriksa
 health endpoint. Deployment berhasil bila terminal menampilkan `DEPLOY_SUCCESS`.

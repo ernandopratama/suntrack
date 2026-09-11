@@ -20,7 +20,8 @@ readonly DOMAIN="suntrack.sunriseadsacademy.com"
 readonly DATABASE="sunrise_suntrack"
 readonly BACKUP_DIR="/root/suntrack-deploy-backups"
 readonly DEPLOY_STAMP="$(date +%Y%m%d-%H%M%S)"
-readonly DATABASE_BACKUP="$BACKUP_DIR/${DATABASE}-${DEPLOY_STAMP}.dump"
+readonly MYSQL_DEFAULTS_FILE="/root/.my.cnf"
+readonly DATABASE_BACKUP="$BACKUP_DIR/${DATABASE}-${DEPLOY_STAMP}.sql.gz"
 readonly ENV_BACKUP="$BACKUP_DIR/.env-${DEPLOY_STAMP}"
 
 maintenance_enabled=0
@@ -60,7 +61,7 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-for command_name in curl flock git npm pg_dump pg_restore redis-cli sudo systemctl; do
+for command_name in curl flock git mysql mysqldump npm redis-cli sudo systemctl; do
     require_command "$command_name"
 done
 
@@ -81,17 +82,19 @@ test -x "$APACHE_BIN"
 test -f .env
 grep -Eq '^APP_KEY=.+$' .env
 grep -Eq '^APP_ENV=production$' .env
-grep -Eq '^DB_CONNECTION=pgsql$' .env
+grep -Eq '^DB_CONNECTION=mysql$' .env
 grep -Eq "^DB_DATABASE=${DATABASE}$" .env
+test -f "$MYSQL_DEFAULTS_FILE"
 test "$(sudo -u "$APP_USER" git branch --show-current)" = "main"
 test -z "$(sudo -u "$APP_USER" git status --porcelain)"
 
 php_modules="$($PHP_BIN -m)"
-for module_name in bcmath gd igbinary intl mbstring pdo_pgsql pgsql redis zip; do
+for module_name in bcmath gd igbinary intl mbstring pdo_mysql redis zip; do
     grep -qx "$module_name" <<< "$php_modules"
 done
 
 redis-cli -h 127.0.0.1 -p 6379 ping | grep -qx PONG
+mysql --defaults-file="$MYSQL_DEFAULTS_FILE" --batch --skip-column-names --execute 'SELECT 1' "$DATABASE" | grep -qx 1
 "$PHP_FPM_BIN" -t
 "$APACHE_BIN" -t
 sudo -u "$APP_USER" "$PHP_BIN" artisan migrate:status >/dev/null
@@ -117,9 +120,12 @@ install -d -m 0700 "$BACKUP_DIR"
 cp -a .env "$ENV_BACKUP"
 chmod 600 "$ENV_BACKUP"
 
-sudo -u postgres pg_dump --format=custom --dbname="$DATABASE" > "$DATABASE_BACKUP"
-test -s "$DATABASE_BACKUP"
-pg_restore --list "$DATABASE_BACKUP" >/dev/null
+mysqldump --defaults-file="$MYSQL_DEFAULTS_FILE" \
+    --single-transaction \
+    --routines \
+    --events \
+    --databases "$DATABASE" | gzip > "$DATABASE_BACKUP"
+gzip -t "$DATABASE_BACKUP"
 chmod 600 "$DATABASE_BACKUP"
 
 printf 'Database backup: %s\n' "$DATABASE_BACKUP"
