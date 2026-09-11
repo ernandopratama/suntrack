@@ -51,7 +51,7 @@ Route::prefix('v1')->group(function () {
     // ------------------------------------------
     // Admin Routes
     // ------------------------------------------
-    Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('admin')->middleware(['web', 'auth:sanctum'])->group(function () {
         // Operational Command Center & Reporting Foundation
         Route::get('/dashboard/stats', [DashboardController::class, 'stats'])
             ->middleware('permission:campaign.view');
