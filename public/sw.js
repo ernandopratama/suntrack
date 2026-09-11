@@ -1,5 +1,5 @@
-const CACHE_NAME = 'suntrack-shell-v1';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/pwa-icon.svg', '/favicon.png'];
+const CACHE_NAME = 'suntrack-shell-v2';
+const APP_SHELL = ['/', '/manifest.webmanifest', '/favicon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
