@@ -5,7 +5,5 @@ deployment:
     - /bin/mkdir -p $DEPLOYPATH
     - /usr/bin/test -f $DEPLOYPATH/.env
     - /usr/local/cpanel/3rdparty/bin/git archive HEAD | /bin/tar -x -C $DEPLOYPATH
-    - cd $DEPLOYPATH && PATH=/opt/alt/alt-nodejs20/root/usr/bin:$PATH npm ci --include=dev --no-audit --no-fund
-    - cd $DEPLOYPATH && PATH=/opt/alt/alt-nodejs20/root/usr/bin:$PATH npm run build
     - /bin/mkdir -p $DEPLOYPATH/storage/framework/cache/data $DEPLOYPATH/storage/framework/sessions $DEPLOYPATH/storage/framework/views $DEPLOYPATH/storage/logs
     - /bin/chmod -R u+rwX $DEPLOYPATH/storage $DEPLOYPATH/bootstrap/cache

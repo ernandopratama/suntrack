@@ -17,7 +17,6 @@ Thumbs.db
 # Laravel generated files
 /vendor/
 /node_modules/
-/public/build/
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
