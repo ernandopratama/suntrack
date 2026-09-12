@@ -47,4 +47,19 @@ class DashboardOverflowTest extends TestCase
             $dashboard,
         );
     }
+
+    public function test_collapsed_sidebar_shows_immediate_accessible_tooltips(): void
+    {
+        $layout = File::get(resource_path('js/layouts/AdminLayout.vue'));
+
+        $this->assertStringContainsString('@mouseover="showSidebarTooltip"', $layout);
+        $this->assertStringContainsString('@focusin="showSidebarTooltip"', $layout);
+        $this->assertStringContainsString('data-sidebar-label="Performance Reports"', $layout);
+        $this->assertStringContainsString('data-sidebar-label="Secure Link PMS"', $layout);
+        $this->assertStringContainsString('v-if="!sidebarOpen && sidebarTooltip.visible"', $layout);
+        $this->assertStringContainsString('role="tooltip"', $layout);
+        $this->assertStringContainsString('class="suntrack-sidebar-tooltip"', $layout);
+        $this->assertStringContainsString('SIDEBAR_TOOLTIP_THEMES', $layout);
+        $this->assertStringContainsString('--tooltip-gradient', $layout);
+    }
 }

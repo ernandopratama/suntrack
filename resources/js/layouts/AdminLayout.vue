@@ -70,7 +70,14 @@
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-5">
+      <nav
+        class="flex-1 space-y-1 overflow-y-auto px-3 py-5"
+        @mouseover="showSidebarTooltip"
+        @mouseout="hideSidebarTooltipOnLeave"
+        @focusin="showSidebarTooltip"
+        @focusout="hideSidebarTooltip"
+        @scroll="hideSidebarTooltip"
+      >
 
         <!-- Main Navigation -->
         <p
@@ -84,6 +91,7 @@
         <router-link
           v-if="$can('campaign.view')"
           to="/dashboard"
+          data-sidebar-label="Dashboard"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -124,6 +132,7 @@
         <router-link
           v-if="$can('user.view')"
           to="/users"
+          data-sidebar-label="Users"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -159,6 +168,7 @@
         <router-link
           v-if="$hasRole('Super Admin')"
           to="/roles"
+          data-sidebar-label="Roles"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -194,6 +204,7 @@
         <router-link
           v-if="$can('company.view')"
           to="/companies"
+          data-sidebar-label="Companies"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -229,6 +240,7 @@
         <router-link
           v-if="$can('brand.view')"
           to="/brands"
+          data-sidebar-label="Brands"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -264,6 +276,7 @@
         <router-link
           v-if="$can('campaign.view')"
           to="/campaigns"
+          data-sidebar-label="Campaigns"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -299,6 +312,7 @@
         <router-link
           v-if="$can('promotion.view')"
           to="/promotions"
+          data-sidebar-label="Promotions"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -334,6 +348,7 @@
         <router-link
           v-if="$can('task.view')"
           to="/tasks"
+          data-sidebar-label="Tasks"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -369,6 +384,7 @@
         <router-link
           v-if="$can('performance-report.view')"
           to="/performance-reports"
+          data-sidebar-label="Performance Reports"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="$route.path.startsWith('/performance-reports') ? 'shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'"
@@ -383,6 +399,7 @@
         <router-link
           v-if="$hasRole('Super Admin')"
           to="/performance-report-links"
+          data-sidebar-label="Secure Link PMS"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="$route.path.startsWith('/performance-report-links') ? 'shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'"
@@ -396,6 +413,7 @@
         <router-link
           v-if="$can('product.view')"
           to="/products"
+          data-sidebar-label="Products"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -451,6 +469,7 @@
         <router-link
           v-if="$can('activity.view')"
           to="/activity"
+          data-sidebar-label="Activity Logs"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -482,6 +501,7 @@
         <router-link
           v-if="$can('report.export')"
           to="/export"
+          data-sidebar-label="Export"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -511,6 +531,7 @@
         <router-link
           v-if="$hasRole('Super Admin') || $hasRole('Admin') || $hasRole('Tim')"
           to="/settings"
+          data-sidebar-label="Settings"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
           :class="
@@ -659,11 +680,30 @@
 
     </div>
 
+    <Teleport to="body">
+      <Transition name="suntrack-sidebar-tooltip">
+        <div
+          v-if="!sidebarOpen && sidebarTooltip.visible"
+          role="tooltip"
+          class="suntrack-sidebar-tooltip"
+          :style="{
+            left: '88px',
+            top: `${sidebarTooltip.top}px`,
+            '--tooltip-gradient': sidebarTooltip.theme.gradient,
+            '--tooltip-border': sidebarTooltip.theme.border,
+            '--tooltip-glow': sidebarTooltip.theme.glow,
+          }"
+        >
+          <span class="suntrack-sidebar-tooltip-label">{{ sidebarTooltip.label }}</span>
+        </div>
+      </Transition>
+    </Teleport>
+
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from "vue";
+import { reactive, ref, watch, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import ThemeToggle from "../components/ThemeToggle.vue";
@@ -672,8 +712,116 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const SIDEBAR_AUTO_CLOSE_DELAY_MS = 5000;
+const SIDEBAR_TOOLTIP_THEMES = {
+    Dashboard: {
+        gradient: "linear-gradient(135deg, #102a56, #1d4ed8, #3b82f6, #0b1835)",
+        border: "rgba(96, 165, 250, 0.7)",
+        glow: "rgba(59, 130, 246, 0.65)",
+    },
+    Users: {
+        gradient: "linear-gradient(135deg, #12352b, #047857, #10b981, #09251d)",
+        border: "rgba(52, 211, 153, 0.7)",
+        glow: "rgba(16, 185, 129, 0.65)",
+    },
+    Roles: {
+        gradient: "linear-gradient(135deg, #351352, #7e22ce, #a855f7, #230c38)",
+        border: "rgba(192, 132, 252, 0.7)",
+        glow: "rgba(168, 85, 247, 0.65)",
+    },
+    Companies: {
+        gradient: "linear-gradient(135deg, #3d2508, #b45309, #f59e0b, #2b1905)",
+        border: "rgba(251, 191, 36, 0.7)",
+        glow: "rgba(245, 158, 11, 0.65)",
+    },
+    Brands: {
+        gradient: "linear-gradient(135deg, #3e1025, #be185d, #ec4899, #2a0a19)",
+        border: "rgba(244, 114, 182, 0.7)",
+        glow: "rgba(236, 72, 153, 0.65)",
+    },
+    Campaigns: {
+        gradient: "linear-gradient(135deg, #3d160c, #c2410c, #f97316, #2b0f08)",
+        border: "rgba(251, 146, 60, 0.7)",
+        glow: "rgba(249, 115, 22, 0.65)",
+    },
+    Promotions: {
+        gradient: "linear-gradient(135deg, #37100e, #b91c1c, #ef4444, #260908)",
+        border: "rgba(248, 113, 113, 0.7)",
+        glow: "rgba(239, 68, 68, 0.65)",
+    },
+    Tasks: {
+        gradient: "linear-gradient(135deg, #0e3440, #0e7490, #06b6d4, #08242c)",
+        border: "rgba(34, 211, 238, 0.7)",
+        glow: "rgba(6, 182, 212, 0.65)",
+    },
+    "Performance Reports": {
+        gradient: "linear-gradient(135deg, #18350d, #4d7c0f, #84cc16, #102507)",
+        border: "rgba(163, 230, 53, 0.7)",
+        glow: "rgba(132, 204, 22, 0.65)",
+    },
+    "Secure Link PMS": {
+        gradient: "linear-gradient(135deg, #0d3540, #0f766e, #14b8a6, #082622)",
+        border: "rgba(45, 212, 191, 0.7)",
+        glow: "rgba(20, 184, 166, 0.65)",
+    },
+    Products: {
+        gradient: "linear-gradient(135deg, #33280b, #a16207, #eab308, #251c06)",
+        border: "rgba(250, 204, 21, 0.7)",
+        glow: "rgba(234, 179, 8, 0.65)",
+    },
+    "Activity Logs": {
+        gradient: "linear-gradient(135deg, #20253a, #475569, #64748b, #141827)",
+        border: "rgba(148, 163, 184, 0.7)",
+        glow: "rgba(100, 116, 139, 0.65)",
+    },
+    Export: {
+        gradient: "linear-gradient(135deg, #152c45, #0369a1, #0ea5e9, #0b1e31)",
+        border: "rgba(56, 189, 248, 0.7)",
+        glow: "rgba(14, 165, 233, 0.65)",
+    },
+    Settings: {
+        gradient: "linear-gradient(135deg, #29203f, #4f46e5, #818cf8, #191329)",
+        border: "rgba(165, 180, 252, 0.7)",
+        glow: "rgba(99, 102, 241, 0.65)",
+    },
+};
+const DEFAULT_SIDEBAR_TOOLTIP_THEME = SIDEBAR_TOOLTIP_THEMES.Dashboard;
 const sidebarOpen = ref(window.innerWidth >= 768);
+const sidebarTooltip = reactive({
+    visible: false,
+    label: "",
+    top: 0,
+    theme: DEFAULT_SIDEBAR_TOOLTIP_THEME,
+});
 let sidebarAutoCloseTimer = null;
+
+const hideSidebarTooltip = () => {
+    sidebarTooltip.visible = false;
+};
+
+const showSidebarTooltip = (event) => {
+    if (sidebarOpen.value || !(event.target instanceof Element)) {
+        hideSidebarTooltip();
+        return;
+    }
+
+    const item = event.target.closest("[data-sidebar-label]");
+    if (!item) return;
+
+    const bounds = item.getBoundingClientRect();
+    sidebarTooltip.label = item.dataset.sidebarLabel || "";
+    sidebarTooltip.theme = SIDEBAR_TOOLTIP_THEMES[sidebarTooltip.label] || DEFAULT_SIDEBAR_TOOLTIP_THEME;
+    sidebarTooltip.top = Math.max(20, Math.min(window.innerHeight - 20, bounds.top + bounds.height / 2));
+    sidebarTooltip.visible = sidebarTooltip.label !== "";
+};
+
+const hideSidebarTooltipOnLeave = (event) => {
+    if (event.target instanceof Element && event.relatedTarget instanceof Element) {
+        const currentItem = event.target.closest("[data-sidebar-label]");
+        const nextItem = event.relatedTarget.closest("[data-sidebar-label]");
+        if (currentItem && currentItem === nextItem) return;
+    }
+    hideSidebarTooltip();
+};
 
 const clearSidebarAutoCloseTimer = () => {
     if (sidebarAutoCloseTimer !== null) {
@@ -691,6 +839,7 @@ const scheduleSidebarAutoClose = () => {
 };
 
 watch(sidebarOpen, (isOpen) => {
+    hideSidebarTooltip();
     if (isOpen) {
         scheduleSidebarAutoClose();
         return;
@@ -718,6 +867,7 @@ onUnmounted(() => {
 });
 
 const closeOnMobile = () => {
+    hideSidebarTooltip();
     if (window.innerWidth < 768) {
         sidebarOpen.value = false;
     }
@@ -730,6 +880,90 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
+.suntrack-sidebar-tooltip {
+  --tooltip-gradient: linear-gradient(135deg, #102a56, #1d4ed8, #3b82f6, #0b1835);
+  --tooltip-border: rgba(96, 165, 250, 0.7);
+  --tooltip-glow: rgba(59, 130, 246, 0.65);
+  pointer-events: none;
+  position: fixed;
+  z-index: 10000;
+  isolation: isolate;
+  overflow: hidden;
+  transform: translateY(-50%);
+  min-width: 92px;
+  padding: 8px 13px;
+  border: 1px solid var(--tooltip-border);
+  border-radius: 15px;
+  background: var(--tooltip-gradient);
+  background-size: 400% 400%;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  white-space: nowrap;
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.35),
+    inset 0 0 10px var(--tooltip-glow),
+    0 0 18px var(--tooltip-glow),
+    0 8px 18px rgba(0, 0, 0, 0.28);
+  animation: suntrack-tooltip-gradient 6s ease infinite;
+}
+
+.suntrack-sidebar-tooltip::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: -75%;
+  left: -65%;
+  width: 60%;
+  height: 250%;
+  transform: rotate(25deg) translateX(-220%);
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0) 80%
+  );
+  animation: suntrack-tooltip-shine 900ms ease-out;
+}
+
+.suntrack-sidebar-tooltip-label {
+  position: relative;
+  z-index: 1;
+}
+
+.suntrack-sidebar-tooltip-enter-active,
+.suntrack-sidebar-tooltip-leave-active {
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.suntrack-sidebar-tooltip-enter-from,
+.suntrack-sidebar-tooltip-leave-to {
+  opacity: 0;
+  transform: translate(-8px, -50%);
+}
+
+@keyframes suntrack-tooltip-gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes suntrack-tooltip-shine {
+  from {
+    transform: rotate(25deg) translateX(-220%);
+  }
+  to {
+    transform: rotate(25deg) translateX(500%);
+  }
+}
+
 .suntrack-logout-btn {
   position: relative;
   display: flex;
