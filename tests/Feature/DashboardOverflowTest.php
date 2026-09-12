@@ -7,6 +7,24 @@ use Tests\TestCase;
 
 class DashboardOverflowTest extends TestCase
 {
+    public function test_sidebar_closes_automatically_after_configured_delay(): void
+    {
+        $layout = File::get(resource_path('js/layouts/AdminLayout.vue'));
+
+        $this->assertStringContainsString(
+            'const SIDEBAR_AUTO_CLOSE_DELAY_MS = 5000;',
+            $layout,
+        );
+        $this->assertStringContainsString(
+            'sidebarAutoCloseTimer = window.setTimeout(() => {',
+            $layout,
+        );
+        $this->assertStringContainsString(
+            'sidebarOpen.value = false;',
+            $layout,
+        );
+    }
+
     public function test_dashboard_layout_owns_vertical_scroll_without_page_overflow(): void
     {
         $layout = File::get(resource_path('js/layouts/AdminLayout.vue'));

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\NotificationCenterController;
 use App\Http\Controllers\Api\V1\PerformanceReportController;
+use App\Http\Controllers\Api\V1\PerformanceReportMediaController;
 use App\Http\Controllers\Api\V1\PricingAnalyticsController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\PromotionController;
@@ -45,6 +46,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);
             Route::get('/user', [AuthController::class, 'user']);
+            Route::patch('/profile', [AuthController::class, 'updateProfile']);
         });
     });
 
@@ -107,6 +109,10 @@ Route::prefix('v1')->group(function () {
             Route::get('secure-link/access-logs', [SecureLinkController::class, 'taskAccessLogs'])->middleware('permission:task.view');
         });
 
+        Route::get('performance-reports/options', [PerformanceReportController::class, 'options'])
+            ->middleware('permission:performance-report.view');
+        Route::get('performance-report-links', [SecureLinkController::class, 'reportLinks'])
+            ->middleware('role:Super Admin');
         Route::apiResource('performance-reports', PerformanceReportController::class)
             ->middlewareFor(['index', 'show'], 'permission:performance-report.view')
             ->middlewareFor('store', 'permission:performance-report.create')
@@ -116,7 +122,13 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:performance-report.update');
         Route::post('performance-reports/{performanceReport}/versions', [PerformanceReportController::class, 'createVersion'])
             ->middleware('permission:performance-report.update');
+        Route::post('performance-reports/{performanceReport}/publish', [PerformanceReportController::class, 'publish'])
+            ->middleware('permission:performance-report.update');
         Route::prefix('performance-reports/{performanceReport}')->group(function () {
+            Route::get('media/{media}', [PerformanceReportMediaController::class, 'show'])->middleware('permission:performance-report.view');
+            Route::post('media', [PerformanceReportMediaController::class, 'store'])->middleware('permission:performance-report.update');
+            Route::patch('media/{media}', [PerformanceReportMediaController::class, 'update'])->middleware('permission:performance-report.update');
+            Route::delete('media/{media}', [PerformanceReportMediaController::class, 'destroy'])->middleware('permission:performance-report.update');
             Route::get('comments', [CollaborationController::class, 'reportComments'])->middleware('permission:performance-report.view');
             Route::post('comments', [CollaborationController::class, 'storeReportComment'])->middleware('permission:performance-report.update');
             Route::post('comments/read', [CollaborationController::class, 'readReportComments'])->middleware('permission:performance-report.view');
@@ -279,6 +291,7 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('public/review/{token}')->group(function () {
         Route::get('/', [PublicReviewController::class, 'show']);
+        Route::get('/media/{media}', [PerformanceReportMediaController::class, 'showPublic']);
         Route::post('/identify', [PublicReviewController::class, 'identify']);
         Route::post('/approval', [PublicReviewController::class, 'approveVariant']);
         Route::post('/batch-approval', [PublicReviewController::class, 'batchApproval']);

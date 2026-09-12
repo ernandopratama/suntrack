@@ -3,9 +3,14 @@ import api from '../utils/api';
 
 export function usePerformanceReports() {
     const reports = ref([]);
+    const reportOptions = ref({ brands: [], report_types: ['daily', 'weekly', 'monthly'] });
     const pagination = ref({ current_page: 1, last_page: 1, total: 0, per_page: 15 });
     const loading = ref(false);
     const error = ref(null);
+
+    const captureError = (exception, fallback) => {
+        error.value = exception.response?.data?.errors || exception.response?.data?.message || fallback;
+    };
 
     const fetchReports = async (params = {}) => {
         loading.value = true;
@@ -21,9 +26,32 @@ export function usePerformanceReports() {
                 per_page: data.per_page || 15,
             };
         } catch (exception) {
-            error.value = exception.response?.data?.errors || exception.response?.data?.message || 'Unable to load reports.';
+            captureError(exception, 'Laporan tidak dapat dimuat.');
         } finally {
             loading.value = false;
+        }
+    };
+
+    const fetchReport = async (id) => {
+        loading.value = true;
+        error.value = null;
+        try {
+            const response = await api.get(`/admin/performance-reports/${id}`);
+            return response.data.data.report;
+        } catch (exception) {
+            captureError(exception, 'Detail laporan tidak dapat dimuat.');
+            return null;
+        } finally {
+            loading.value = false;
+        }
+    };
+
+    const fetchReportOptions = async () => {
+        try {
+            const response = await api.get('/admin/performance-reports/options');
+            reportOptions.value = response.data.data;
+        } catch (exception) {
+            captureError(exception, 'Pilihan brand tidak dapat dimuat.');
         }
     };
 
@@ -36,21 +64,48 @@ export function usePerformanceReports() {
                 : await api.post('/admin/performance-reports', payload);
             return response.data.data.report;
         } catch (exception) {
-            error.value = exception.response?.data?.errors || exception.response?.data?.message || 'Unable to save report.';
+            captureError(exception, 'Laporan tidak dapat disimpan.');
             return null;
         } finally {
             loading.value = false;
         }
     };
 
-    const transitionReport = async (id, status, note = null) => {
+    const publishReport = async (id) => {
+        loading.value = true;
+        error.value = null;
         try {
-            const response = await api.post(`/admin/performance-reports/${id}/transition`, { status, note });
+            const response = await api.post(`/admin/performance-reports/${id}/publish`);
             return response.data.data.report;
         } catch (exception) {
-            error.value = exception.response?.data?.errors || exception.response?.data?.message || 'Unable to update report status.';
+            captureError(exception, 'Laporan tidak dapat dipublikasikan.');
             return null;
+        } finally {
+            loading.value = false;
         }
+    };
+
+    const uploadMedia = async (reportId, item) => {
+        const payload = new FormData();
+        payload.append('image', item.file);
+        payload.append('title', item.title || '');
+        payload.append('notes', item.notes || '');
+        payload.append('sort_order', String(item.sort_order || 0));
+        const response = await api.post(`/admin/performance-reports/${reportId}/media`, payload);
+        return response.data.data.media;
+    };
+
+    const updateMedia = async (reportId, item) => {
+        const response = await api.patch(`/admin/performance-reports/${reportId}/media/${item.id}`, {
+            title: item.title || null,
+            notes: item.notes || null,
+            sort_order: item.sort_order || 0,
+        });
+        return response.data.data.media;
+    };
+
+    const deleteMedia = async (reportId, mediaId) => {
+        await api.delete(`/admin/performance-reports/${reportId}/media/${mediaId}`);
     };
 
     const deleteReport = async (id) => {
@@ -58,20 +113,13 @@ export function usePerformanceReports() {
             await api.delete(`/admin/performance-reports/${id}`);
             return true;
         } catch (exception) {
-            error.value = exception.response?.data?.errors || exception.response?.data?.message || 'Unable to delete report.';
+            captureError(exception, 'Laporan tidak dapat dihapus.');
             return false;
         }
     };
 
-    const createVersion = async (id) => {
-        try {
-            const response = await api.post(`/admin/performance-reports/${id}/versions`);
-            return response.data.data.report;
-        } catch (exception) {
-            error.value = exception.response?.data?.errors || exception.response?.data?.message || 'Unable to create report version.';
-            return null;
-        }
+    return {
+        reports, reportOptions, pagination, loading, error, fetchReports, fetchReport, fetchReportOptions,
+        saveReport, publishReport, uploadMedia, updateMedia, deleteMedia, deleteReport,
     };
-
-    return { reports, pagination, loading, error, fetchReports, saveReport, transitionReport, deleteReport, createVersion };
 }

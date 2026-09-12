@@ -120,7 +120,12 @@ class PublicReviewController extends Controller
         // - Promotion has: brand, campaign, variants, comments, activityLogs
         // - Campaign has: brand, comments, activityLogs (NOT campaign or variants)
         if ($entity instanceof Task || $entity instanceof PerformanceReport) {
-            $entity->load(['brand', 'pic', 'attachments.uploader', 'comments.attachments.uploader']);
+            $relations = ['brand', 'pic', 'attachments.uploader', 'comments.attachments.uploader'];
+            if ($entity instanceof PerformanceReport) {
+                $relations[] = 'creator';
+                $relations[] = 'media.uploader';
+            }
+            $entity->load($relations);
 
             return response()->json([
                 'success' => true,

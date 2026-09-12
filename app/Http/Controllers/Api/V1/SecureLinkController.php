@@ -13,6 +13,7 @@ use App\Models\PerformanceReport;
 use App\Models\Promotion;
 use App\Models\Task;
 use App\Services\ActivityLogger;
+use App\Services\Reporting\PerformanceReportPublishingService;
 use App\Support\Rbac\RbacRegistry;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -21,6 +22,54 @@ use Illuminate\Support\Str;
 
 class SecureLinkController extends Controller
 {
+    public function __construct(private PerformanceReportPublishingService $reportPublishing) {}
+
+    public function reportLinks(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->hasRole(RbacRegistry::SUPER_ADMIN), 403);
+        $query = \App\Models\SecureLink::query()
+            ->where('linkable_type', PerformanceReport::class)
+            ->with(['creator', 'linkable.brand', 'linkable.creator']);
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+            $query->whereHasMorph('linkable', [PerformanceReport::class], function ($reports) use ($search) {
+                $reports->where(function ($match) use ($search) {
+                    $match->where('title', 'like', "%{$search}%")
+                        ->orWhereHas('brand', fn ($brand) => $brand->where('name', 'like', "%{$search}%"));
+                });
+            });
+        }
+
+        $links = $query->latest()->paginate((int) $request->integer('per_page', 20));
+        $payload = $links->through(function ($link) {
+            $report = $link->linkable;
+
+            return [
+                'id' => $link->id,
+                'report_id' => $report?->id,
+                'title' => $report?->title,
+                'brand' => $report?->brand?->name,
+                'report_type' => $report?->report_type,
+                'period_start' => $report?->period_start?->format('Y-m-d'),
+                'period_end' => $report?->period_end?->format('Y-m-d'),
+                'pic' => $report?->creator?->name,
+                'report_status' => $report?->status,
+                'url' => url('/review/'.$link->token),
+                'status' => $link->status,
+                'view_count' => $link->view_count,
+                'created_at' => $link->created_at?->toIso8601String(),
+                'last_accessed_at' => $link->last_accessed_at?->toIso8601String(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar Secure Link laporan berhasil dimuat.',
+            'data' => ['links' => $payload],
+        ]);
+    }
+
     public function showTaskLink(Request $request, Task $task): JsonResponse
     {
         return $this->showDeliveryLink($request, $task);
@@ -47,7 +96,15 @@ class SecureLinkController extends Controller
 
     public function showReportLink(Request $request, PerformanceReport $performanceReport): JsonResponse
     {
-        return $this->showDeliveryLink($request, $performanceReport);
+        $this->authorize('view', $performanceReport);
+        $this->assertReportOwnerOrSuperAdmin($request, $performanceReport);
+        $link = $performanceReport->secureLinks()->with('creator')->oldest()->first();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Secure link retrieved successfully.',
+            'data' => $link ? new SecureLinkResource($link) : null,
+        ]);
     }
 
     public function storeReportLink(Request $request, PerformanceReport $performanceReport): JsonResponse
@@ -56,17 +113,46 @@ class SecureLinkController extends Controller
             abort(422, 'Performance Report must be published before a Secure Link can be created.');
         }
 
-        return $this->storeDeliveryLink($request, $performanceReport);
+        $this->authorize('update', $performanceReport);
+        $data = $request->validate(['expires_at' => ['nullable', 'date', 'after:now']]);
+        $existing = $performanceReport->secureLinks()->oldest()->first();
+        $link = $this->reportPublishing->activateLink($performanceReport, $request->user());
+        if (array_key_exists('expires_at', $data)) {
+            $link->update(['expires_at' => $data['expires_at']]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Secure link berhasil diaktifkan.',
+            'data' => new SecureLinkResource($link->load('creator')),
+        ], $existing ? 200 : 201);
     }
 
     public function destroyReportLink(Request $request, PerformanceReport $performanceReport): JsonResponse
     {
-        return $this->destroyDeliveryLink($request, $performanceReport);
+        $this->authorize('update', $performanceReport);
+        $link = $this->reportPublishing->revokeLink($performanceReport);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Secure link berhasil dinonaktifkan.',
+            'data' => $link ? new SecureLinkResource($link->load('creator')) : null,
+        ]);
     }
 
     public function reportAccessLogs(Request $request, PerformanceReport $performanceReport): JsonResponse
     {
-        return $this->accessLogs($request, $performanceReport);
+        $this->authorize('view', $performanceReport);
+        $this->assertReportOwnerOrSuperAdmin($request, $performanceReport);
+        $link = $performanceReport->secureLinks()->oldest()->first();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Secure link access logs retrieved successfully.',
+            'data' => $link
+                ? SecureLinkAccessLogResource::collection($link->accessLogs()->paginate(25))->response()->getData(true)
+                : ['data' => []],
+        ]);
     }
 
     // ==========================================
@@ -429,6 +515,15 @@ class SecureLinkController extends Controller
     private function assertManager(Request $request): void
     {
         abort_unless($request->user()->hasAnyRole([RbacRegistry::SUPER_ADMIN, RbacRegistry::ADMIN]), 403);
+    }
+
+    private function assertReportOwnerOrSuperAdmin(Request $request, PerformanceReport $report): void
+    {
+        abort_unless(
+            $report->created_by === $request->user()->id
+            || $request->user()->hasRole(RbacRegistry::SUPER_ADMIN),
+            403
+        );
     }
 
     private function subjectTitle(Model $subject): string

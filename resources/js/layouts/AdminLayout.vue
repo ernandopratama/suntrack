@@ -379,6 +379,19 @@
           <span v-if="$route.path.startsWith('/performance-reports') && sidebarOpen" class="ml-auto h-2 w-2 rounded-full" style="background: #4274d9"></span>
         </router-link>
 
+        <!-- PMS Secure Links -->
+        <router-link
+          v-if="$hasRole('Super Admin')"
+          to="/performance-report-links"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="$route.path.startsWith('/performance-report-links') ? 'shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'"
+          :style="$route.path.startsWith('/performance-report-links') ? { background: '#D0E7E6', color: '#293681' } : {}"
+        >
+          <i class="fa-solid fa-link w-5 text-center" :style="$route.path.startsWith('/performance-report-links') ? { color: '#4274D9' } : {}"></i>
+          <span v-if="sidebarOpen" class="ml-3">Secure Link PMS</span>
+        </router-link>
+
         <!-- Products -->
         <router-link
           v-if="$can('product.view')"
@@ -416,7 +429,7 @@
 
         <!-- Divider -->
         <div
-          v-if="$can('activity.view') || $can('report.export') || $can('settings.view')"
+          v-if="$can('activity.view') || $can('report.export') || $hasRole('Super Admin') || $hasRole('Admin') || $hasRole('Tim')"
           class="my-5 flex items-center gap-3 px-3"
         >
           <div class="h-px flex-1 bg-slate-100"></div>
@@ -496,7 +509,7 @@
 
         <!-- Settings -->
         <router-link
-          v-if="$can('settings.view')"
+          v-if="$hasRole('Super Admin') || $hasRole('Admin') || $hasRole('Tim')"
           to="/settings"
           @click="closeOnMobile"
           class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
@@ -650,7 +663,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, watch, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import ThemeToggle from "../components/ThemeToggle.vue";
@@ -658,7 +671,33 @@ import ThemeToggle from "../components/ThemeToggle.vue";
 const authStore = useAuthStore();
 const router = useRouter();
 
+const SIDEBAR_AUTO_CLOSE_DELAY_MS = 5000;
 const sidebarOpen = ref(window.innerWidth >= 768);
+let sidebarAutoCloseTimer = null;
+
+const clearSidebarAutoCloseTimer = () => {
+    if (sidebarAutoCloseTimer !== null) {
+        window.clearTimeout(sidebarAutoCloseTimer);
+        sidebarAutoCloseTimer = null;
+    }
+};
+
+const scheduleSidebarAutoClose = () => {
+    clearSidebarAutoCloseTimer();
+
+    sidebarAutoCloseTimer = window.setTimeout(() => {
+        sidebarOpen.value = false;
+    }, SIDEBAR_AUTO_CLOSE_DELAY_MS);
+};
+
+watch(sidebarOpen, (isOpen) => {
+    if (isOpen) {
+        scheduleSidebarAutoClose();
+        return;
+    }
+
+    clearSidebarAutoCloseTimer();
+}, { immediate: true });
 
 const handleResize = () => {
     if (window.innerWidth >= 768) {
@@ -675,6 +714,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener("resize", handleResize);
+    clearSidebarAutoCloseTimer();
 });
 
 const closeOnMobile = () => {

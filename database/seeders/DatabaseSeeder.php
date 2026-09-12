@@ -33,7 +33,10 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $this->call(RolePermissionSeeder::class);
+        $this->call([
+            RolePermissionSeeder::class,
+            PerformanceReportBrandSeeder::class,
+        ]);
 
         $this->command->info('Database seeded with Company, Brand, Admin, and RBAC Roles.');
     }

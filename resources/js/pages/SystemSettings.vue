@@ -52,20 +52,21 @@
                 class="text-2xl font-bold tracking-tight sm:text-3xl"
                 style="color: #293681"
               >
-                System Settings
+                {{ isSystemAdministrator ? 'System Settings' : 'Pengaturan' }}
               </h1>
 
               <span
                 class="rounded-full px-3 py-1 text-xs font-semibold"
                 style="background: #d0e7e6; color: #293681"
               >
-                Administration
+                {{ currentRole }}
               </span>
             </div>
 
             <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-              Configure operational parameters, storage drivers, and gateway
-              credentials dynamically.
+              {{ isSystemAdministrator
+                ? 'Configure operational parameters, storage drivers, and gateway credentials dynamically.'
+                : 'Kelola pemasangan SunTrack pada perangkat yang Anda gunakan.' }}
             </p>
           </div>
         </div>
@@ -73,6 +74,7 @@
         <!-- Actions -->
         <div class="flex flex-wrap items-center gap-3">
           <button
+            v-if="isSystemAdministrator"
             type="button"
             @click="installPwa"
             :disabled="isInstalled"
@@ -83,6 +85,7 @@
           </button>
 
           <button
+            v-if="isSystemAdministrator"
             @click="fetchSettings"
             :disabled="loading"
             class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -104,6 +107,7 @@
           </button>
 
           <button
+            v-if="isSystemAdministrator"
             @click="saveSettings"
             :disabled="saving || !canUpdate"
             class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
@@ -181,9 +185,162 @@
       </div>
     </div>
 
+    <form
+      v-if="!isSystemAdministrator"
+      class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100"
+      @submit.prevent="saveProfile"
+    >
+      <div class="border-b border-slate-100 p-6 sm:p-8">
+        <div class="flex items-start gap-4">
+          <div
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+            style="background: #d0e7e6; color: #293681"
+          >
+            <i class="fa-solid fa-user-gear text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-[#293681]">Profil Saya</h2>
+            <p class="mt-1 text-sm leading-6 text-slate-500">
+              Perbarui nama, username, atau password akun yang sedang digunakan.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-5 p-6 sm:p-8 md:grid-cols-2">
+        <div>
+          <label for="profile-name" class="settings-label">Nama</label>
+          <input
+            id="profile-name"
+            v-model="profileForm.name"
+            type="text"
+            required
+            minlength="2"
+            maxlength="255"
+            autocomplete="name"
+            class="settings-input"
+          />
+          <p v-if="profileErrors.name" class="mt-1.5 text-xs text-rose-600">
+            {{ profileErrors.name[0] }}
+          </p>
+        </div>
+
+        <div>
+          <label for="profile-username" class="settings-label">Username</label>
+          <input
+            id="profile-username"
+            v-model="profileForm.username"
+            type="text"
+            required
+            minlength="3"
+            maxlength="50"
+            pattern="[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?"
+            autocomplete="username"
+            class="settings-input"
+          />
+          <p v-if="profileErrors.username" class="mt-1.5 text-xs text-rose-600">
+            {{ profileErrors.username[0] }}
+          </p>
+        </div>
+
+        <div>
+          <label for="profile-current-password" class="settings-label">Password Saat Ini</label>
+          <input
+            id="profile-current-password"
+            v-model="profileForm.current_password"
+            type="password"
+            autocomplete="current-password"
+            class="settings-input"
+            placeholder="Wajib jika mengganti password"
+          />
+          <p v-if="profileErrors.current_password" class="mt-1.5 text-xs text-rose-600">
+            {{ profileErrors.current_password[0] }}
+          </p>
+        </div>
+
+        <div>
+          <label for="profile-password" class="settings-label">Password Baru</label>
+          <input
+            id="profile-password"
+            v-model="profileForm.password"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            class="settings-input"
+            placeholder="Kosongkan jika tidak diubah"
+          />
+          <p v-if="profileErrors.password" class="mt-1.5 text-xs text-rose-600">
+            {{ profileErrors.password[0] }}
+          </p>
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="profile-password-confirmation" class="settings-label">Konfirmasi Password Baru</label>
+          <input
+            id="profile-password-confirmation"
+            v-model="profileForm.password_confirmation"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            class="settings-input"
+            placeholder="Ulangi password baru"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-end border-t border-slate-100 bg-slate-50/70 px-6 py-4 sm:px-8">
+        <button
+          type="submit"
+          :disabled="profileSaving"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4274d9] px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#315fba] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <span
+            v-if="profileSaving"
+            class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+          ></span>
+          <i v-else class="fa-solid fa-floppy-disk"></i>
+          <span>{{ profileSaving ? 'Menyimpan...' : 'Simpan Profil' }}</span>
+        </button>
+      </div>
+    </form>
+
+    <div
+      v-if="!isSystemAdministrator"
+      class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100"
+    >
+      <div class="grid gap-6 p-6 sm:p-8 md:grid-cols-[auto_1fr_auto] md:items-center">
+        <div
+          class="flex h-14 w-14 items-center justify-center rounded-2xl"
+          style="background: #d0e7e6; color: #293681"
+        >
+          <i class="fa-solid fa-mobile-screen-button text-2xl"></i>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-bold text-[#293681]">Aplikasi SunTrack</h2>
+          <p class="mt-1 text-sm leading-6 text-slate-500">
+            Pasang SunTrack di layar utama agar dapat dibuka seperti aplikasi pada smartphone.
+          </p>
+          <p class="mt-2 text-xs font-medium text-slate-400">
+            Masuk sebagai {{ authStore.user?.name || 'Pengguna' }} · {{ currentRole }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          @click="installPwa"
+          :disabled="isInstalled"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4274d9] px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#315fba] disabled:cursor-not-allowed disabled:bg-slate-300"
+        >
+          <i :class="isInstalled ? 'fa-solid fa-circle-check' : 'fa-solid fa-download'"></i>
+          <span>{{ isInstalled ? 'Sudah Terpasang' : 'Pasang di Smartphone' }}</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Permission Warning -->
     <div
-      v-if="!canUpdate"
+      v-if="isSystemAdministrator && !canUpdate"
       class="flex items-start gap-4 rounded-2xl border p-4"
       style="
         background: #fffaf0;
@@ -227,6 +384,7 @@
 
     <!-- Tabs -->
     <div
+      v-if="isSystemAdministrator"
       class="overflow-x-auto rounded-2xl bg-white p-2 shadow-sm ring-1 ring-slate-100"
     >
       <div class="flex min-w-max gap-1">
@@ -256,7 +414,7 @@
 
     <!-- Loading -->
     <div
-      v-if="loading"
+      v-if="isSystemAdministrator && loading"
       class="rounded-3xl bg-white p-14 text-center shadow-sm ring-1 ring-slate-100"
     >
       <div
@@ -278,7 +436,7 @@
 
     <!-- Content -->
     <div
-      v-else
+      v-else-if="isSystemAdministrator"
       class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100"
     >
       <div class="p-6 sm:p-8">
@@ -892,6 +1050,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
 import { usePwaInstall } from '../pwa';
+import api from '../utils/api';
 
 const authStore = useAuthStore();
 const loading = ref(true);
@@ -899,7 +1058,20 @@ const saving = ref(false);
 const activeTab = ref('general');
 const showWaToken = ref(false);
 const showInstallGuide = ref(false);
+const profileSaving = ref(false);
+const profileErrors = ref({});
 const { isInstalled, isIos, requestInstall } = usePwaInstall();
+
+const isSystemAdministrator = computed(() => authStore.hasRole('Super Admin'));
+const currentRole = computed(() => authStore.activeRole || 'Pengguna');
+
+const profileForm = reactive({
+  name: authStore.user?.name || '',
+  username: authStore.user?.username || '',
+  current_password: '',
+  password: '',
+  password_confirmation: '',
+});
 
 const tabs = [
   { id: 'general', label: 'General' },
@@ -965,6 +1137,39 @@ const installPwa = async () => {
   }
 
   showInstallGuide.value = true;
+};
+
+const saveProfile = async () => {
+  profileSaving.value = true;
+  profileErrors.value = {};
+
+  try {
+    const response = await api.patch('/auth/profile', profileForm);
+    const user = response.data?.data?.user;
+
+    if (user) {
+      authStore.setUser(user);
+      profileForm.name = user.name;
+      profileForm.username = user.username;
+    }
+
+    profileForm.current_password = '';
+    profileForm.password = '';
+    profileForm.password_confirmation = '';
+    showNotification('Profil berhasil diperbarui.');
+  } catch (error) {
+    if (error.response?.status === 422) {
+      profileErrors.value = error.response.data?.errors || {};
+      return;
+    }
+
+    showNotification(
+      error.response?.data?.message || 'Profil gagal diperbarui.',
+      'error'
+    );
+  } finally {
+    profileSaving.value = false;
+  }
 };
 
 const fetchSettings = async () => {
@@ -1105,7 +1310,12 @@ const saveSettings = async () => {
 };
 
 onMounted(() => {
-  fetchSettings();
+  if (isSystemAdministrator.value) {
+    fetchSettings();
+    return;
+  }
+
+  loading.value = false;
 });
 </script>
 

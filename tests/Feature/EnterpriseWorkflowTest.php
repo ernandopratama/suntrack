@@ -256,7 +256,8 @@ class EnterpriseWorkflowTest extends TestCase
 
         $this->actingAs($this->team)
             ->putJson("/api/v1/admin/performance-reports/{$report->id}", ['title' => 'Changed Published Report'])
-            ->assertUnprocessable();
+            ->assertOk()
+            ->assertJsonPath('data.report.title', 'Changed Published Report');
 
         $versionResponse = $this->actingAs($this->team)
             ->postJson("/api/v1/admin/performance-reports/{$report->id}/versions")

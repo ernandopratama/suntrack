@@ -66,6 +66,12 @@ const routes = [
                 meta: { permission: 'performance-report.view' },
             },
             {
+                path: 'performance-report-links',
+                name: 'PerformanceReportLinks',
+                component: () => import('./pages/PerformanceReportLinks.vue'),
+                meta: { role: 'Super Admin' },
+            },
+            {
                 path: 'campaigns/:id',
                 name: 'CampaignDetail',
                 component: () => import('./pages/CampaignDetail.vue'),
@@ -111,7 +117,7 @@ const routes = [
                 path: 'settings',
                 name: 'SystemSettings',
                 component: () => import('./pages/SystemSettings.vue'),
-                meta: { permission: 'settings.view' },
+                meta: { roles: ['Super Admin', 'Admin', 'Tim'] },
             },
             {
                 path: 'forbidden',
@@ -158,6 +164,10 @@ router.beforeEach(async (to, from) => {
     }
 
     if (to.meta.role && !authStore.hasRole(to.meta.role)) {
+        return { name: 'AccessDenied' };
+    }
+
+    if (to.meta.roles && !to.meta.roles.some((role) => authStore.hasRole(role))) {
         return { name: 'AccessDenied' };
     }
 

@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PerformanceReport extends Model
@@ -16,7 +18,8 @@ class PerformanceReport extends Model
     protected $fillable = [
         'brand_id', 'created_by', 'author_id', 'pic_id', 'supersedes_report_id', 'report_type', 'title',
         'period_start', 'period_end', 'executive_summary', 'content', 'status', 'version', 'review_notes',
-        'approved_at', 'published_at',
+        'approved_at', 'published_at', 'turnover', 'order_count', 'ad_spend', 'ad_sales', 'findings',
+        'action_plan',
     ];
 
     protected $casts = [
@@ -25,6 +28,10 @@ class PerformanceReport extends Model
         'approved_at' => 'datetime',
         'published_at' => 'datetime',
         'version' => 'integer',
+        'turnover' => 'decimal:2',
+        'order_count' => 'integer',
+        'ad_spend' => 'decimal:2',
+        'ad_sales' => 'decimal:2',
     ];
 
     /** @return BelongsTo<Brand, $this> */
@@ -61,6 +68,18 @@ class PerformanceReport extends Model
     public function secureLinks(): MorphMany
     {
         return $this->morphMany(SecureLink::class, 'linkable');
+    }
+
+    /** @return MorphOne<SecureLink, $this> */
+    public function secureLink(): MorphOne
+    {
+        return $this->morphOne(SecureLink::class, 'linkable')->oldestOfMany();
+    }
+
+    /** @return HasMany<PerformanceReportMedia, $this> */
+    public function media(): HasMany
+    {
+        return $this->hasMany(PerformanceReportMedia::class)->orderBy('sort_order')->orderBy('created_at');
     }
 
     /** @return MorphMany<Comment, $this> */

@@ -135,10 +135,30 @@
         </template>
 
         <template v-else>
-          <p class="mt-5 text-sm font-semibold text-[#52605E]">Periode {{ reviewData.period_start }} — {{ reviewData.period_end }} · Versi {{ reviewData.version }}</p>
-          <div v-if="reviewData.executive_summary" class="mt-5 rounded-2xl bg-[#F8FAF9] p-5 text-sm leading-7 text-[#52605E]">{{ reviewData.executive_summary }}</div>
-          <div class="prose mt-6 max-w-none text-[#52605E]" v-html="reviewData.content"></div>
+          <div class="mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Periode</p><p class="mt-1 font-bold text-[#293331]">{{ formatDate(reviewData.period_start) }} – {{ formatDate(reviewData.period_end) }}</p></div>
+            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Dibuat</p><p class="mt-1 font-bold text-[#293331]">{{ formatDateTime(reviewData.created_at) }} WIB</p></div>
+            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Diperbarui</p><p class="mt-1 font-bold text-[#293331]">{{ formatDateTime(reviewData.updated_at) }} WIB</p></div>
+            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Dipublikasikan</p><p class="mt-1 font-bold text-[#293331]">{{ formatDateTime(reviewData.published_at) }} WIB</p></div>
+          </div>
+          <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div v-for="metric in reportMetricCards" :key="metric.label" class="rounded-2xl border border-[#E3E9E6] p-4"><p class="text-xs text-[#899492]">{{ metric.label }}</p><p class="mt-1 text-lg font-extrabold text-[#293331]">{{ metric.value }}</p></div>
+          </div>
+          <div v-if="reviewData.executive_summary" class="prose mt-6 max-w-none rounded-2xl bg-[#F8FAF9] p-5 text-sm leading-7 text-[#52605E]" v-html="reviewData.executive_summary"></div>
+          <div v-if="reviewData.content" class="mt-6"><h2 class="text-lg font-extrabold text-[#293331]">Analisis Performa</h2><div class="prose mt-3 max-w-none text-[#52605E]" v-html="reviewData.content"></div></div>
+          <div v-if="reviewData.findings" class="mt-6"><h2 class="text-lg font-extrabold text-[#293331]">Temuan dan Kendala</h2><div class="prose mt-3 max-w-none text-[#52605E]" v-html="reviewData.findings"></div></div>
+          <div v-if="reviewData.action_plan" class="mt-6"><h2 class="text-lg font-extrabold text-[#293331]">Rencana Tindak Lanjut</h2><div class="prose mt-3 max-w-none text-[#52605E]" v-html="reviewData.action_plan"></div></div>
         </template>
+      </section>
+
+      <section v-if="reviewData.type === 'PerformanceReport' && reviewData.media?.length" class="rounded-3xl border border-[#E3E9E6] bg-white p-6 shadow-sm sm:p-8">
+        <h2 class="text-xl font-extrabold text-[#293331]">Dokumentasi Performa</h2>
+        <div class="mt-6 space-y-7">
+          <article v-for="media in reviewData.media" :key="media.id" class="overflow-hidden rounded-2xl border border-[#E3E9E6]">
+            <img :src="media.url" :alt="media.title || media.original_name" class="max-h-[720px] w-full bg-[#F8FAF9] object-contain" />
+            <div v-if="media.title || media.notes" class="p-5"><h3 v-if="media.title" class="font-extrabold text-[#293331]">{{ media.title }}</h3><div v-if="media.notes" class="prose mt-2 max-w-none text-sm leading-7 text-[#52605E]" v-html="media.notes"></div></div>
+          </article>
+        </div>
       </section>
 
       <section class="grid gap-6 lg:grid-cols-2">
@@ -1787,6 +1807,19 @@ const selectedVariantIds = ref([]);
 const batchLoading = ref(false);
 const pendingAction = ref(null);
 const isDelivery = computed(() => ['Task', 'PerformanceReport'].includes(reviewData.value?.type));
+const reportMetricCards = computed(() => {
+  const report = reviewData.value || {};
+  return [
+    { label: 'Omzet', value: formatCurrency(report.turnover) },
+    { label: 'Jumlah Pesanan', value: Number(report.order_count || 0).toLocaleString('id-ID') },
+    { label: 'Biaya Iklan', value: formatCurrency(report.ad_spend) },
+    { label: 'Penjualan dari Iklan', value: formatCurrency(report.ad_sales) },
+    { label: 'ROAS', value: report.roas === null ? '-' : Number(report.roas).toFixed(2) },
+    { label: 'ACOS', value: report.acos === null ? '-' : `${Number(report.acos).toFixed(2)}%` },
+    { label: 'Kontribusi Iklan', value: report.ad_contribution === null ? '-' : `${Number(report.ad_contribution).toFixed(2)}%` },
+    { label: 'Rata-rata Pesanan', value: formatCurrency(report.average_order_value) },
+  ];
+});
 
 const handleDeliveryComment = async () => {
   if (!reviewerIdentity.name?.trim() || !newCommentBody.value.trim()) return;
@@ -2230,6 +2263,7 @@ const formatDateTime = (dateStr) => {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Asia/Jakarta',
   });
 };
 

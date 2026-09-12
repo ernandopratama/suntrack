@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\ActivityType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\Authorization\DataScopeService;
@@ -91,6 +92,22 @@ class AuthController extends Controller
 
         return $this->success('User retrieved successfully.', [
             'user' => $this->accessProfile($user, $dataScope),
+        ]);
+    }
+
+    public function updateProfile(UpdateProfileRequest $request, DataScopeService $dataScope): JsonResponse
+    {
+        $user = $request->user();
+        $data = $request->safe()->only(['name', 'username', 'password']);
+
+        if (! $request->filled('password')) {
+            unset($data['password']);
+        }
+
+        $user->update($data);
+
+        return $this->success('Profil berhasil diperbarui.', [
+            'user' => $this->accessProfile($user->refresh(), $dataScope),
         ]);
     }
 
