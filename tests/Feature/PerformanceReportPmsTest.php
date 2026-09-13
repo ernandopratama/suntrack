@@ -10,6 +10,7 @@ use App\Support\Rbac\RbacRegistry;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -64,7 +65,7 @@ class PerformanceReportPmsTest extends TestCase
         ]);
     }
 
-    public function test_period_rules_enforce_daily_weekly_and_calendar_month_limits(): void
+    public function test_period_rules_enforce_daily_weekly_and_monthly_limits(): void
     {
         $this->actingAs($this->creator)->postJson('/api/v1/admin/performance-reports', $this->payload([
             'period_end' => '2026-09-12',
@@ -78,8 +79,14 @@ class PerformanceReportPmsTest extends TestCase
         $this->actingAs($this->creator)->postJson('/api/v1/admin/performance-reports', $this->payload([
             'report_type' => 'monthly',
             'period_start' => '2026-09-20',
-            'period_end' => '2026-10-01',
+            'period_end' => '2026-10-20',
         ]))->assertJsonValidationErrors('period_end');
+
+        $this->actingAs($this->creator)->postJson('/api/v1/admin/performance-reports', $this->payload([
+            'report_type' => 'monthly',
+            'period_start' => '2026-09-20',
+            'period_end' => '2026-10-19',
+        ]))->assertCreated();
 
         $this->actingAs($this->creator)->postJson('/api/v1/admin/performance-reports', $this->payload([
             'report_type' => 'weekly',
@@ -138,6 +145,84 @@ class PerformanceReportPmsTest extends TestCase
         $this->actingAs($this->otherAdmin)->getJson('/api/v1/admin/performance-report-links')->assertForbidden();
         $this->actingAs($this->superAdmin)->getJson('/api/v1/admin/performance-report-links')
             ->assertOk()->assertJsonCount(1, 'data.links.data');
+    }
+
+    public function test_money_metrics_use_automatic_rupiah_inputs(): void
+    {
+        $page = File::get(resource_path('js/pages/PerformanceReports.vue'));
+
+        $this->assertStringContainsString("label: 'Omset / Penjualan Toko', currency: true", $page);
+        $this->assertStringContainsString("label: 'Budget Ads Terpakai (Biaya Iklan)', currency: true", $page);
+        $this->assertStringContainsString("label: 'Penjualan dari Iklan', currency: true", $page);
+        $this->assertStringContainsString('Rp.</span>', $page);
+        $this->assertStringContainsString(':value="formatRupiahInput(form[field.key])"', $page);
+        $this->assertStringContainsString('@input="updateCurrencyField(field.key, $event)"', $page);
+        $this->assertStringContainsString('type="tel"', $page);
+        $this->assertStringContainsString('pattern="[0-9.]*"', $page);
+        $this->assertStringNotContainsString('@pointerdown="focusMobileInput"', $page);
+    }
+
+    public function test_rich_text_editor_supports_mobile_keyboard_focus(): void
+    {
+        $editor = File::get(resource_path('js/components/RichTextEditor.vue'));
+
+        $this->assertStringContainsString("import Quill from 'quill'", $editor);
+        $this->assertStringContainsString('new Quill(editor.value', $editor);
+        $this->assertStringContainsString("quill.root.setAttribute('inputmode', 'text')", $editor);
+        $this->assertStringContainsString("quill.on('text-change', emitValue)", $editor);
+        $this->assertStringNotContainsString('document.execCommand', $editor);
+        $this->assertStringNotContainsString('pointerdown', $editor);
+    }
+
+    public function test_report_form_fills_period_end_from_report_duration(): void
+    {
+        $page = File::get(resource_path('js/pages/PerformanceReports.vue'));
+
+        $this->assertStringContainsString('REPORT_DURATION_DAYS = { daily: 1, weekly: 7, monthly: 30 }', $page);
+        $this->assertStringContainsString('@change="syncPeriodEnd"', $page);
+        $this->assertStringContainsString('day + duration - 1', $page);
+        $this->assertStringContainsString("form.period_end = endDate.toISOString().slice(0, 10)", $page);
+    }
+
+    public function test_publish_validates_required_fields_and_displays_api_errors_inside_modal(): void
+    {
+        $page = File::get(resource_path('js/pages/PerformanceReports.vue'));
+
+        $this->assertStringContainsString('ref="reportForm"', $page);
+        $this->assertStringContainsString('reportForm.value?.checkValidity()', $page);
+        $this->assertStringContainsString('reportForm.value?.reportValidity()', $page);
+        $this->assertStringContainsString('if (!validateReportForm()) return;', $page);
+        $this->assertStringContainsString('data-testid="pms-modal-error"', $page);
+    }
+
+    public function test_public_secure_report_has_readable_summary_metrics_and_discussion_sections(): void
+    {
+        $page = File::get(resource_path('js/pages/PublicReview.vue'));
+
+        $this->assertStringContainsString('Ringkasan Performa', $page);
+        $this->assertStringContainsString('primaryReportMetrics', $page);
+        $this->assertStringContainsString('secondaryReportMetrics', $page);
+        $this->assertStringContainsString('Pembahasan Laporan', $page);
+        $this->assertStringContainsString('Dokumentasi Performa', $page);
+        $this->assertStringContainsString('Tulis pertanyaan atau tanggapan...', $page);
+        $this->assertStringContainsString('class="delivery-title', $page);
+        $this->assertStringContainsString('class="media-caption', $page);
+        $this->assertStringContainsString('color: #ffffff !important;', $page);
+        $this->assertStringContainsString('background: linear-gradient(145deg, #ffffff 0%, #fffaf2 100%) !important;', $page);
+    }
+
+    public function test_public_secure_report_supports_persistent_local_light_and_dark_modes(): void
+    {
+        $layout = File::get(resource_path('js/layouts/PublicLayout.vue'));
+        $toggle = File::get(resource_path('js/components/ThemeToggle.vue'));
+        $page = File::get(resource_path('js/pages/PublicReview.vue'));
+
+        $this->assertStringContainsString('<ThemeToggle', $layout);
+        $this->assertStringContainsString('local-only', $layout);
+        $this->assertStringContainsString('show-label', $layout);
+        $this->assertStringContainsString('if (localOnly)', $toggle);
+        $this->assertStringContainsString("themeStore.apply(themeStore.isDark ? 'light' : 'dark')", $toggle);
+        $this->assertStringContainsString(":global(:root[data-theme='dark']) .delivery-page .review-card", $page);
     }
 
     private function createReport(): PerformanceReport

@@ -1,69 +1,141 @@
 <template>
-  <div class="overflow-hidden rounded-xl border border-default bg-surface focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
-    <div class="flex flex-wrap gap-1 border-b border-default bg-surface-muted p-2">
-      <button v-for="action in actions" :key="action.command" type="button" :title="action.label" class="flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-bold text-content-soft hover:bg-surface hover:text-blue-600" @mousedown.prevent="apply(action)">
-        <i v-if="action.icon" :class="action.icon"></i>
-        <span v-else>{{ action.short }}</span>
-      </button>
-    </div>
-    <div
-      ref="editor"
-      class="suntrack-rich-editor min-h-32 px-4 py-3 text-sm leading-7 text-content outline-none"
-      contenteditable="true"
-      role="textbox"
-      aria-multiline="true"
-      :data-placeholder="placeholder"
-      @input="emitValue"
-      @blur="emitValue"
-    ></div>
+  <div class="suntrack-quill overflow-hidden rounded-xl border border-default bg-surface focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
+    <div ref="editor"></div>
   </div>
 </template>
 
 <script setup>
-import { nextTick, onMounted, ref, watch } from 'vue';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
   placeholder: { type: String, default: 'Tulis catatan...' },
+  label: { type: String, default: 'Editor teks' },
 });
 const emit = defineEmits(['update:modelValue']);
 const editor = ref(null);
-const actions = [
-  { command: 'bold', label: 'Tebal', icon: 'fa-solid fa-bold' },
-  { command: 'italic', label: 'Miring', icon: 'fa-solid fa-italic' },
-  { command: 'underline', label: 'Garis bawah', icon: 'fa-solid fa-underline' },
-  { command: 'insertUnorderedList', label: 'Daftar poin', icon: 'fa-solid fa-list-ul' },
-  { command: 'insertOrderedList', label: 'Daftar angka', icon: 'fa-solid fa-list-ol' },
-  { command: 'formatBlock', value: 'h3', label: 'Subjudul', short: 'H3' },
-  { command: 'formatBlock', value: 'p', label: 'Paragraf', short: 'P' },
+let quill = null;
+
+const toolbar = [
+  ['bold', 'italic', 'underline'],
+  [{ list: 'bullet' }, { list: 'ordered' }],
+  [{ header: [3, false] }],
+  ['clean'],
 ];
 
-const sync = async () => {
-  await nextTick();
-  if (editor.value && editor.value.innerHTML !== (props.modelValue || '') && document.activeElement !== editor.value) {
-    editor.value.innerHTML = props.modelValue || '';
-  }
+const normalizedHtml = value => String(value || '').trim();
+const editorHtml = () => {
+  if (!quill || quill.getText().trim() === '') return '';
+  return quill.getSemanticHTML().trim();
 };
-const emitValue = () => emit('update:modelValue', editor.value?.innerHTML || '');
-const apply = (action) => {
-  editor.value?.focus();
-  document.execCommand(action.command, false, action.value || null);
-  emitValue();
+const emitValue = () => emit('update:modelValue', editorHtml());
+const syncValue = async value => {
+  await nextTick();
+  if (!quill || document.activeElement === quill.root) return;
+  if (normalizedHtml(editorHtml()) === normalizedHtml(value)) return;
+  quill.clipboard.dangerouslyPasteHTML(value || '', 'silent');
 };
 
-onMounted(sync);
-watch(() => props.modelValue, sync);
+onMounted(() => {
+  quill = new Quill(editor.value, {
+    theme: 'snow',
+    placeholder: props.placeholder,
+    modules: { toolbar },
+    formats: ['bold', 'italic', 'underline', 'list', 'header'],
+  });
+
+  quill.root.setAttribute('aria-label', props.label);
+  quill.root.setAttribute('inputmode', 'text');
+  quill.root.setAttribute('enterkeyhint', 'enter');
+  quill.root.setAttribute('autocapitalize', 'sentences');
+  quill.root.setAttribute('spellcheck', 'true');
+  quill.on('text-change', emitValue);
+  syncValue(props.modelValue);
+});
+
+watch(() => props.modelValue, syncValue);
+
+onBeforeUnmount(() => {
+  quill?.off('text-change', emitValue);
+  quill = null;
+});
 </script>
 
 <style scoped>
-.suntrack-rich-editor:empty::before {
-  color: #94a3b8;
-  content: attr(data-placeholder);
-  pointer-events: none;
+.suntrack-quill :deep(.ql-toolbar.ql-snow) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.125rem;
+  border: 0;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-surface-muted);
+  padding: 0.25rem 0.375rem;
 }
 
-.suntrack-rich-editor :deep(ul) { list-style: disc; padding-left: 1.25rem; }
-.suntrack-rich-editor :deep(ol) { list-style: decimal; padding-left: 1.25rem; }
-.suntrack-rich-editor :deep(h3) { font-size: 1rem; font-weight: 700; }
-.suntrack-rich-editor :deep(blockquote) { border-left: 3px solid #94a3b8; padding-left: .75rem; }
+.suntrack-quill :deep(.ql-toolbar.ql-snow .ql-formats) {
+  display: inline-flex;
+  gap: 0.0625rem;
+  margin: 0;
+}
+
+.suntrack-quill :deep(.ql-toolbar.ql-snow button),
+.suntrack-quill :deep(.ql-toolbar.ql-snow .ql-picker-label) {
+  width: 1.75rem;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0.3125rem;
+}
+
+.suntrack-quill :deep(.ql-toolbar.ql-snow button svg) {
+  width: 1rem;
+  height: 1rem;
+}
+
+.suntrack-quill :deep(.ql-toolbar.ql-snow .ql-picker.ql-header) {
+  width: 5.25rem;
+  font-size: 0.75rem;
+}
+
+.suntrack-quill :deep(.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label) {
+  width: 100%;
+  padding-left: 0.375rem;
+  padding-right: 1.125rem;
+}
+
+.suntrack-quill :deep(.ql-container.ql-snow) {
+  border: 0;
+  color: var(--ui-content);
+  font-family: inherit;
+}
+
+.suntrack-quill :deep(.ql-editor) {
+  min-height: 8rem;
+  padding: 0.75rem 1rem;
+  color: var(--ui-content);
+  font-size: 1rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.suntrack-quill :deep(.ql-editor.ql-blank::before) {
+  left: 1rem;
+  right: 1rem;
+  color: var(--ui-content-muted);
+  font-style: normal;
+}
+
+.suntrack-quill :deep(.ql-snow .ql-stroke) {
+  stroke: var(--ui-content-soft);
+}
+
+.suntrack-quill :deep(.ql-snow .ql-fill) {
+  fill: var(--ui-content-soft);
+}
+
+.suntrack-quill :deep(.ql-snow .ql-picker) {
+  color: var(--ui-content-soft);
+}
 </style>

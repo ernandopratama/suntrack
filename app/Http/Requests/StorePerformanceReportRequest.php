@@ -71,8 +71,8 @@ class StorePerformanceReportRequest extends FormRequest
                 $validator->errors()->add('period_end', 'Laporan Weekly maksimal mencakup 7 hari.');
             }
             if ($values['report_type'] === 'monthly'
-                && ($inclusiveDays < 1 || $inclusiveDays > 31 || ! $start->isSameMonth($end))) {
-                $validator->errors()->add('period_end', 'Laporan Monthly maksimal 31 hari dan harus berada dalam bulan yang sama.');
+                && ($inclusiveDays < 1 || $inclusiveDays > 30)) {
+                $validator->errors()->add('period_end', 'Laporan Monthly maksimal mencakup 30 hari.');
             }
 
             $brand = Brand::find($values['brand_id']);

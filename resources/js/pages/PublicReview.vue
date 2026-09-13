@@ -1,5 +1,6 @@
 <template>
   <PublicLayout>
+    <div class="review-shell">
     <!-- =========================================================
          LOADING
     ========================================================== -->
@@ -9,18 +10,18 @@
     >
       <div class="relative">
         <div
-          class="w-14 h-14 rounded-full border-4 border-[#F7E49B]"
+          class="w-14 h-14 rounded-full border-4 border-[#FFD41D]"
         ></div>
         <div
-          class="absolute inset-0 w-14 h-14 rounded-full border-4 border-transparent border-t-[#BA5A5A] animate-spin"
+          class="absolute inset-0 w-14 h-14 rounded-full border-4 border-transparent border-t-[#D73535] animate-spin"
         ></div>
       </div>
 
-      <p class="mt-5 text-sm font-semibold text-[#52605E]">
+      <p class="mt-5 text-sm font-semibold text-[#687370]">
         Memuat data peninjauan dan persetujuan...
       </p>
 
-      <p class="mt-1 text-xs text-[#899492]">
+      <p class="mt-1 text-xs text-[#98A19E]">
         Mohon tunggu sebentar
       </p>
     </div>
@@ -33,14 +34,14 @@
       class="max-w-2xl mx-auto py-12 px-4"
     >
       <div
-        class="bg-white rounded-[28px] p-8 sm:p-10 border border-[#E3E9E6] shadow-[0_20px_60px_rgba(41,51,49,0.08)] text-center"
+        class="bg-white rounded-[28px] p-8 sm:p-10 border border-[#ECEEEC] shadow-[0_20px_60px_rgba(41,51,49,0.08)] text-center"
       >
         <div
           class="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-3xl mb-6"
           :class="
             linkStatus === 'Expired'
-              ? 'bg-[#F7E49B]/45 text-[#79651A]'
-              : 'bg-[#BA5A5A]/10 text-[#BA5A5A]'
+              ? 'bg-[#FFD41D]/45 text-[#755700]'
+              : 'bg-[#D73535]/10 text-[#D73535]'
           "
         >
           {{ linkStatus === 'Expired' ? '⏰' : '🔒' }}
@@ -50,14 +51,14 @@
           class="inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] mb-3"
           :class="
             linkStatus === 'Expired'
-              ? 'bg-[#F7E49B]/40 text-[#79651A]'
-              : 'bg-[#BA5A5A]/10 text-[#BA5A5A]'
+              ? 'bg-[#FFD41D]/40 text-[#755700]'
+              : 'bg-[#D73535]/10 text-[#D73535]'
           "
         >
           Secure Public Link
         </span>
 
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-[#293331] mb-3">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-[-0.025em] text-[#46504D] mb-3">
           {{
             linkStatus === 'Expired'
               ? 'Tautan Sudah Kedaluwarsa'
@@ -67,7 +68,7 @@
           }}
         </h2>
 
-        <p class="text-[#687572] mb-7 leading-relaxed text-sm sm:text-base">
+        <p class="text-[#77817E] mb-7 leading-relaxed text-sm sm:text-base">
           {{
             errorMessage ||
               'Tautan publik ini tidak lagi dapat diakses untuk peninjauan. Hal ini dapat terjadi karena masa berlaku tautan telah habis atau tautan telah ditarik kembali oleh Admin sistem.'
@@ -75,17 +76,17 @@
         </p>
 
         <div
-          class="bg-[#F8FAF9] rounded-2xl p-5 border border-[#E3E9E6] text-sm text-[#687572] mb-7 text-left"
+          class="bg-[#FCFBF8] rounded-2xl p-5 border border-[#ECEEEC] text-sm text-[#77817E] mb-7 text-left"
         >
           <div class="flex gap-3">
             <div
-              class="w-9 h-9 shrink-0 rounded-xl bg-[#86BCBD]/20 text-[#315F60] flex items-center justify-center"
+              class="w-9 h-9 shrink-0 rounded-xl bg-[#FFA240]/20 text-[#9A4700] flex items-center justify-center"
             >
               ?
             </div>
 
             <div>
-              <p class="font-bold text-[#293331] mb-1">
+              <p class="font-bold text-[#46504D] mb-1">
                 Bantuan & Tindak Lanjut
               </p>
 
@@ -99,94 +100,156 @@
 
         <a
           href="mailto:admin@suntrack.app"
-          class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#BA5A5A] text-white font-bold text-sm hover:bg-[#A84F4F] transition shadow-lg shadow-[#BA5A5A]/20"
+          class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#D73535] text-white font-bold text-sm hover:bg-[#B92D2D] transition shadow-lg shadow-[#D73535]/20"
         >
           Hubungi Admin System
         </a>
       </div>
     </div>
 
-    <div v-else-if="reviewData && isDelivery" class="mx-auto max-w-5xl space-y-6 px-4 pb-12">
-      <section class="rounded-3xl border border-[#E3E9E6] bg-white p-6 shadow-sm sm:p-8">
-        <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-[0.15em] text-[#315F60]">
-              {{ reviewData.type === 'Task' ? 'Task Delivery' : 'Performance Report' }}
+    <div v-else-if="reviewData && isDelivery" class="delivery-page mx-auto max-w-6xl space-y-6 px-1 pb-12 sm:px-3">
+      <section class="delivery-hero overflow-hidden rounded-[28px] px-5 py-6 text-white sm:px-8 sm:py-8">
+        <div class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div class="max-w-3xl">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-white/90">
+                <i :class="reviewData.type === 'Task' ? 'fa-solid fa-list-check' : 'fa-solid fa-chart-line'"></i>
+                {{ reviewData.type === 'Task' ? 'Hasil Pekerjaan' : `${reportTypeLabel} Report` }}
+              </span>
+              <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.1em]" :class="deliveryStatusClass">
+                <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                {{ deliveryStatusLabel }}
+              </span>
+            </div>
+
+            <h1 class="delivery-title mt-5 text-2xl font-extrabold leading-tight tracking-[-0.035em] text-white sm:text-4xl lg:text-[2.75rem]">{{ reviewData.name }}</h1>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-white/75 sm:text-base">
+              {{ reviewData.type === 'Task'
+                ? 'Rangkuman hasil pekerjaan yang dapat ditinjau melalui tautan ini.'
+                : `Laporan performa ${reviewData.brand?.name || 'brand'} untuk periode ${formatDate(reviewData.period_start)} sampai ${formatDate(reviewData.period_end)}.` }}
             </p>
-            <h1 class="mt-2 text-2xl font-extrabold text-[#293331] sm:text-3xl">{{ reviewData.name }}</h1>
-            <p class="mt-2 text-sm text-[#687572]">{{ reviewData.brand?.name }} · {{ reviewData.pic?.name || 'SUNTRACK' }}</p>
+
+            <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-white/80 sm:text-sm">
+              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-tag text-[#FFD41D]"></i>{{ reviewData.brand?.name || 'Brand tidak tersedia' }}</span>
+              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-user-check text-[#FFA240]"></i>PIC: {{ reviewData.pic?.name || 'SUNTRACK' }}</span>
+              <span v-if="reviewData.version" class="inline-flex items-center gap-2"><i class="fa-solid fa-code-branch text-[#FF8A8A]"></i>Versi {{ reviewData.version }}</span>
+            </div>
           </div>
-          <span class="rounded-full bg-[#86BCBD]/20 px-4 py-2 text-xs font-bold uppercase text-[#315F60]">
-            {{ String(reviewData.status || '').replaceAll('_', ' ') }}
-          </span>
+
+          <div v-if="reviewData.type === 'PerformanceReport'" class="min-w-[220px] rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
+            <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">Terakhir diperbarui</p>
+            <p class="mt-1.5 text-sm font-bold text-white">{{ formatDateTime(reviewData.updated_at) }} WIB</p>
+            <p class="mt-2 text-xs leading-5 text-white/60">Dibuat oleh {{ reviewData.creator?.name || reviewData.pic?.name || 'Tim SUNTRACK' }}</p>
+          </div>
         </div>
+      </section>
+
+      <section class="review-card rounded-3xl border border-[#ECEEEC] bg-white p-5 shadow-sm sm:p-8">
 
         <template v-if="reviewData.type === 'Task'">
           <div class="mt-7 grid gap-4 sm:grid-cols-3">
-            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Priority</p><p class="mt-1 font-bold capitalize text-[#293331]">{{ reviewData.priority }}</p></div>
-            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Deadline</p><p class="mt-1 font-bold text-[#293331]">{{ formatDate(reviewData.deadline) }}</p></div>
-            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Completed</p><p class="mt-1 font-bold text-[#293331]">{{ formatDate(reviewData.completed_at) }}</p></div>
+            <div class="rounded-2xl bg-[#FCFBF8] p-4"><p class="text-xs text-[#98A19E]">Priority</p><p class="mt-1 font-bold capitalize text-[#46504D]">{{ reviewData.priority }}</p></div>
+            <div class="rounded-2xl bg-[#FCFBF8] p-4"><p class="text-xs text-[#98A19E]">Deadline</p><p class="mt-1 font-bold text-[#46504D]">{{ formatDate(reviewData.deadline) }}</p></div>
+            <div class="rounded-2xl bg-[#FCFBF8] p-4"><p class="text-xs text-[#98A19E]">Completed</p><p class="mt-1 font-bold text-[#46504D]">{{ formatDate(reviewData.completed_at) }}</p></div>
           </div>
-          <div class="mt-6 space-y-4 text-sm leading-7 text-[#52605E]">
-            <div v-if="reviewData.description"><h2 class="font-bold text-[#293331]">Instruksi</h2><p>{{ reviewData.description }}</p></div>
-            <div v-if="reviewData.completion_summary"><h2 class="font-bold text-[#293331]">Ringkasan Hasil</h2><p>{{ reviewData.completion_summary }}</p></div>
-            <div v-if="reviewData.completion_details"><h2 class="font-bold text-[#293331]">Detail Pekerjaan</h2><p>{{ reviewData.completion_details }}</p></div>
+          <div class="mt-6 space-y-4 text-sm leading-7 text-[#687370]">
+            <div v-if="reviewData.description"><h2 class="font-bold text-[#46504D]">Instruksi</h2><p>{{ reviewData.description }}</p></div>
+            <div v-if="reviewData.completion_summary"><h2 class="font-bold text-[#46504D]">Ringkasan Hasil</h2><p>{{ reviewData.completion_summary }}</p></div>
+            <div v-if="reviewData.completion_details"><h2 class="font-bold text-[#46504D]">Detail Pekerjaan</h2><p>{{ reviewData.completion_details }}</p></div>
           </div>
         </template>
 
         <template v-else>
-          <div class="mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Periode</p><p class="mt-1 font-bold text-[#293331]">{{ formatDate(reviewData.period_start) }} – {{ formatDate(reviewData.period_end) }}</p></div>
-            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Dibuat</p><p class="mt-1 font-bold text-[#293331]">{{ formatDateTime(reviewData.created_at) }} WIB</p></div>
-            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Diperbarui</p><p class="mt-1 font-bold text-[#293331]">{{ formatDateTime(reviewData.updated_at) }} WIB</p></div>
-            <div class="rounded-2xl bg-[#F8FAF9] p-4"><p class="text-xs text-[#899492]">Dipublikasikan</p><p class="mt-1 font-bold text-[#293331]">{{ formatDateTime(reviewData.published_at) }} WIB</p></div>
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div class="flex items-center gap-3">
+              <span class="section-icon bg-[#FFF4E8] text-[#B45309]"><i class="fa-regular fa-calendar"></i></span>
+              <div><p class="section-kicker">Tentang laporan</p><h2 class="section-title">Informasi Periode</h2></div>
+            </div>
+            <p class="text-xs text-[#929B98]">Data diperbarui {{ formatDateTime(reviewData.updated_at) }} WIB</p>
           </div>
-          <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div v-for="metric in reportMetricCards" :key="metric.label" class="rounded-2xl border border-[#E3E9E6] p-4"><p class="text-xs text-[#899492]">{{ metric.label }}</p><p class="mt-1 text-lg font-extrabold text-[#293331]">{{ metric.value }}</p></div>
+          <div class="report-meta-grid mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-2xl bg-[#FCFBF8] p-4"><p class="text-xs text-[#98A19E]">Periode</p><p class="mt-1 font-bold text-[#46504D]">{{ formatDate(reviewData.period_start) }} – {{ formatDate(reviewData.period_end) }}</p></div>
+            <div class="rounded-2xl bg-[#FCFBF8] p-4"><p class="text-xs text-[#98A19E]">Dibuat</p><p class="mt-1 font-bold text-[#46504D]">{{ formatDateTime(reviewData.created_at) }} WIB</p></div>
+            <div class="rounded-2xl bg-[#FCFBF8] p-4"><p class="text-xs text-[#98A19E]">Diperbarui</p><p class="mt-1 font-bold text-[#46504D]">{{ formatDateTime(reviewData.updated_at) }} WIB</p></div>
+            <div class="rounded-2xl bg-[#FCFBF8] p-4"><p class="text-xs text-[#98A19E]">Dipublikasikan</p><p class="mt-1 font-bold text-[#46504D]">{{ formatDateTime(reviewData.published_at) }} WIB</p></div>
           </div>
-          <div v-if="reviewData.executive_summary" class="prose mt-6 max-w-none rounded-2xl bg-[#F8FAF9] p-5 text-sm leading-7 text-[#52605E]" v-html="reviewData.executive_summary"></div>
-          <div v-if="reviewData.content" class="mt-6"><h2 class="text-lg font-extrabold text-[#293331]">Analisis Performa</h2><div class="prose mt-3 max-w-none text-[#52605E]" v-html="reviewData.content"></div></div>
-          <div v-if="reviewData.findings" class="mt-6"><h2 class="text-lg font-extrabold text-[#293331]">Temuan dan Kendala</h2><div class="prose mt-3 max-w-none text-[#52605E]" v-html="reviewData.findings"></div></div>
-          <div v-if="reviewData.action_plan" class="mt-6"><h2 class="text-lg font-extrabold text-[#293331]">Rencana Tindak Lanjut</h2><div class="prose mt-3 max-w-none text-[#52605E]" v-html="reviewData.action_plan"></div></div>
+          <div class="mt-8 flex items-end justify-between gap-4 border-t border-[#ECEEEC] pt-7">
+            <div><p class="section-kicker">Angka utama</p><h2 class="section-title">Ringkasan Performa</h2></div>
+            <p class="hidden max-w-sm text-right text-xs leading-5 text-[#929B98] sm:block">Nilai di bawah dihitung dari data pada periode laporan.</p>
+          </div>
+          <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <article v-for="metric in primaryReportMetrics" :key="metric.label" class="metric-card" :class="metric.tone">
+              <div class="flex items-start justify-between gap-3"><span class="metric-icon"><i :class="metric.icon"></i></span><span class="text-[10px] font-extrabold uppercase tracking-[0.12em] opacity-55">{{ reportTypeLabel }}</span></div>
+              <p class="mt-5 text-xs font-semibold text-[#7D8885]">{{ metric.label }}</p>
+              <p class="mt-1 break-words text-xl font-extrabold tracking-[-0.025em] text-[#343D3B] sm:text-2xl">{{ metric.value }}</p>
+              <p class="mt-2 text-[11px] leading-5 text-[#929B98]">{{ metric.description }}</p>
+            </article>
+          </div>
+          <div class="ratio-grid mt-5 grid overflow-hidden rounded-2xl border border-[#E8ECEA] bg-[#FAFBFA] sm:grid-cols-2 lg:grid-cols-4">
+            <div v-for="metric in secondaryReportMetrics" :key="metric.label" class="ratio-metric p-4 sm:p-5">
+              <p class="text-xs font-bold text-[#6E7976]">{{ metric.label }}</p><p class="mt-1 text-xl font-extrabold text-[#3D4744]">{{ metric.value }}</p><p class="mt-1 text-[10px] leading-4 text-[#98A19E]">{{ metric.description }}</p>
+            </div>
+          </div>
+          <div v-if="reviewData.executive_summary" class="summary-card mt-7 rounded-2xl border border-[#F1DFC9] bg-[#FFF9F1] p-5 sm:p-6">
+            <div class="flex items-center gap-2 text-[#9A4700]"><i class="fa-solid fa-align-left"></i><h2 class="text-sm font-extrabold">Ringkasan Laporan</h2></div>
+            <div class="report-prose prose mt-4 max-w-none text-sm leading-8 text-[#65706D] sm:text-base" v-html="reviewData.executive_summary"></div>
+          </div>
+          <div v-if="reportContentSections.length" class="mt-7 border-t border-[#ECEEEC] pt-7">
+            <div class="flex items-center gap-3"><span class="section-icon bg-[#EEF7F5] text-[#236B61]"><i class="fa-solid fa-book-open"></i></span><div><p class="section-kicker">Penjelasan</p><h2 class="section-title">Pembahasan Laporan</h2></div></div>
+            <div class="mt-5 grid gap-4 lg:grid-cols-2">
+              <article v-for="(section, index) in reportContentSections" :key="section.title" class="report-content-card">
+                <div class="flex items-start gap-3"><span class="content-number">{{ String(index + 1).padStart(2, '0') }}</span><div><h3 class="text-base font-extrabold text-[#3C4643]">{{ section.title }}</h3><p class="mt-1 text-xs leading-5 text-[#929B98]">{{ section.description }}</p></div></div>
+                <div class="report-prose prose mt-5 max-w-none text-sm leading-7 text-[#65706D]" v-html="section.html"></div>
+              </article>
+            </div>
+          </div>
         </template>
       </section>
 
-      <section v-if="reviewData.type === 'PerformanceReport' && reviewData.media?.length" class="rounded-3xl border border-[#E3E9E6] bg-white p-6 shadow-sm sm:p-8">
-        <h2 class="text-xl font-extrabold text-[#293331]">Dokumentasi Performa</h2>
-        <div class="mt-6 space-y-7">
-          <article v-for="media in reviewData.media" :key="media.id" class="overflow-hidden rounded-2xl border border-[#E3E9E6]">
-            <img :src="media.url" :alt="media.title || media.original_name" class="max-h-[720px] w-full bg-[#F8FAF9] object-contain" />
-            <div v-if="media.title || media.notes" class="p-5"><h3 v-if="media.title" class="font-extrabold text-[#293331]">{{ media.title }}</h3><div v-if="media.notes" class="prose mt-2 max-w-none text-sm leading-7 text-[#52605E]" v-html="media.notes"></div></div>
+      <section v-if="reviewData.type === 'PerformanceReport' && reviewData.media?.length" class="review-card rounded-3xl border border-[#ECEEEC] bg-white p-5 shadow-sm sm:p-8">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div class="flex items-center gap-3"><span class="section-icon bg-[#FFF0F0] text-[#D73535]"><i class="fa-regular fa-images"></i></span><div><p class="section-kicker">Bukti pendukung</p><h2 class="section-title">Dokumentasi Performa</h2></div></div>
+          <p class="text-xs text-[#929B98]">{{ reviewData.media.length }} gambar dilampirkan</p>
+        </div>
+        <div class="mt-6 grid gap-5" :class="reviewData.media.length > 1 ? 'lg:grid-cols-2' : ''">
+          <article v-for="(media, index) in reviewData.media" :key="media.id" class="media-card overflow-hidden rounded-2xl border border-[#E4E8E6]">
+            <div class="media-visual relative bg-[#F5F7F6]"><img :src="media.url" :alt="media.title || media.original_name" loading="lazy" class="max-h-[680px] min-h-56 w-full object-contain" /><span class="absolute left-3 top-3 rounded-full bg-[#26302E]/80 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">Gambar {{ index + 1 }}</span></div>
+            <div class="media-caption p-5 sm:p-6">
+              <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#B45309]">Keterangan gambar</p>
+              <h3 class="media-caption-title mt-1.5 text-base font-extrabold">{{ media.title || media.original_name }}</h3>
+              <div v-if="media.notes" class="media-caption-copy report-prose prose mt-3 max-w-none text-sm leading-7" v-html="media.notes"></div>
+            </div>
           </article>
         </div>
       </section>
 
-      <section class="grid gap-6 lg:grid-cols-2">
-        <div class="rounded-3xl border border-[#E3E9E6] bg-white p-6">
-          <h2 class="text-lg font-extrabold text-[#293331]">Attachment</h2>
-          <div v-if="!reviewData.attachments?.length" class="mt-4 text-sm text-[#899492]">Tidak ada attachment.</div>
+      <section class="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div class="review-card rounded-3xl border border-[#ECEEEC] bg-white p-5 sm:p-6">
+          <div class="flex items-center gap-3"><span class="section-icon bg-[#EEF3FF] text-[#315EB8]"><i class="fa-solid fa-paperclip"></i></span><div><p class="section-kicker">Berkas</p><h2 class="section-title">Lampiran</h2></div></div>
+          <div v-if="!reviewData.attachments?.length" class="mt-5 rounded-2xl border border-dashed border-[#DFE4E1] bg-[#FAFBFA] px-4 py-7 text-center text-sm text-[#929B98]">Tidak ada berkas tambahan.</div>
           <a
             v-for="attachment in reviewData.attachments || []"
             :key="attachment.id"
             :href="`/api/v1/public/review/${token}/attachments/${attachment.id}/download`"
-            class="mt-3 flex items-center justify-between rounded-xl border border-[#E3E9E6] p-3 text-sm font-semibold text-[#315F60] hover:bg-[#F8FAF9]"
+            class="attachment-row mt-3 flex items-center gap-3 rounded-2xl border border-[#E4E8E6] p-3.5"
           >
-            <span class="truncate">{{ attachment.original_name }}</span><span class="ml-3 text-xs">Unduh</span>
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF3FF] text-[#315EB8]"><i class="fa-solid fa-file-arrow-down"></i></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm text-[#46504D]">{{ attachment.original_name }}</strong><small class="mt-0.5 block text-[10px] text-[#98A19E]">Klik untuk mengunduh</small></span><i class="fa-solid fa-arrow-down text-xs text-[#98A19E]"></i>
           </a>
         </div>
 
-        <div class="rounded-3xl border border-[#E3E9E6] bg-white p-6">
-          <h2 class="text-lg font-extrabold text-[#293331]">Diskusi</h2>
-          <div class="mt-4 max-h-72 space-y-3 overflow-y-auto">
-            <div v-for="comment in reviewData.comments || []" :key="comment.id" class="rounded-xl bg-[#F8FAF9] p-3">
-              <div class="flex justify-between gap-3 text-xs"><strong class="text-[#293331]">{{ comment.author_name }}</strong><span class="text-[#899492]">{{ formatDate(comment.created_at) }}</span></div>
-              <p class="mt-2 text-sm text-[#52605E]">{{ comment.body }}</p>
-            </div>
+        <div class="review-card rounded-3xl border border-[#ECEEEC] bg-white p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="section-icon bg-[#EEF7F5] text-[#236B61]"><i class="fa-regular fa-comments"></i></span><div><p class="section-kicker">Kolaborasi</p><h2 class="section-title">Diskusi</h2></div></div><span class="rounded-full bg-[#F2F5F3] px-2.5 py-1 text-[10px] font-bold text-[#6E7976]">{{ reviewData.comments?.length || 0 }} komentar</span></div>
+          <div v-if="reviewData.comments?.length" class="mt-5 max-h-72 space-y-3 overflow-y-auto pr-1">
+            <article v-for="comment in reviewData.comments" :key="comment.id" class="comment-card flex gap-3 rounded-2xl bg-[#F8FAF9] p-3.5">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFE8D1] text-xs font-extrabold text-[#9A4700]">{{ initialOf(comment.author_name) }}</span>
+              <div class="min-w-0 flex-1"><div class="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between"><strong class="text-xs text-[#46504D]">{{ comment.author_name }}</strong><time class="text-[10px] text-[#98A19E]">{{ formatDateTime(comment.created_at) }} WIB</time></div><p class="mt-1.5 whitespace-pre-line text-sm leading-6 text-[#687370]">{{ comment.body }}</p></div>
+            </article>
           </div>
-          <form class="mt-5 space-y-3" @submit.prevent="handleDeliveryComment">
-            <input v-model="reviewerIdentity.name" required maxlength="150" placeholder="Nama Anda" class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm" />
-            <textarea v-model="newCommentBody" required maxlength="2000" rows="3" placeholder="Tulis komentar" class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm"></textarea>
-            <button :disabled="loading" class="rounded-xl bg-[#315F60] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">Kirim Komentar</button>
+          <div v-else class="mt-5 rounded-2xl bg-[#F8FAF9] px-4 py-5 text-center text-sm text-[#929B98]">Belum ada komentar pada laporan ini.</div>
+          <form class="mt-5 space-y-4 border-t border-[#ECEEEC] pt-5" @submit.prevent="handleDeliveryComment">
+            <label class="block text-xs font-bold text-[#596461]">Nama Anda<input v-model="reviewerIdentity.name" required maxlength="150" autocomplete="name" placeholder="Masukkan nama" class="mt-1.5 w-full rounded-xl border border-[#E1E4E2] px-3.5 py-2.5 text-sm" /></label>
+            <label class="block text-xs font-bold text-[#596461]">Komentar<textarea v-model="newCommentBody" required maxlength="2000" rows="3" placeholder="Tulis pertanyaan atau tanggapan..." class="mt-1.5 w-full resize-y rounded-xl border border-[#E1E4E2] px-3.5 py-2.5 text-sm"></textarea></label>
+            <button :disabled="loading" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#9A4700] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 sm:w-auto"><i class="fa-solid fa-paper-plane"></i>Kirim Komentar</button>
           </form>
         </div>
       </section>
@@ -204,14 +267,14 @@
       ======================================================== -->
       <div
         class="relative overflow-hidden rounded-[24px] p-5 sm:p-6 text-white shadow-[0_16px_40px_rgba(41,51,49,0.12)]"
-        style="background: linear-gradient(135deg, #293331 0%, #3d4b48 100%)"
+        style="background: linear-gradient(135deg, #C93434 0%, #EB4545 46%, #F79B3B 100%)"
       >
         <div
-          class="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-[#86BCBD]/15"
+          class="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-[#FFA240]/15"
         ></div>
 
         <div
-          class="absolute -right-5 -bottom-20 w-40 h-40 rounded-full bg-[#F7E49B]/10"
+          class="absolute -right-5 -bottom-20 w-40 h-40 rounded-full bg-[#FFD41D]/10"
         ></div>
 
         <div
@@ -226,7 +289,7 @@
 
             <div class="min-w-0">
               <p
-                class="text-[10px] uppercase font-bold tracking-[0.18em] text-[#86BCBD]"
+                class="text-[10px] uppercase font-bold tracking-[0.18em] text-[#FFA240]"
               >
                 Reviewer Identity
               </p>
@@ -241,7 +304,7 @@
 
               <p
                 v-if="reviewerIdentity.companyName"
-                class="text-xs text-[#F7E49B] mt-0.5"
+                class="text-xs text-[#FFD41D] mt-0.5"
               >
                 {{ reviewerIdentity.companyName }}
               </p>
@@ -270,20 +333,20 @@
            PROMOTION INFORMATION
       ======================================================== -->
       <div
-        class="relative overflow-hidden bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+        class="review-card review-card--featured relative overflow-hidden bg-white rounded-[24px] p-6 sm:p-8 border border-[#ECEEEC] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
       >
         <div
-          class="absolute -right-20 -top-20 w-64 h-64 rounded-full bg-[#F7E49B]/20"
+          class="absolute -right-20 -top-20 w-64 h-64 rounded-full bg-[#FFD41D]/20"
         ></div>
 
         <div
-          class="relative flex flex-col md:flex-row md:items-center justify-between gap-5 border-b border-[#EDF1EF] pb-6 mb-6"
+          class="relative flex flex-col md:flex-row md:items-center justify-between gap-5 border-b border-[#F0F1EF] pb-6 mb-6"
         >
           <div>
             <div class="flex flex-wrap items-center gap-2 mb-3">
               <span
                 v-if="reviewData.code"
-                class="px-3 py-1.5 rounded-lg bg-[#86BCBD]/15 text-[#315F60] border border-[#86BCBD]/30 text-xs font-mono font-bold tracking-wider"
+                class="px-3 py-1.5 rounded-lg bg-[#FFA240]/15 text-[#9A4700] border border-[#FFA240]/30 text-xs font-mono font-bold tracking-wider"
               >
                 {{ reviewData.code }}
               </span>
@@ -294,7 +357,7 @@
                   :value="reviewData.status"
                   @change="handleStatusChange"
                   :disabled="loading"
-                  class="appearance-none min-w-[180px] pl-4 pr-10 py-2 rounded-full text-[11px] font-bold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="appearance-none min-w-[180px] pl-4 pr-10 py-2 rounded-full text-[11px] font-bold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFA240]/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   :class="getStatusBadgeClass(reviewData.status)"
                 >
                   <option
@@ -324,34 +387,34 @@
             </div>
 
             <h1
-              class="text-2xl sm:text-3xl font-extrabold text-[#293331] tracking-tight"
+              class="text-2xl sm:text-3xl font-bold tracking-[-0.025em] text-[#46504D] tracking-tight"
             >
               {{ reviewData.name }}
             </h1>
 
             <p
               v-if="reviewData.brand"
-              class="text-sm text-[#788480] mt-2"
+              class="text-sm text-[#858E8B] mt-2"
             >
               Brand:
-              <span class="font-bold text-[#293331]">
+              <span class="font-bold text-[#46504D]">
                 {{ reviewData.brand.name }}
               </span>
             </p>
           </div>
 
           <div
-            class="bg-[#F8FAF9] px-5 py-4 rounded-2xl border border-[#E3E9E6] min-w-fit"
+            class="bg-[#FCFBF8] px-5 py-4 rounded-2xl border border-[#ECEEEC] min-w-fit"
           >
             <span
-              class="block text-[10px] uppercase tracking-wider font-bold text-[#899492] mb-1"
+              class="block text-[10px] uppercase tracking-wider font-bold text-[#98A19E] mb-1"
             >
               Periode Promosi
             </span>
 
-            <span class="font-bold text-sm text-[#293331]">
+            <span class="font-bold text-sm text-[#46504D]">
               {{ formatDate(reviewData.start_date) }}
-              <span class="text-[#BA5A5A] mx-1">→</span>
+              <span class="text-[#D73535] mx-1">→</span>
               {{ formatDate(reviewData.end_date) }}
             </span>
           </div>
@@ -359,10 +422,10 @@
 
         <div
           v-if="reviewData.description"
-          class="text-[#687572] text-sm leading-relaxed"
+          class="text-[#77817E] text-sm leading-relaxed"
         >
           <p
-            class="font-bold text-[#293331] text-[10px] uppercase tracking-wider mb-2"
+            class="font-bold text-[#46504D] text-[10px] uppercase tracking-wider mb-2"
           >
             Deskripsi Promosi
           </p>
@@ -376,36 +439,36 @@
       ======================================================== -->
       <div
         v-if="reviewData.campaign"
-        class="rounded-[22px] p-5 border border-[#86BCBD]/30 bg-[#86BCBD]/10 shadow-sm"
+        class="rounded-[22px] p-5 border border-[#FFA240]/30 bg-[#FFA240]/10 shadow-sm"
       >
         <div
           class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div class="flex items-center gap-4">
             <div
-              class="w-11 h-11 rounded-xl bg-[#86BCBD] text-[#293331] flex items-center justify-center font-bold text-lg shadow-sm"
+              class="w-11 h-11 rounded-xl bg-[#FFA240] text-[#46504D] flex items-center justify-center font-bold text-lg shadow-sm"
             >
               🎯
             </div>
 
             <div>
               <span
-                class="text-[10px] font-extrabold uppercase tracking-wider text-[#315F60]"
+                class="text-[10px] font-extrabold uppercase tracking-wider text-[#9A4700]"
               >
                 Terhubung ke Campaign
               </span>
 
-              <h3 class="text-lg font-extrabold text-[#293331] mt-0.5">
+              <h3 class="text-lg font-bold tracking-[-0.01em] text-[#46504D] mt-0.5">
                 {{ reviewData.campaign.name }}
               </h3>
             </div>
           </div>
 
           <div
-            class="text-xs sm:text-sm text-[#52605E] font-medium bg-white px-4 py-2.5 rounded-xl border border-[#86BCBD]/30"
+            class="text-xs sm:text-sm text-[#687370] font-medium bg-white px-4 py-2.5 rounded-xl border border-[#FFA240]/30"
           >
             Periode:
-            <span class="font-bold text-[#293331]">
+            <span class="font-bold text-[#46504D]">
               {{ formatDate(reviewData.campaign?.start_date) }}
               -
               {{ formatDate(reviewData.campaign?.end_date) }}
@@ -418,17 +481,17 @@
            APPROVAL SUMMARY
       ======================================================== -->
       <div
-        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+        class="review-card bg-white rounded-[24px] p-6 sm:p-8 border border-[#ECEEEC] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
       >
         <div
           class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
         >
           <div>
             <h2
-              class="text-lg font-extrabold text-[#293331] flex items-center gap-2"
+              class="text-lg font-bold tracking-[-0.01em] text-[#46504D] flex items-center gap-2"
             >
             <span
-              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+              class="w-8 h-8 rounded-lg bg-[#FFA240]/15 flex items-center justify-center overflow-hidden"
             >
               <img
                 src="/images/stat.webp"
@@ -439,33 +502,33 @@
               <span>Ringkasan Persetujuan</span>
             </h2>
 
-            <p class="text-xs text-[#899492] mt-1">
+            <p class="text-xs text-[#98A19E] mt-1">
               Pantau status persetujuan seluruh variant produk
             </p>
           </div>
 
           <div
-            class="flex items-center gap-4 text-xs text-[#687572] bg-[#F8FAF9] px-4 py-2.5 rounded-xl border border-[#E3E9E6]"
+            class="flex items-center gap-4 text-xs text-[#77817E] bg-[#FCFBF8] px-4 py-2.5 rounded-xl border border-[#ECEEEC]"
           >
             <div>
-              <span class="block text-[#899492] mb-0.5">
+              <span class="block text-[#98A19E] mb-0.5">
                 Terakhir Diperbarui
               </span>
 
-              <span class="font-bold text-[#293331]">
+              <span class="font-bold text-[#46504D]">
                 {{ formatDateTime(reviewData.approval_summary.last_updated) }}
               </span>
             </div>
 
             <div
               v-if="reviewData.approval_summary.last_reviewer"
-              class="border-l border-[#DDE4E1] pl-4"
+              class="border-l border-[#E7E9E7] pl-4"
             >
-              <span class="block text-[#899492] mb-0.5">
+              <span class="block text-[#98A19E] mb-0.5">
                 Reviewer Terakhir
               </span>
 
-              <span class="font-bold text-[#293331]">
+              <span class="font-bold text-[#46504D]">
                 {{ reviewData.approval_summary.last_reviewer.name }}
               </span>
             </div>
@@ -475,64 +538,64 @@
         <!-- Metric Cards -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
           <div
-            class="rounded-2xl p-5 border border-[#E3E9E6] bg-[#F8FAF9] text-center"
+            class="rounded-2xl p-5 border border-[#ECEEEC] bg-[#FCFBF8] text-center"
           >
             <span
-              class="block text-2xl sm:text-3xl font-extrabold text-[#293331]"
+              class="block text-2xl sm:text-3xl font-bold tracking-[-0.025em] text-[#46504D]"
             >
               {{ reviewData.approval_summary.total_variants }}
             </span>
 
             <span
-              class="text-[10px] font-bold text-[#899492] uppercase tracking-wider mt-1 block"
+              class="text-[10px] font-bold text-[#98A19E] uppercase tracking-wider mt-1 block"
             >
               Total Variant
             </span>
           </div>
 
           <div
-            class="rounded-2xl p-5 border border-[#A4CE8B]/40 bg-[#A4CE8B]/15 text-center"
+            class="rounded-2xl p-5 border border-[#FFD41D]/40 bg-[#FFD41D]/15 text-center"
           >
             <span
-              class="block text-2xl sm:text-3xl font-extrabold text-[#426332]"
+              class="block text-2xl sm:text-3xl font-extrabold text-[#654C00]"
             >
               {{ reviewData.approval_summary.approved }}
             </span>
 
             <span
-              class="text-[10px] font-bold text-[#527842] uppercase tracking-wider mt-1 block"
+              class="text-[10px] font-bold text-[#755700] uppercase tracking-wider mt-1 block"
             >
               Approved
             </span>
           </div>
 
           <div
-            class="rounded-2xl p-5 border border-[#F7E49B]/70 bg-[#F7E49B]/30 text-center"
+            class="rounded-2xl p-5 border border-[#FFD41D]/70 bg-[#FFD41D]/30 text-center"
           >
             <span
-              class="block text-2xl sm:text-3xl font-extrabold text-[#79651A]"
+              class="block text-2xl sm:text-3xl font-extrabold text-[#755700]"
             >
               {{ reviewData.approval_summary.pending }}
             </span>
 
             <span
-              class="text-[10px] font-bold text-[#79651A] uppercase tracking-wider mt-1 block"
+              class="text-[10px] font-bold text-[#755700] uppercase tracking-wider mt-1 block"
             >
               Pending
             </span>
           </div>
 
           <div
-            class="rounded-2xl p-5 border border-[#BA5A5A]/20 bg-[#BA5A5A]/10 text-center"
+            class="rounded-2xl p-5 border border-[#D73535]/20 bg-[#D73535]/10 text-center"
           >
             <span
-              class="block text-2xl sm:text-3xl font-extrabold text-[#BA5A5A]"
+              class="block text-2xl sm:text-3xl font-extrabold text-[#D73535]"
             >
               {{ reviewData.approval_summary.rejected }}
             </span>
 
             <span
-              class="text-[10px] font-bold text-[#BA5A5A] uppercase tracking-wider mt-1 block"
+              class="text-[10px] font-bold text-[#D73535] uppercase tracking-wider mt-1 block"
             >
               Rejected
             </span>
@@ -542,27 +605,27 @@
         <!-- Progress -->
         <div>
           <div
-            class="flex items-center justify-between text-xs font-bold text-[#52605E] mb-2"
+            class="flex items-center justify-between text-xs font-bold text-[#687370] mb-2"
           >
             <span>Tingkat Penyelesaian Review</span>
 
-            <span class="text-[#BA5A5A]">
+            <span class="text-[#D73535]">
               {{ reviewData.approval_summary.completion_percentage }}%
             </span>
           </div>
 
           <div
-            class="w-full h-3 bg-[#EEF2F0] rounded-full overflow-hidden flex"
+            class="w-full h-3 bg-[#F1F1EE] rounded-full overflow-hidden flex"
           >
             <div
-              class="bg-[#A4CE8B] h-full transition-all duration-500"
+              class="bg-[#FFD41D] h-full transition-all duration-500"
               :style="{
                 width: `${(reviewData.approval_summary.approved / Math.max(reviewData.approval_summary.total_variants, 1)) * 100}%`
               }"
             ></div>
 
             <div
-              class="bg-[#BA5A5A] h-full transition-all duration-500"
+              class="bg-[#D73535] h-full transition-all duration-500"
               :style="{
                 width: `${(reviewData.approval_summary.rejected / Math.max(reviewData.approval_summary.total_variants, 1)) * 100}%`
               }"
@@ -570,13 +633,13 @@
           </div>
 
           <div class="flex items-center gap-4 mt-3 text-[10px] font-semibold">
-            <span class="flex items-center gap-1.5 text-[#527842]">
-              <span class="w-2 h-2 rounded-full bg-[#A4CE8B]"></span>
+            <span class="flex items-center gap-1.5 text-[#755700]">
+              <span class="w-2 h-2 rounded-full bg-[#FFD41D]"></span>
               Approved
             </span>
 
-            <span class="flex items-center gap-1.5 text-[#BA5A5A]">
-              <span class="w-2 h-2 rounded-full bg-[#BA5A5A]"></span>
+            <span class="flex items-center gap-1.5 text-[#D73535]">
+              <span class="w-2 h-2 rounded-full bg-[#D73535]"></span>
               Rejected
             </span>
           </div>
@@ -587,17 +650,17 @@
            VARIANTS & APPROVAL
       ======================================================== -->
       <div
-        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+        class="review-card bg-white rounded-[24px] p-6 sm:p-8 border border-[#ECEEEC] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
       >
         <div
           class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
         >
           <div>
             <h2
-              class="text-lg font-extrabold text-[#293331] flex items-center gap-2"
+              class="text-lg font-bold tracking-[-0.01em] text-[#46504D] flex items-center gap-2"
             >
             <span
-              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+              class="w-8 h-8 rounded-lg bg-[#FFA240]/15 flex items-center justify-center overflow-hidden"
             >
               <img
                 src="/images/product.webp"
@@ -609,14 +672,14 @@
               <span>Daftar Produk & Variant</span>
             </h2>
 
-            <p class="text-xs text-[#899492] mt-1">
+            <p class="text-xs text-[#98A19E] mt-1">
               Tinjau harga dan berikan persetujuan per item maupun batch.
             </p>
           </div>
 
           <button
             @click="showHistoryModal = true"
-            class="px-4 py-2.5 bg-[#F8FAF9] hover:bg-[#EEF2F0] text-[#52605E] font-bold rounded-xl text-xs transition flex items-center gap-2 border border-[#E3E9E6]"
+            class="px-4 py-2.5 bg-[#FCFBF8] hover:bg-[#F1F1EE] text-[#687370] font-bold rounded-xl text-xs transition flex items-center gap-2 border border-[#ECEEEC]"
           >
             <span>📜</span>
             <span>
@@ -629,9 +692,9 @@
         <!-- Batch Toolbar -->
         <div
           v-if="reviewData.variants && reviewData.variants.length > 0"
-          class="flex flex-wrap items-center justify-between gap-4 p-4 bg-[#86BCBD]/10 border border-[#86BCBD]/25 rounded-2xl mb-5"
+          class="flex flex-wrap items-center justify-between gap-4 p-4 bg-[#FFA240]/10 border border-[#FFA240]/25 rounded-2xl mb-5"
         >
-          <div class="flex items-center gap-2 text-xs font-bold text-[#52605E]">
+          <div class="flex items-center gap-2 text-xs font-bold text-[#687370]">
             <span>
               {{ selectedVariantIds.length }} dari
               {{ reviewData.variants.length }} variant terpilih
@@ -640,7 +703,7 @@
             <button
               v-if="selectedVariantIds.length > 0"
               @click="selectedVariantIds = []"
-              class="text-[#BA5A5A] hover:underline text-[10px]"
+              class="text-[#D73535] hover:underline text-[10px]"
             >
               Reset
             </button>
@@ -650,7 +713,7 @@
             <button
               @click="handleBatchAction('approve_selected')"
               :disabled="selectedVariantIds.length === 0 || batchLoading"
-              class="px-3.5 py-2 bg-[#A4CE8B] hover:bg-[#94C27A] disabled:bg-[#DDE4E1] text-[#304A27] font-bold text-xs rounded-xl transition"
+              class="px-3.5 py-2 bg-[#FFD41D] hover:bg-[#E3B900] disabled:bg-[#DDE4E1] text-[#5A4300] font-bold text-xs rounded-xl transition"
             >
               ✓ Setujui Terpilih ({{ selectedVariantIds.length }})
             </button>
@@ -658,17 +721,17 @@
             <button
               @click="handleBatchAction('reject_selected')"
               :disabled="selectedVariantIds.length === 0 || batchLoading"
-              class="px-3.5 py-2 bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:bg-[#DDE4E1] text-white font-bold text-xs rounded-xl transition"
+              class="px-3.5 py-2 bg-[#D73535] hover:bg-[#B92D2D] disabled:bg-[#DDE4E1] text-white font-bold text-xs rounded-xl transition"
             >
               ✕ Tolak Terpilih ({{ selectedVariantIds.length }})
             </button>
 
-            <span class="hidden sm:block text-[#B8C2BF]">|</span>
+            <span class="hidden sm:block text-[#C5CBC9]">|</span>
 
             <button
               @click="handleBatchAction('approve_all')"
               :disabled="batchLoading"
-              class="px-3.5 py-2 bg-white hover:bg-[#F2F7EF] text-[#527842] border border-[#A4CE8B] font-bold text-xs rounded-xl transition"
+              class="px-3.5 py-2 bg-white hover:bg-[#F2F7EF] text-[#755700] border border-[#FFD41D] font-bold text-xs rounded-xl transition"
             >
               ✓ Setujui Semua
             </button>
@@ -676,7 +739,7 @@
             <button
               @click="handleBatchAction('reject_all')"
               :disabled="batchLoading"
-              class="px-3.5 py-2 bg-white hover:bg-[#FCF1F1] text-[#BA5A5A] border border-[#D99A9A] font-bold text-xs rounded-xl transition"
+              class="px-3.5 py-2 bg-white hover:bg-[#FCF1F1] text-[#D73535] border border-[#F3A0A0] font-bold text-xs rounded-xl transition"
             >
               ✕ Tolak Semua
             </button>
@@ -684,18 +747,18 @@
         </div>
 
         <!-- Table -->
-        <div class="overflow-x-auto rounded-2xl border border-[#E3E9E6]">
+        <div class="overflow-x-auto rounded-2xl border border-[#ECEEEC]">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr
-                class="border-b border-[#E3E9E6] text-[10px] font-extrabold text-[#899492] uppercase tracking-wider bg-[#F8FAF9]"
+                class="border-b border-[#ECEEEC] text-[10px] font-extrabold text-[#98A19E] uppercase tracking-wider bg-[#FCFBF8]"
               >
                 <th class="py-4 px-3 w-10 text-center">
                   <input
                     type="checkbox"
                     @change="toggleSelectAll"
                     :checked="isAllSelected"
-                    class="rounded border-[#C7D0CD] text-[#BA5A5A] focus:ring-[#BA5A5A]"
+                    class="rounded border-[#C7D0CD] text-[#D73535] focus:ring-[#D73535]"
                   />
                 </th>
 
@@ -712,9 +775,9 @@
               <tr
                 v-for="variant in reviewData.variants"
                 :key="variant.id"
-                class="hover:bg-[#F8FAF9] transition"
+                class="hover:bg-[#FCFBF8] transition"
                 :class="{
-                  'bg-[#86BCBD]/10': selectedVariantIds.includes(variant.id)
+                  'bg-[#FFA240]/10': selectedVariantIds.includes(variant.id)
                 }"
               >
                 <td class="py-4 px-3 text-center">
@@ -722,21 +785,21 @@
                     type="checkbox"
                     :value="variant.id"
                     v-model="selectedVariantIds"
-                    class="rounded border-[#C7D0CD] text-[#BA5A5A] focus:ring-[#BA5A5A]"
+                    class="rounded border-[#C7D0CD] text-[#D73535] focus:ring-[#D73535]"
                   />
                 </td>
 
                 <td class="py-4 px-4">
-                  <span class="block font-bold text-[#293331]">
+                  <span class="block font-bold text-[#46504D]">
                     {{ variant.product_name }}
                   </span>
 
-                  <span class="text-xs text-[#899492]">
+                  <span class="text-xs text-[#98A19E]">
                     {{ variant.name }}
 
                     <span
                       v-if="variant.sku"
-                      class="font-mono text-[#A5AEAB]"
+                      class="font-mono text-[#ADB5B2]"
                     >
                       ({{ variant.sku }})
                     </span>
@@ -744,37 +807,37 @@
 
                   <p
                     v-if="variant.rejection_notes"
-                    class="mt-2 text-xs text-[#BA5A5A] bg-[#BA5A5A]/10 px-2.5 py-1.5 rounded-lg border border-[#BA5A5A]/20 inline-block"
+                    class="mt-2 text-xs text-[#D73535] bg-[#D73535]/10 px-2.5 py-1.5 rounded-lg border border-[#D73535]/20 inline-block"
                   >
                     ⚠️ Catatan: {{ variant.rejection_notes }}
                   </p>
                 </td>
 
-                <td class="py-4 px-4 font-mono text-[#687572]">
+                <td class="py-4 px-4 font-mono text-[#77817E]">
                   {{ formatCurrency(variant.normal_price_snapshot) }}
                 </td>
 
-                <td class="py-4 px-4 font-mono font-bold text-[#527842]">
+                <td class="py-4 px-4 font-mono font-bold text-[#755700]">
                   <span class="block">
                     {{ formatCurrency(variant.campaign_price) }}
                   </span>
 
                   <span
                     v-if="variant.discount_price < variant.normal_price_snapshot"
-                    class="text-xs font-normal text-[#A5AEAB] line-through"
+                    class="text-xs font-normal text-[#ADB5B2] line-through"
                   >
                     {{ formatCurrency(variant.discount_price) }}
                   </span>
                 </td>
 
-                <td class="py-4 px-4 text-[#687572]">
+                <td class="py-4 px-4 text-[#77817E]">
                   <span class="block font-medium">
                     {{ variant.promotion_stock }} unit
                   </span>
 
                   <span
                     v-if="variant.purchase_limit > 0"
-                    class="text-xs text-[#A5AEAB]"
+                    class="text-xs text-[#ADB5B2]"
                   >
                     Max {{ variant.purchase_limit }}/user
                   </span>
@@ -796,8 +859,8 @@
                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
                       :class="
                         variant.approval_status === 'Approved'
-                          ? 'bg-[#A4CE8B] text-[#304A27]'
-                          : 'bg-[#A4CE8B]/15 text-[#527842] hover:bg-[#A4CE8B]/30 border border-[#A4CE8B]/50'
+                          ? 'bg-[#FFD41D] text-[#5A4300]'
+                          : 'bg-[#FFD41D]/15 text-[#755700] hover:bg-[#FFD41D]/30 border border-[#FFD41D]/50'
                       "
                     >
                       ✓
@@ -813,8 +876,8 @@
                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap"
                       :class="
                         variant.approval_status === 'Rejected'
-                          ? 'bg-[#BA5A5A] text-white'
-                          : 'bg-[#BA5A5A]/10 text-[#BA5A5A] hover:bg-[#BA5A5A]/15 border border-[#BA5A5A]/25'
+                          ? 'bg-[#D73535] text-white'
+                          : 'bg-[#D73535]/10 text-[#D73535] hover:bg-[#D73535]/15 border border-[#D73535]/25'
                       "
                     >
                       ✕
@@ -831,7 +894,7 @@
               <tr v-if="reviewData.variants.length === 0">
                 <td
                   colspan="7"
-                  class="py-12 text-center text-[#899492] text-sm"
+                  class="py-12 text-center text-[#98A19E] text-sm"
                 >
                   Belum ada variant yang dipetakan ke promosi ini.
                 </td>
@@ -850,14 +913,14 @@
           reviewData.tasks &&
           reviewData.tasks.length
         "
-        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+        class="review-card bg-white rounded-[24px] p-6 sm:p-8 border border-[#ECEEEC] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
       >
         <div class="mb-6">
           <h2
-            class="text-lg font-extrabold text-[#293331] flex items-center gap-2"
+            class="text-lg font-bold tracking-[-0.01em] text-[#46504D] flex items-center gap-2"
           >
             <span
-              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+              class="w-8 h-8 rounded-lg bg-[#FFA240]/15 flex items-center justify-center overflow-hidden"
             >
               <img
                 src="/images/task.webp"
@@ -868,7 +931,7 @@
             <span>Daftar Task Campaign</span>
           </h2>
 
-          <p class="text-xs text-[#899492] mt-1">
+          <p class="text-xs text-[#98A19E] mt-1">
             Perbarui status pengerjaan dan kirim hasil visual jika dibutuhkan.
           </p>
         </div>
@@ -877,20 +940,20 @@
           <div
             v-for="task in reviewData.tasks"
             :key="task.id"
-            class="rounded-2xl bg-[#F8FAF9] border border-[#E3E9E6] p-5"
+            class="rounded-2xl bg-[#FCFBF8] border border-[#ECEEEC] p-5"
           >
             <div
               class="flex flex-col sm:flex-row sm:items-start justify-between gap-4"
             >
               <div class="min-w-0 flex-1">
                 <p
-                  class="font-bold text-[#293331] flex items-center gap-2 flex-wrap"
+                  class="font-bold text-[#46504D] flex items-center gap-2 flex-wrap"
                 >
                   <span>{{ task.name }}</span>
 
                   <span
                     v-if="task.requires_visual"
-                    class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-[#86BCBD]/20 text-[#315F60] border border-[#86BCBD]/30"
+                    class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-[#FFA240]/20 text-[#9A4700] border border-[#FFA240]/30"
                   >
                     Butuh Visual
                   </span>
@@ -903,7 +966,7 @@
                   </span>
                 </p>
 
-                <p class="text-xs text-[#899492] mt-2">
+                <p class="text-xs text-[#98A19E] mt-2">
                   <span
                     v-if="task.visual_type"
                     class="font-medium"
@@ -921,7 +984,7 @@
 
                 <p
                   v-if="task.creative_brief"
-                  class="text-xs text-[#687572] mt-2 leading-relaxed"
+                  class="text-xs text-[#77817E] mt-2 leading-relaxed"
                 >
                   Brief:
                   {{
@@ -932,7 +995,7 @@
                 </p>
               </div>
 
-              <div class="shrink-0 rounded-xl border border-[#D5DDDA] bg-white px-3.5 py-2 text-xs font-medium text-[#687572]">
+              <div class="shrink-0 rounded-xl border border-[#E1E4E2] bg-white px-3.5 py-2 text-xs font-medium text-[#77817E]">
                 Status dikelola oleh Tim dan PIC SUNTRACK
               </div>
             </div>
@@ -940,11 +1003,11 @@
             <!-- Visual Submission -->
             <div
               v-if="task.requires_visual"
-              class="mt-5 pt-5 border-t border-[#E3E9E6]"
+              class="mt-5 pt-5 border-t border-[#ECEEEC]"
             >
               <div
                 v-if="task.visual_link || task.visual_file_url"
-                class="mb-4 p-4 rounded-xl bg-[#A4CE8B]/15 border border-[#A4CE8B]/40 text-xs text-[#426332]"
+                class="mb-4 p-4 rounded-xl bg-[#FFD41D]/15 border border-[#FFD41D]/40 text-xs text-[#654C00]"
               >
                 <p class="font-bold mb-2">
                   Visual sudah dikirim:
@@ -983,7 +1046,7 @@
 
                 <p
                   v-if="task.submitted_by"
-                  class="text-[#527842] mt-2"
+                  class="text-[#755700] mt-2"
                 >
                   Dikirim oleh: {{ task.submitted_by }}
                   {{
@@ -996,7 +1059,7 @@
                 <button
                   v-if="task.visual_file_url || task.visual_link"
                   @click="handleDeleteVisual(task)"
-                  class="mt-3 px-3 py-1.5 text-[#BA5A5A] bg-white border border-[#BA5A5A]/25 rounded-lg text-xs font-bold hover:bg-[#BA5A5A]/10"
+                  class="mt-3 px-3 py-1.5 text-[#D73535] bg-white border border-[#D73535]/25 rounded-lg text-xs font-bold hover:bg-[#D73535]/10"
                 >
                   Hapus Visual
                 </button>
@@ -1004,7 +1067,7 @@
 
               <form @submit.prevent="handleSubmitVisual(task)">
                 <label
-                  class="block text-xs font-bold text-[#52605E] mb-1.5"
+                  class="block text-xs font-bold text-[#687370] mb-1.5"
                 >
                   Link Google Drive / URL Visual
                 </label>
@@ -1013,14 +1076,14 @@
                   type="url"
                   v-model="taskVisualLinks[task.id]"
                   placeholder="https://drive.google.com/..."
-                  class="w-full rounded-xl border border-[#D5DDDA] bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/30 focus:border-[#86BCBD] mb-3"
+                  class="w-full rounded-xl border border-[#E1E4E2] bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFA240]/30 focus:border-[#FFA240] mb-3"
                 />
 
                 <label
-                  class="block text-xs font-bold text-[#52605E] mb-1.5"
+                  class="block text-xs font-bold text-[#687370] mb-1.5"
                 >
                   Atau unggah gambar
-                  <span class="font-normal text-[#899492]">
+                  <span class="font-normal text-[#98A19E]">
                     (JPG/PNG/WEBP/GIF, maks 5MB)
                   </span>
                 </label>
@@ -1029,12 +1092,12 @@
                   type="file"
                   accept="image/*"
                   @change="(e) => onTaskFileChange(e, task.id)"
-                  class="block w-full text-sm text-[#687572] file:mr-3 file:rounded-lg file:border-0 file:bg-[#F7E49B]/40 file:px-3 file:py-2 file:text-[#79651A] file:font-bold mb-3"
+                  class="block w-full text-sm text-[#77817E] file:mr-3 file:rounded-lg file:border-0 file:bg-[#FFD41D]/40 file:px-3 file:py-2 file:text-[#755700] file:font-bold mb-3"
                 />
 
                 <div
                   v-if="taskFileErrors[task.id]"
-                  class="text-[#BA5A5A] text-xs mb-2"
+                  class="text-[#D73535] text-xs mb-2"
                 >
                   {{ taskFileErrors[task.id] }}
                 </div>
@@ -1046,7 +1109,7 @@
                   <img
                     :src="taskVisualPreviews[task.id]"
                     alt="Preview"
-                    class="max-h-40 rounded-xl border border-[#D5DDDA]"
+                    class="max-h-40 rounded-xl border border-[#E1E4E2]"
                   />
                 </div>
 
@@ -1059,7 +1122,7 @@
                       !taskVisualLinks[task.id]) ||
                     taskFileErrors[task.id]
                   "
-                  class="px-4 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs transition shadow-sm"
+                  class="px-4 py-2.5 rounded-xl bg-[#D73535] hover:bg-[#B92D2D] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs transition shadow-sm"
                 >
                   Kirim Visual
                 </button>
@@ -1073,13 +1136,13 @@
            COMMENTS
       ======================================================== -->
       <div
-        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+        class="review-card bg-white rounded-[24px] p-6 sm:p-8 border border-[#ECEEEC] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
       >
         <h2
-          class="text-lg font-extrabold text-[#293331] flex items-center gap-2 mb-6"
+          class="text-lg font-bold tracking-[-0.01em] text-[#46504D] flex items-center gap-2 mb-6"
         >
             <span
-              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+              class="w-8 h-8 rounded-lg bg-[#FFA240]/15 flex items-center justify-center overflow-hidden"
             >
               <img
                 src="/images/chat.webp"
@@ -1091,7 +1154,7 @@
           <span>Diskusi & Komentar</span>
 
           <span
-            class="text-[10px] font-bold text-[#687572] bg-[#F1F4F3] px-2 py-1 rounded-full"
+            class="text-[10px] font-bold text-[#77817E] bg-[#F6F5F2] px-2 py-1 rounded-full"
           >
             {{ reviewData.comments?.length || 0 }}
           </span>
@@ -1106,8 +1169,8 @@
             class="p-4 rounded-2xl border transition"
             :class="
               comment.author_type === 'Admin'
-                ? 'bg-[#86BCBD]/10 border-[#86BCBD]/25 ml-4 sm:ml-8'
-                : 'bg-[#F8FAF9] border-[#E3E9E6] mr-4 sm:mr-8'
+                ? 'bg-[#FFA240]/10 border-[#FFA240]/25 ml-4 sm:ml-8'
+                : 'bg-[#FCFBF8] border-[#ECEEEC] mr-4 sm:mr-8'
             "
           >
             <div
@@ -1118,32 +1181,32 @@
                   class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider"
                   :class="
                     comment.author_type === 'Admin'
-                      ? 'bg-[#86BCBD] text-[#293331]'
-                      : 'bg-[#F7E49B] text-[#79651A]'
+                      ? 'bg-[#FFA240] text-[#46504D]'
+                      : 'bg-[#FFD41D] text-[#755700]'
                   "
                 >
                   {{ comment.author_type }}
                 </span>
 
-                <span class="font-bold text-[#293331] text-sm">
+                <span class="font-bold text-[#46504D] text-sm">
                   {{ comment.author_name }}
                 </span>
 
                 <span
                   v-if="comment.author_position"
-                  class="text-xs text-[#899492]"
+                  class="text-xs text-[#98A19E]"
                 >
                   ({{ comment.author_position }})
                 </span>
               </div>
 
-              <span class="text-xs text-[#A0AAA7]">
+              <span class="text-xs text-[#AAB2AF]">
                 {{ formatDateTime(comment.created_at) }}
               </span>
             </div>
 
             <p
-              class="text-sm text-[#52605E] whitespace-pre-line leading-relaxed"
+              class="text-sm text-[#687370] whitespace-pre-line leading-relaxed"
             >
               {{ comment.body }}
             </p>
@@ -1151,17 +1214,17 @@
 
           <div
             v-if="!reviewData.comments || reviewData.comments.length === 0"
-            class="py-10 text-center bg-[#F8FAF9] rounded-2xl border border-dashed border-[#D5DDDA] text-[#899492] text-sm"
+            class="py-10 text-center bg-[#FCFBF8] rounded-2xl border border-dashed border-[#E1E4E2] text-[#98A19E] text-sm"
           >
             Belum ada komentar diskusi.
           </div>
         </div>
 
         <div
-          class="bg-[#F8FAF9] rounded-2xl p-4 border border-[#E3E9E6]"
+          class="bg-[#FCFBF8] rounded-2xl p-4 border border-[#ECEEEC]"
         >
           <label
-            class="block text-[10px] font-extrabold uppercase tracking-wider text-[#687572] mb-2"
+            class="block text-[10px] font-extrabold uppercase tracking-wider text-[#77817E] mb-2"
           >
             Tulis Komentar atau Feedback
           </label>
@@ -1170,15 +1233,15 @@
             v-model="newCommentBody"
             rows="3"
             placeholder="Tulis pesan, pertanyaan, atau catatan kolaborasi untuk Admin..."
-            class="w-full rounded-xl border border-[#D5DDDA] bg-white p-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD] mb-3"
+            class="w-full rounded-xl border border-[#E1E4E2] bg-white p-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25 focus:border-[#FFA240] mb-3"
           ></textarea>
 
           <div
             class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
           >
-            <span class="text-xs text-[#899492]">
+            <span class="text-xs text-[#98A19E]">
               Posting sebagai:
-              <strong class="text-[#293331]">
+              <strong class="text-[#46504D]">
                 {{
                   isIdentified()
                     ? reviewerIdentity.name
@@ -1190,7 +1253,7 @@
             <button
               @click="handlePostComment"
               :disabled="!newCommentBody.trim() || loading"
-              class="px-5 py-2.5 bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:opacity-50 text-white font-bold text-xs rounded-xl transition shadow-sm"
+              class="px-5 py-2.5 bg-[#D73535] hover:bg-[#B92D2D] disabled:opacity-50 text-white font-bold text-xs rounded-xl transition shadow-sm"
             >
               Kirim Komentar
             </button>
@@ -1202,13 +1265,13 @@
            ACTIVITY TIMELINE
       ======================================================== -->
       <div
-        class="bg-white rounded-[24px] p-6 sm:p-8 border border-[#E3E9E6] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
+        class="review-card bg-white rounded-[24px] p-6 sm:p-8 border border-[#ECEEEC] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
       >
         <h2
-          class="text-lg font-extrabold text-[#293331] flex items-center gap-2 mb-7"
+          class="text-lg font-bold tracking-[-0.01em] text-[#46504D] flex items-center gap-2 mb-7"
         >
             <span
-              class="w-8 h-8 rounded-lg bg-[#86BCBD]/15 flex items-center justify-center overflow-hidden"
+              class="w-8 h-8 rounded-lg bg-[#FFA240]/15 flex items-center justify-center overflow-hidden"
             >
               <img
                 src="/images/activity.webp"
@@ -1221,7 +1284,7 @@
         </h2>
 
         <div
-          class="relative pl-7 border-l-2 border-[#E3E9E6] space-y-7"
+          class="relative pl-7 border-l-2 border-[#ECEEEC] space-y-7"
         >
           <div
             v-for="log in latestTimeline"
@@ -1232,8 +1295,8 @@
               class="absolute -left-[35px] top-0 w-4 h-4 rounded-full border-[3px] border-white shadow-sm"
               :class="
                 log.actor_type === 'Admin'
-                  ? 'bg-[#86BCBD]'
-                  : 'bg-[#F7E49B]'
+                  ? 'bg-[#FFA240]'
+                  : 'bg-[#FFD41D]'
               "
             ></div>
 
@@ -1241,7 +1304,7 @@
               class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1"
             >
               <span
-                class="font-bold text-[#293331] text-sm flex items-center gap-2"
+                class="font-bold text-[#46504D] text-sm flex items-center gap-2"
               >
                 <span>{{ log.action }}</span>
 
@@ -1249,28 +1312,28 @@
                   class="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase"
                   :class="
                     log.actor_type === 'Admin'
-                      ? 'bg-[#86BCBD]/20 text-[#315F60]'
-                      : 'bg-[#F7E49B]/50 text-[#79651A]'
+                      ? 'bg-[#FFA240]/20 text-[#9A4700]'
+                      : 'bg-[#FFD41D]/50 text-[#755700]'
                   "
                 >
                   {{ log.actor_type }}
                 </span>
               </span>
 
-              <span class="text-xs text-[#A0AAA7]">
+              <span class="text-xs text-[#AAB2AF]">
                 {{ formatDateTime(log.created_at) }}
               </span>
             </div>
 
             <p
-              class="text-xs sm:text-sm text-[#687572] leading-relaxed"
+              class="text-xs sm:text-sm text-[#77817E] leading-relaxed"
             >
               {{ log.description }}
             </p>
 
             <p
               v-if="log.actor_name"
-              class="text-xs text-[#A0AAA7] mt-1"
+              class="text-xs text-[#AAB2AF] mt-1"
             >
               Oleh: {{ log.actor_name }}
 
@@ -1288,22 +1351,22 @@
     ========================================================== -->
     <div
       v-if="showIdentityModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#4A514F]/65 backdrop-blur-sm"
     >
       <div
-        class="bg-white rounded-[26px] max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#E3E9E6]"
+        class="modal-card bg-white rounded-[26px] max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#ECEEEC]"
       >
         <div
-          class="flex items-center justify-between pb-4 border-b border-[#EDF1EF] mb-5"
+          class="flex items-center justify-between pb-4 border-b border-[#F0F1EF] mb-5"
         >
           <div>
             <span
-              class="text-[10px] font-extrabold uppercase tracking-wider text-[#BA5A5A]"
+              class="text-[10px] font-extrabold uppercase tracking-wider text-[#D73535]"
             >
               Reviewer
             </span>
 
-            <h3 class="text-lg font-extrabold text-[#293331] mt-1">
+            <h3 class="text-lg font-bold tracking-[-0.01em] text-[#46504D] mt-1">
               {{
                 isIdentified()
                   ? 'Ubah Identitas Reviewer'
@@ -1314,13 +1377,13 @@
 
           <button
             @click="showIdentityModal = false"
-            class="w-8 h-8 rounded-lg text-[#899492] hover:bg-[#F1F4F3] hover:text-[#293331] transition"
+            class="w-8 h-8 rounded-lg text-[#98A19E] hover:bg-[#F6F5F2] hover:text-[#46504D] transition"
           >
             ✕
           </button>
         </div>
 
-        <p class="text-xs text-[#687572] mb-5 leading-relaxed">
+        <p class="text-xs text-[#77817E] mb-5 leading-relaxed">
           Lengkapi identitas Anda untuk pencatatan audit trail pada setiap
           aktivitas review.
         </p>
@@ -1331,10 +1394,10 @@
         >
           <div>
             <label
-              class="block text-xs font-bold text-[#52605E] mb-1.5"
+              class="block text-xs font-bold text-[#687370] mb-1.5"
             >
               Nama Lengkap
-              <span class="text-[#BA5A5A]">*</span>
+              <span class="text-[#D73535]">*</span>
             </label>
 
             <input
@@ -1342,16 +1405,16 @@
               type="text"
               required
               placeholder="Contoh: Budi Santoso"
-              class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD]"
+              class="w-full rounded-xl border border-[#E1E4E2] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25 focus:border-[#FFA240]"
             />
           </div>
 
           <div>
             <label
-              class="block text-xs font-bold text-[#52605E] mb-1.5"
+              class="block text-xs font-bold text-[#687370] mb-1.5"
             >
               Jabatan / Posisi
-              <span class="text-[#899492] font-normal">
+              <span class="text-[#98A19E] font-normal">
                 (Opsional)
               </span>
             </label>
@@ -1360,13 +1423,13 @@
               v-model="identityForm.position"
               type="text"
               placeholder="Brand Manager / Marketing Director"
-              class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD]"
+              class="w-full rounded-xl border border-[#E1E4E2] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25 focus:border-[#FFA240]"
             />
           </div>
 
           <div>
             <label
-              class="block text-xs font-bold text-[#52605E] mb-1.5"
+              class="block text-xs font-bold text-[#687370] mb-1.5"
             >
               Nama Perusahaan / Brand
             </label>
@@ -1375,16 +1438,16 @@
               v-model="identityForm.companyName"
               type="text"
               disabled
-              class="w-full rounded-xl border border-[#E3E9E6] bg-[#F1F4F3] px-3.5 py-2.5 text-sm text-[#899492]"
+              class="w-full rounded-xl border border-[#ECEEEC] bg-[#F6F5F2] px-3.5 py-2.5 text-sm text-[#98A19E]"
             />
           </div>
 
           <div>
             <label
-              class="block text-xs font-bold text-[#52605E] mb-1.5"
+              class="block text-xs font-bold text-[#687370] mb-1.5"
             >
               Nomor WhatsApp
-              <span class="text-[#899492] font-normal">
+              <span class="text-[#98A19E] font-normal">
                 (Opsional)
               </span>
             </label>
@@ -1393,17 +1456,17 @@
               v-model="identityForm.whatsappNumber"
               type="text"
               placeholder="081234567890"
-              class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD]"
+              class="w-full rounded-xl border border-[#E1E4E2] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25 focus:border-[#FFA240]"
             />
           </div>
 
           <div
-            class="flex items-center justify-end gap-3 pt-4 border-t border-[#EDF1EF]"
+            class="flex items-center justify-end gap-3 pt-4 border-t border-[#F0F1EF]"
           >
             <button
               type="button"
               @click="showIdentityModal = false"
-              class="px-4 py-2.5 rounded-xl border border-[#D5DDDA] text-xs font-bold text-[#687572] hover:bg-[#F8FAF9] transition"
+              class="px-4 py-2.5 rounded-xl border border-[#E1E4E2] text-xs font-bold text-[#77817E] hover:bg-[#FCFBF8] transition"
             >
               Batal
             </button>
@@ -1411,7 +1474,7 @@
             <button
               type="submit"
               :disabled="!identityForm.name.trim() || loading"
-              class="px-5 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:opacity-50 text-white text-xs font-bold transition shadow-sm"
+              class="px-5 py-2.5 rounded-xl bg-[#D73535] hover:bg-[#B92D2D] disabled:opacity-50 text-white text-xs font-bold transition shadow-sm"
             >
               Simpan Identitas
             </button>
@@ -1425,37 +1488,37 @@
     ========================================================== -->
     <div
       v-if="showRejectModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#4A514F]/65 backdrop-blur-sm"
     >
       <div
-        class="bg-white rounded-[26px] max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#E3E9E6]"
+        class="modal-card bg-white rounded-[26px] max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#ECEEEC]"
       >
         <div
-          class="flex items-center justify-between pb-4 border-b border-[#EDF1EF] mb-5"
+          class="flex items-center justify-between pb-4 border-b border-[#F0F1EF] mb-5"
         >
           <div>
             <span
-              class="text-[10px] font-extrabold uppercase tracking-wider text-[#BA5A5A]"
+              class="text-[10px] font-extrabold uppercase tracking-wider text-[#D73535]"
             >
               Approval Review
             </span>
 
-            <h3 class="text-lg font-extrabold text-[#BA5A5A] mt-1">
+            <h3 class="text-lg font-extrabold text-[#D73535] mt-1">
               Tolak Variant Produk
             </h3>
           </div>
 
           <button
             @click="showRejectModal = false"
-            class="w-8 h-8 rounded-lg text-[#899492] hover:bg-[#F1F4F3]"
+            class="w-8 h-8 rounded-lg text-[#98A19E] hover:bg-[#F6F5F2]"
           >
             ✕
           </button>
         </div>
 
-        <p class="text-xs text-[#687572] mb-4">
+        <p class="text-xs text-[#77817E] mb-4">
           Anda akan menolak variant:
-          <strong class="text-[#293331]">
+          <strong class="text-[#46504D]">
             {{ selectedVariant?.product_name }} -
             {{ selectedVariant?.name }}
           </strong>
@@ -1467,10 +1530,10 @@
         >
           <div>
             <label
-              class="block text-xs font-bold text-[#52605E] mb-1.5"
+              class="block text-xs font-bold text-[#687370] mb-1.5"
             >
               Catatan Penolakan
-              <span class="text-[#BA5A5A]">*</span>
+              <span class="text-[#D73535]">*</span>
             </label>
 
             <textarea
@@ -1478,21 +1541,21 @@
               rows="4"
               required
               placeholder="Jelaskan alasan penolakan..."
-              class="w-full rounded-xl border border-[#D99A9A] p-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#BA5A5A]/20 focus:border-[#BA5A5A]"
+              class="w-full rounded-xl border border-[#F3A0A0] p-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#D73535]/20 focus:border-[#D73535]"
             ></textarea>
 
-            <p class="text-[10px] text-[#BA5A5A] mt-1.5">
+            <p class="text-[10px] text-[#D73535] mt-1.5">
               Alasan penolakan wajib disertakan.
             </p>
           </div>
 
           <div
-            class="flex items-center justify-end gap-3 pt-4 border-t border-[#EDF1EF]"
+            class="flex items-center justify-end gap-3 pt-4 border-t border-[#F0F1EF]"
           >
             <button
               type="button"
               @click="showRejectModal = false"
-              class="px-4 py-2.5 rounded-xl border border-[#D5DDDA] text-xs font-bold text-[#687572]"
+              class="px-4 py-2.5 rounded-xl border border-[#E1E4E2] text-xs font-bold text-[#77817E]"
             >
               Batal
             </button>
@@ -1500,7 +1563,7 @@
             <button
               type="submit"
               :disabled="!rejectionNoteInput.trim() || loading"
-              class="px-5 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] disabled:opacity-50 text-white text-xs font-bold transition"
+              class="px-5 py-2.5 rounded-xl bg-[#D73535] hover:bg-[#B92D2D] disabled:opacity-50 text-white text-xs font-bold transition"
             >
               Konfirmasi Penolakan
             </button>
@@ -1514,29 +1577,29 @@
     ========================================================== -->
     <div
       v-if="showHistoryModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#4A514F]/65 backdrop-blur-sm"
     >
       <div
-        class="bg-white rounded-[26px] max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-[#E3E9E6] max-h-[85vh] flex flex-col"
+        class="modal-card bg-white rounded-[26px] max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-[#ECEEEC] max-h-[85vh] flex flex-col"
       >
         <div
-          class="flex items-center justify-between pb-4 border-b border-[#EDF1EF] mb-4"
+          class="flex items-center justify-between pb-4 border-b border-[#F0F1EF] mb-4"
         >
           <div>
             <span
-              class="text-[10px] font-extrabold uppercase tracking-wider text-[#86BCBD]"
+              class="text-[10px] font-extrabold uppercase tracking-wider text-[#FFA240]"
             >
               Audit Trail
             </span>
 
-            <h3 class="text-lg font-extrabold text-[#293331] mt-1">
+            <h3 class="text-lg font-bold tracking-[-0.01em] text-[#46504D] mt-1">
               Riwayat Approval
             </h3>
           </div>
 
           <button
             @click="showHistoryModal = false"
-            class="w-8 h-8 rounded-lg text-[#899492] hover:bg-[#F1F4F3]"
+            class="w-8 h-8 rounded-lg text-[#98A19E] hover:bg-[#F6F5F2]"
           >
             ✕
           </button>
@@ -1548,42 +1611,42 @@
           <div
             v-for="hist in reviewData.approval_histories"
             :key="hist.id"
-            class="p-4 rounded-2xl bg-[#F8FAF9] border border-[#E3E9E6]"
+            class="p-4 rounded-2xl bg-[#FCFBF8] border border-[#ECEEEC]"
           >
             <div
-              class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 font-bold text-[#293331] mb-2"
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 font-bold text-[#46504D] mb-2"
             >
               <span>
                 {{ hist.variant_name }}
 
                 <span
                   v-if="hist.variant_sku"
-                  class="font-mono font-normal text-[#A0AAA7]"
+                  class="font-mono font-normal text-[#AAB2AF]"
                 >
                   ({{ hist.variant_sku }})
                 </span>
               </span>
 
-              <span class="text-xs text-[#A0AAA7] font-normal">
+              <span class="text-xs text-[#AAB2AF] font-normal">
                 {{ formatDateTime(hist.created_at) }}
               </span>
             </div>
 
             <div class="flex items-center gap-2 my-3 text-xs">
               <span
-                class="px-2.5 py-1 rounded-lg bg-[#E7ECEA] font-semibold text-[#687572]"
+                class="px-2.5 py-1 rounded-lg bg-[#F0F1EF] font-semibold text-[#77817E]"
               >
                 {{ hist.old_status }}
               </span>
 
-              <span class="text-[#A0AAA7]">→</span>
+              <span class="text-[#AAB2AF]">→</span>
 
               <span
                 class="px-2.5 py-1 rounded-lg font-bold"
                 :class="
                   hist.new_status === 'Approved'
-                    ? 'bg-[#A4CE8B]/25 text-[#426332]'
-                    : 'bg-[#BA5A5A]/10 text-[#BA5A5A]'
+                    ? 'bg-[#FFD41D]/25 text-[#654C00]'
+                    : 'bg-[#D73535]/10 text-[#D73535]'
                 "
               >
                 {{ hist.new_status }}
@@ -1592,16 +1655,16 @@
 
             <p
               v-if="hist.notes"
-              class="text-xs text-[#BA5A5A] bg-[#BA5A5A]/10 p-3 rounded-xl border border-[#BA5A5A]/20"
+              class="text-xs text-[#D73535] bg-[#D73535]/10 p-3 rounded-xl border border-[#D73535]/20"
             >
               📝 {{ hist.notes }}
             </p>
 
             <p
-              class="text-[10px] text-[#899492] mt-3 border-t border-[#E3E9E6] pt-2"
+              class="text-[10px] text-[#98A19E] mt-3 border-t border-[#ECEEEC] pt-2"
             >
               Reviewer:
-              <strong class="text-[#52605E]">
+              <strong class="text-[#687370]">
                 {{ hist.reviewer_name }}
               </strong>
 
@@ -1620,18 +1683,18 @@
               !reviewData.approval_histories ||
               reviewData.approval_histories.length === 0
             "
-            class="py-10 text-center text-[#899492] text-sm"
+            class="py-10 text-center text-[#98A19E] text-sm"
           >
             Belum ada riwayat perubahan status approval.
           </div>
         </div>
 
         <div
-          class="pt-4 border-t border-[#EDF1EF] text-right mt-4"
+          class="pt-4 border-t border-[#F0F1EF] text-right mt-4"
         >
           <button
             @click="showHistoryModal = false"
-            class="px-5 py-2.5 bg-[#293331] hover:bg-[#3D4B48] text-white font-bold text-xs rounded-xl transition"
+            class="px-5 py-2.5 bg-[#4A514F] hover:bg-[#3F4644] text-white font-bold text-xs rounded-xl transition"
           >
             Tutup Riwayat
           </button>
@@ -1651,11 +1714,11 @@
           :key="t.id"
           class="w-full px-4 py-3 rounded-xl shadow-lg flex items-start gap-3 border"
           :class="{
-            'bg-[#A4CE8B] text-[#304A27] border-[#94C27A]':
+            'bg-[#FFD41D] text-[#5A4300] border-[#E3B900]':
               t.type === 'success',
-            'bg-[#BA5A5A] text-white border-[#A84F4F]':
+            'bg-[#D73535] text-white border-[#B92D2D]':
               t.type === 'error',
-            'bg-[#293331] text-white border-[#3D4B48]':
+            'bg-[#4A514F] text-white border-[#59615E]':
               t.type === 'info'
           }"
         >
@@ -1679,36 +1742,36 @@
     ========================================================== -->
     <div
       v-if="confirmModal.show"
-      class="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+      class="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-[#4A514F]/65 backdrop-blur-sm"
     >
       <div
-        class="bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-[#E3E9E6]"
+        class="modal-card bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-[#ECEEEC]"
       >
         <div
-          class="w-10 h-10 rounded-xl bg-[#F7E49B]/40 flex items-center justify-center mb-4"
+          class="w-10 h-10 rounded-xl bg-[#FFD41D]/40 flex items-center justify-center mb-4"
         >
           ?
         </div>
 
-        <div class="text-lg font-extrabold text-[#293331] mb-2">
+        <div class="text-lg font-bold tracking-[-0.01em] text-[#46504D] mb-2">
           Konfirmasi
         </div>
 
-        <p class="text-sm text-[#687572] mb-6 leading-relaxed">
+        <p class="text-sm text-[#77817E] mb-6 leading-relaxed">
           {{ confirmModal.message }}
         </p>
 
         <div class="flex justify-end gap-3">
           <button
             @click="confirmCancel"
-            class="px-4 py-2.5 rounded-xl border border-[#D5DDDA] text-xs font-bold text-[#687572] hover:bg-[#F8FAF9]"
+            class="px-4 py-2.5 rounded-xl border border-[#E1E4E2] text-xs font-bold text-[#77817E] hover:bg-[#FCFBF8]"
           >
             Batal
           </button>
 
           <button
             @click="confirmOk"
-            class="px-5 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] text-white text-xs font-bold"
+            class="px-5 py-2.5 rounded-xl bg-[#D73535] hover:bg-[#B92D2D] text-white text-xs font-bold"
           >
             Ya, Lanjutkan
           </button>
@@ -1721,24 +1784,24 @@
     ========================================================== -->
     <div
       v-if="promptModal.show"
-      class="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-[#293331]/65 backdrop-blur-sm"
+      class="fixed inset-0 z-[55] flex items-center justify-center p-4 bg-[#4A514F]/65 backdrop-blur-sm"
     >
       <div
-        class="bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-[#E3E9E6]"
+        class="modal-card bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-[#ECEEEC]"
       >
         <div
-          class="w-10 h-10 rounded-xl bg-[#F7E49B]/40 flex items-center justify-center mb-4"
+          class="w-10 h-10 rounded-xl bg-[#FFD41D]/40 flex items-center justify-center mb-4"
         >
           ✎
         </div>
 
-        <div class="text-lg font-extrabold text-[#293331] mb-2">
+        <div class="text-lg font-bold tracking-[-0.01em] text-[#46504D] mb-2">
           {{ promptModal.title || 'Masukkan' }}
         </div>
 
         <p
           v-if="promptModal.message"
-          class="text-sm text-[#687572] mb-4"
+          class="text-sm text-[#77817E] mb-4"
         >
           {{ promptModal.message }}
         </p>
@@ -1746,25 +1809,26 @@
         <input
           v-model="promptModal.value"
           type="text"
-          class="w-full rounded-xl border border-[#D5DDDA] px-3.5 py-2.5 text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[#86BCBD]/25 focus:border-[#86BCBD]"
+          class="w-full rounded-xl border border-[#E1E4E2] px-3.5 py-2.5 text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25 focus:border-[#FFA240]"
         />
 
         <div class="flex justify-end gap-3">
           <button
             @click="promptCancel"
-            class="px-4 py-2.5 rounded-xl border border-[#D5DDDA] text-xs font-bold text-[#687572]"
+            class="px-4 py-2.5 rounded-xl border border-[#E1E4E2] text-xs font-bold text-[#77817E]"
           >
             Batal
           </button>
 
           <button
             @click="promptOk"
-            class="px-5 py-2.5 rounded-xl bg-[#BA5A5A] hover:bg-[#A84F4F] text-white text-xs font-bold"
+            class="px-5 py-2.5 rounded-xl bg-[#D73535] hover:bg-[#B92D2D] text-white text-xs font-bold"
           >
             Kirim
           </button>
         </div>
       </div>
+    </div>
     </div>
   </PublicLayout>
 </template>
@@ -1807,19 +1871,50 @@ const selectedVariantIds = ref([]);
 const batchLoading = ref(false);
 const pendingAction = ref(null);
 const isDelivery = computed(() => ['Task', 'PerformanceReport'].includes(reviewData.value?.type));
-const reportMetricCards = computed(() => {
+const reportTypeLabel = computed(() => ({
+  daily: 'Harian',
+  weekly: 'Mingguan',
+  monthly: 'Bulanan',
+}[reviewData.value?.report_type] || 'Laporan'));
+const deliveryStatusLabel = computed(() => ({
+  published: 'Dipublikasikan',
+  draft: 'Draft',
+  completed: 'Selesai',
+  in_progress: 'Sedang Dikerjakan',
+}[String(reviewData.value?.status || '').toLowerCase()] || String(reviewData.value?.status || '').replaceAll('_', ' ')));
+const deliveryStatusClass = computed(() => {
+  const status = String(reviewData.value?.status || '').toLowerCase();
+  if (['published', 'completed'].includes(status)) return 'bg-emerald-400/20 text-emerald-100 ring-1 ring-inset ring-emerald-300/30';
+  if (status === 'draft') return 'bg-amber-300/20 text-amber-100 ring-1 ring-inset ring-amber-200/30';
+  return 'bg-white/10 text-white/85 ring-1 ring-inset ring-white/15';
+});
+const primaryReportMetrics = computed(() => {
   const report = reviewData.value || {};
   return [
-    { label: 'Omzet', value: formatCurrency(report.turnover) },
-    { label: 'Jumlah Pesanan', value: Number(report.order_count || 0).toLocaleString('id-ID') },
-    { label: 'Biaya Iklan', value: formatCurrency(report.ad_spend) },
-    { label: 'Penjualan dari Iklan', value: formatCurrency(report.ad_sales) },
-    { label: 'ROAS', value: report.roas === null ? '-' : Number(report.roas).toFixed(2) },
-    { label: 'ACOS', value: report.acos === null ? '-' : `${Number(report.acos).toFixed(2)}%` },
-    { label: 'Kontribusi Iklan', value: report.ad_contribution === null ? '-' : `${Number(report.ad_contribution).toFixed(2)}%` },
-    { label: 'Rata-rata Pesanan', value: formatCurrency(report.average_order_value) },
+    { label: 'Omzet Toko', value: formatCurrency(report.turnover), description: 'Total penjualan toko selama periode laporan.', icon: 'fa-solid fa-wallet', tone: 'metric-card--amber' },
+    { label: 'Jumlah Pesanan', value: Number(report.order_count || 0).toLocaleString('id-ID'), description: 'Total pesanan yang diterima oleh toko.', icon: 'fa-solid fa-box', tone: 'metric-card--yellow' },
+    { label: 'Biaya Iklan', value: formatCurrency(report.ad_spend), description: 'Total anggaran iklan yang telah digunakan.', icon: 'fa-solid fa-bullhorn', tone: 'metric-card--red' },
+    { label: 'Penjualan dari Iklan', value: formatCurrency(report.ad_sales), description: 'Nilai penjualan yang dihasilkan oleh iklan.', icon: 'fa-solid fa-chart-line', tone: 'metric-card--green' },
   ];
 });
+const secondaryReportMetrics = computed(() => {
+  const report = reviewData.value || {};
+  return [
+    { label: 'ROAS', value: report.roas === null ? '-' : `${Number(report.roas).toFixed(2)}x`, description: 'Pendapatan iklan untuk setiap Rp1 biaya.' },
+    { label: 'ACOS', value: report.acos === null ? '-' : `${Number(report.acos).toFixed(2)}%`, description: 'Porsi biaya terhadap penjualan dari iklan.' },
+    { label: 'Kontribusi Iklan', value: report.ad_contribution === null ? '-' : `${Number(report.ad_contribution).toFixed(2)}%`, description: 'Porsi penjualan iklan terhadap omzet toko.' },
+    { label: 'Rata-rata Pesanan', value: formatCurrency(report.average_order_value), description: 'Nilai rata-rata dari setiap pesanan.' },
+  ];
+});
+const reportContentSections = computed(() => {
+  const report = reviewData.value || {};
+  return [
+    { title: 'Analisis Performa', description: 'Penjelasan hasil kinerja selama periode laporan.', html: report.content },
+    { title: 'Temuan dan Kendala', description: 'Hal penting serta hambatan yang ditemukan.', html: report.findings },
+    { title: 'Rencana Tindak Lanjut', description: 'Langkah yang disarankan setelah laporan ini.', html: report.action_plan },
+  ].filter(section => section.html);
+});
+const initialOf = name => String(name || '?').trim().charAt(0).toUpperCase();
 
 const handleDeliveryComment = async () => {
   if (!reviewerIdentity.name?.trim() || !newCommentBody.value.trim()) return;
@@ -2302,19 +2397,19 @@ const getStatusBadgeClass = (status) => {
   switch (status) {
     case 'Approved':
     case 'Completed':
-      return 'bg-[#A4CE8B]/25 text-[#3F6935] border-[#A4CE8B]';
+      return 'bg-[#FFD41D]/25 text-[#6B5000] border-[#FFD41D]';
 
     case 'Rejected':
-      return 'bg-[#BA5A5A]/10 text-[#9B4141] border-[#BA5A5A]/40';
+      return 'bg-[#D73535]/10 text-[#B52A2A] border-[#D73535]/40';
 
     case 'Partially Approved':
-      return 'bg-[#F7E49B]/40 text-[#806A19] border-[#F7E49B]';
+      return 'bg-[#FFD41D]/40 text-[#755700] border-[#FFD41D]';
 
     case 'Active':
-      return 'bg-[#86BCBD]/20 text-[#356B6C] border-[#86BCBD]';
+      return 'bg-[#FFA240]/20 text-[#A04B00] border-[#FFA240]';
 
     case 'Draft':
-      return 'bg-[#F7E49B]/40 text-[#806A19] border-[#F7E49B]';
+      return 'bg-[#FFD41D]/40 text-[#755700] border-[#FFD41D]';
 
     default:
       return 'bg-slate-100 text-slate-700 border-slate-200';
@@ -2338,11 +2433,11 @@ const getTaskStatusLabel = (status) => {
 const getTaskStatusBadgeClass = (status) => {
   switch (status) {
     case 'completed':
-      return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+      return 'bg-[#FFD41D]/25 text-[#654C00] border border-[#FFD41D]/60';
     case 'in_progress':
-      return 'bg-blue-100 text-blue-800 border border-blue-200';
+      return 'bg-[#FFA240]/20 text-[#9A4700] border border-[#FFA240]/50';
     case 'revision':
-      return 'bg-amber-100 text-amber-800 border border-amber-200';
+      return 'bg-[#FFA240]/20 text-[#9A4700] border border-[#FFA240]/50';
     case 'on_hold':
       return 'bg-slate-100 text-slate-700 border border-slate-200';
     default:
@@ -2353,13 +2448,721 @@ const getTaskStatusBadgeClass = (status) => {
 const getVariantStatusBadgeClass = (status) => {
   switch (status) {
     case 'Approved':
-      return 'bg-emerald-100 text-emerald-800';
+      return 'bg-[#FFD41D]/25 text-[#654C00]';
     case 'Rejected':
-      return 'bg-rose-100 text-rose-800';
+      return 'bg-[#FF4646]/12 text-[#D73535]';
     default:
-      return 'bg-amber-100 text-amber-800';
+      return 'bg-[#FFA240]/20 text-[#9A4700]';
   }
 };
 
 </script>
 
+
+<style scoped>
+/* ============================================================
+   SUNTRACK PUBLIC REVIEW — MODERN BRAND THEME
+   Palette:
+   #FFD41D — Yellow
+   #FFA240 — Orange
+   #D73535 — Deep Red
+   #FF4646 — Signal Red
+============================================================ */
+
+.review-shell {
+  --st-yellow: #FFD41D;
+  --st-orange: #FFA240;
+  --st-red: #D73535;
+  --st-signal: #FF4646;
+
+  --st-ink: #252A2B;
+  --st-text: #56605F;
+  --st-muted: #8A9492;
+  --st-line: #E7EAE8;
+  --st-surface: #FFFFFF;
+  --st-soft: #FFF9ED;
+
+  position: relative;
+  min-height: 100vh;
+  padding-top: 1.25rem;
+  background:
+    radial-gradient(circle at 7% 3%, rgba(255, 212, 29, .20), transparent 22rem),
+    radial-gradient(circle at 95% 8%, rgba(255, 70, 70, .10), transparent 25rem),
+    linear-gradient(180deg, #FFFDF8 0%, #FFFFFF 34%, #FFF9F7 100%);
+  isolation: isolate;
+}
+
+.review-shell::before,
+.review-shell::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(10px);
+}
+
+.review-shell::before {
+  width: 18rem;
+  height: 18rem;
+  top: 9rem;
+  left: -9rem;
+  background: rgba(255, 162, 64, .08);
+}
+
+.review-shell::after {
+  width: 24rem;
+  height: 24rem;
+  right: -12rem;
+  bottom: 4rem;
+  background: rgba(215, 53, 53, .06);
+}
+
+/* Main authenticated review content */
+.review-shell > .space-y-7 {
+  width: min(100% - 2rem, 1180px);
+  margin-inline: auto;
+}
+
+.review-card {
+  position: relative;
+  border-color: rgba(37, 42, 43, .08) !important;
+  box-shadow:
+    0 1px 2px rgba(37, 42, 43, .02),
+    0 14px 42px rgba(37, 42, 43, .06) !important;
+  transition:
+    transform .22s ease,
+    box-shadow .22s ease,
+    border-color .22s ease;
+}
+
+.review-card:hover {
+  border-color: rgba(255, 162, 64, .30) !important;
+  box-shadow:
+    0 2px 4px rgba(37, 42, 43, .025),
+    0 20px 52px rgba(37, 42, 43, .085) !important;
+}
+
+.review-card--featured::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--st-yellow) 0%,
+    var(--st-orange) 34%,
+    var(--st-signal) 67%,
+    var(--st-red) 100%
+  );
+}
+
+.modal-card {
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 30px 90px rgba(37, 42, 43, .24),
+    0 4px 18px rgba(37, 42, 43, .08) !important;
+}
+
+.modal-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--st-yellow),
+    var(--st-orange),
+    var(--st-signal),
+    var(--st-red)
+  );
+}
+
+/* Inputs */
+.review-shell :deep(input:not([type="checkbox"]):not([type="file"])),
+.review-shell :deep(textarea),
+.review-shell :deep(select) {
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    background-color .18s ease;
+}
+
+.review-shell :deep(input:not([type="checkbox"]):not([type="file"]):focus),
+.review-shell :deep(textarea:focus),
+.review-shell :deep(select:focus) {
+  border-color: rgba(255, 162, 64, .85) !important;
+  box-shadow: 0 0 0 4px rgba(255, 162, 64, .13) !important;
+}
+
+/* Checkbox brand treatment */
+.review-shell :deep(input[type="checkbox"]) {
+  accent-color: var(--st-red);
+}
+
+/* Buttons */
+.review-shell :deep(button) {
+  transition:
+    transform .16s ease,
+    box-shadow .16s ease,
+    background-color .16s ease,
+    border-color .16s ease,
+    color .16s ease;
+}
+
+.review-shell :deep(button:not(:disabled):active) {
+  transform: translateY(1px) scale(.99);
+}
+
+/* Table */
+.review-shell :deep(table) {
+  background: rgba(255, 255, 255, .94);
+}
+
+.review-shell :deep(thead) {
+  backdrop-filter: blur(8px);
+}
+
+.review-shell :deep(tbody tr) {
+  transition: background-color .18s ease;
+}
+
+/* Scrollbar */
+.review-shell :deep(*::-webkit-scrollbar) {
+  width: 8px;
+  height: 8px;
+}
+
+.review-shell :deep(*::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+.review-shell :deep(*::-webkit-scrollbar-thumb) {
+  background: #D7DBD9;
+  border-radius: 9999px;
+}
+
+.review-shell :deep(*::-webkit-scrollbar-thumb:hover) {
+  background: #BCC2BF;
+}
+
+/* Rich text */
+.review-shell :deep(.prose h1),
+.review-shell :deep(.prose h2),
+.review-shell :deep(.prose h3),
+.review-shell :deep(.prose strong) {
+  color: var(--st-ink);
+}
+
+.review-shell :deep(.prose a) {
+  color: var(--st-red);
+  text-decoration-color: rgba(215, 53, 53, .35);
+}
+
+/* Toast transitions */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all .22s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) translateX(10px);
+}
+
+/* Mobile refinements */
+@media (max-width: 640px) {
+  .review-shell {
+    padding-top: .75rem;
+  }
+
+  .review-shell > .space-y-7 {
+    width: min(100% - 1rem, 1180px);
+  }
+
+  .review-card {
+    border-radius: 20px !important;
+  }
+
+  .modal-card {
+    border-radius: 22px !important;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .review-shell *,
+  .review-shell *::before,
+  .review-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+
+/* ============================================================
+   VISUAL REFINEMENT V2 — SOFTER TYPOGRAPHY & MODERN DEPTH
+============================================================ */
+
+.review-shell {
+  --st-heading: #46504D;
+  --st-body: #687370;
+  --st-muted: #98A19E;
+  --st-faint: #AAB2AF;
+
+  background:
+    radial-gradient(circle at 4% 4%, rgba(255, 212, 29, .16), transparent 25rem),
+    radial-gradient(circle at 96% 7%, rgba(255, 162, 64, .10), transparent 25rem),
+    radial-gradient(circle at 88% 85%, rgba(255, 70, 70, .055), transparent 28rem),
+    linear-gradient(180deg, #FFFDF9 0%, #FFFFFF 36%, #FFFBF9 100%);
+}
+
+/* Give content slightly more breathing room */
+.review-shell > .space-y-7 {
+  gap: 1.65rem;
+}
+
+/* Modern card treatment: lighter and less boxed-in */
+.review-card {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, .97) 0%,
+      rgba(255, 255, 255, .94) 100%
+    ) !important;
+
+  border-color: rgba(61, 70, 67, .075) !important;
+
+  box-shadow:
+    0 1px 2px rgba(35, 41, 39, .015),
+    0 12px 34px rgba(35, 41, 39, .045) !important;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.review-card:hover {
+  transform: translateY(-1px);
+
+  border-color: rgba(255, 162, 64, .22) !important;
+
+  box-shadow:
+    0 2px 4px rgba(35, 41, 39, .018),
+    0 18px 44px rgba(35, 41, 39, .065) !important;
+}
+
+/* Softer text hierarchy */
+.review-shell :deep(h1),
+.review-shell :deep(h2),
+.review-shell :deep(h3) {
+  color: var(--st-heading);
+  letter-spacing: -0.018em;
+}
+
+.review-shell :deep(p) {
+  text-rendering: optimizeLegibility;
+}
+
+.review-shell :deep(.prose) {
+  color: var(--st-body);
+}
+
+.review-shell :deep(.prose p),
+.review-shell :deep(.prose li) {
+  color: var(--st-body);
+  line-height: 1.8;
+}
+
+.review-shell :deep(.prose h1),
+.review-shell :deep(.prose h2),
+.review-shell :deep(.prose h3),
+.review-shell :deep(.prose strong) {
+  color: var(--st-heading);
+}
+
+/* Metric cards feel more like dashboard widgets */
+.review-shell :deep(.grid > div.rounded-2xl) {
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    border-color .18s ease;
+}
+
+.review-shell :deep(.grid > div.rounded-2xl:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(44, 50, 48, .045);
+}
+
+/* Softer table typography */
+.review-shell :deep(table th) {
+  color: #9AA29F;
+  font-weight: 700;
+  letter-spacing: .075em;
+}
+
+.review-shell :deep(table td) {
+  color: #707A77;
+}
+
+.review-shell :deep(table tbody tr:hover) {
+  background: rgba(255, 212, 29, .045) !important;
+}
+
+/* Inputs: cleaner neutral surface */
+.review-shell :deep(input:not([type="checkbox"]):not([type="file"])),
+.review-shell :deep(textarea),
+.review-shell :deep(select) {
+  color: #596360;
+  background-color: rgba(255, 255, 255, .94);
+}
+
+.review-shell :deep(input::placeholder),
+.review-shell :deep(textarea::placeholder) {
+  color: #AEB5B2;
+}
+
+/* Buttons gain a more polished elevation */
+.review-shell :deep(button:not(:disabled)) {
+  box-shadow: 0 1px 2px rgba(35, 41, 39, .025);
+}
+
+.review-shell :deep(button:not(:disabled):hover) {
+  box-shadow: 0 7px 18px rgba(35, 41, 39, .07);
+}
+
+/* Accent badges stay colorful without overpowering the page */
+.review-shell :deep(.rounded-full),
+.review-shell :deep(.rounded-lg) {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Modal surface refinement */
+.modal-card {
+  border-color: rgba(61, 70, 67, .08) !important;
+  background: rgba(255, 255, 255, .985) !important;
+
+  box-shadow:
+    0 34px 100px rgba(39, 44, 43, .18),
+    0 5px 20px rgba(39, 44, 43, .06) !important;
+}
+
+/* Scrollable discussion/timeline areas */
+.review-shell :deep(.overflow-y-auto) {
+  scrollbar-gutter: stable;
+}
+
+/* Mobile spacing refinement */
+@media (max-width: 640px) {
+  .review-shell {
+    background:
+      radial-gradient(circle at 5% 2%, rgba(255, 212, 29, .12), transparent 18rem),
+      linear-gradient(180deg, #FFFDF9 0%, #FFFFFF 40%, #FFFBF9 100%);
+  }
+
+  .review-card:hover {
+    transform: none;
+  }
+}
+
+/* Public delivery and performance report */
+.delivery-hero {
+  position: relative;
+  background:
+    radial-gradient(circle at 90% 15%, rgba(255, 212, 29, .22), transparent 18rem),
+    radial-gradient(circle at 12% 115%, rgba(255, 162, 64, .2), transparent 20rem),
+    linear-gradient(135deg, #25302e 0%, #313d3a 52%, #82372e 100%);
+  box-shadow: 0 24px 60px rgba(37, 48, 46, .16);
+}
+
+.delivery-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 4px;
+  background: linear-gradient(90deg, #FFD41D, #FFA240, #FF4646, #D73535);
+}
+
+.delivery-title {
+  color: #ffffff !important;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .18);
+}
+
+.section-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+.section-kicker {
+  color: #9A4700;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .13em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.section-title {
+  margin-top: 3px;
+  color: #3c4643;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.report-meta-grid > div {
+  border: 1px solid #eceeec;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff 0%, #fcfbf8 100%);
+}
+
+.metric-card {
+  min-width: 0;
+  padding: 1.15rem;
+  overflow: hidden;
+  border: 1px solid #e7ebe9;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(47, 56, 53, .04);
+}
+
+.metric-icon {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.metric-card--amber {
+  border-top: 3px solid #ffa240;
+}
+.metric-card--amber .metric-icon {
+  color: #a94d00;
+  background: #fff0df;
+}
+.metric-card--yellow {
+  border-top: 3px solid #ffd41d;
+}
+.metric-card--yellow .metric-icon {
+  color: #745e00;
+  background: #fff8ce;
+}
+.metric-card--red {
+  border-top: 3px solid #d73535;
+}
+.metric-card--red .metric-icon {
+  color: #b32323;
+  background: #ffeded;
+}
+.metric-card--green {
+  border-top: 3px solid #49a48b;
+}
+.metric-card--green .metric-icon {
+  color: #26745f;
+  background: #e9f7f2;
+}
+
+.ratio-metric + .ratio-metric {
+  border-top: 1px solid #e8ecea;
+}
+
+.report-content-card {
+  padding: 1.25rem;
+  border: 1px solid #e7ebe9;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #fff 0%, #fafbf9 100%);
+}
+
+.content-number {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  color: #9a4700;
+  background: #fff0df;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.report-prose :deep(p:first-child) {
+  margin-top: 0;
+}
+
+.report-prose :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.media-card,
+.attachment-row,
+.comment-card {
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.media-card {
+  color: #46504d !important;
+  background: #ffffff !important;
+}
+
+.media-caption {
+  border-top: 1px solid #e7ebe9;
+  background: linear-gradient(145deg, #ffffff 0%, #fffaf2 100%) !important;
+}
+
+.media-caption-title {
+  color: #303a37 !important;
+}
+
+.media-caption-copy,
+.media-caption-copy :deep(*) {
+  color: #687370 !important;
+}
+
+.media-caption-copy :deep(strong),
+.media-caption-copy :deep(h1),
+.media-caption-copy :deep(h2),
+.media-caption-copy :deep(h3) {
+  color: #3c4643 !important;
+}
+
+.media-card:hover,
+.attachment-row:hover {
+  border-color: rgba(255, 162, 64, .4);
+  box-shadow: 0 14px 30px rgba(45, 54, 51, .07);
+}
+
+.attachment-row:hover {
+  transform: translateY(-1px);
+}
+
+@media (min-width: 640px) {
+  .ratio-metric + .ratio-metric {
+    border-top: 0;
+  }
+
+  .ratio-metric:nth-child(even) {
+    border-left: 1px solid #e8ecea;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ratio-metric + .ratio-metric {
+    border-left: 1px solid #e8ecea;
+  }
+}
+
+:global(:root[data-theme='dark']) .review-shell {
+  --st-heading: #f1f5f3;
+  --st-body: #b5c1bd;
+  --st-muted: #899791;
+  --st-line: #2d3a36;
+  color: #dbe4e0;
+  background:
+    radial-gradient(circle at 5% 3%, rgba(255, 212, 29, .07), transparent 23rem),
+    radial-gradient(circle at 95% 8%, rgba(215, 53, 53, .08), transparent 26rem),
+    linear-gradient(180deg, #0b1211 0%, #101816 42%, #121311 100%);
+}
+
+:global(:root[data-theme='dark']) .delivery-page .review-card {
+  border-color: #2d3935 !important;
+  background: linear-gradient(180deg, #16201e 0%, #131c1a 100%) !important;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .22) !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .section-title,
+:global(:root[data-theme='dark']) .delivery-page .review-card h2,
+:global(:root[data-theme='dark']) .delivery-page .review-card h3,
+:global(:root[data-theme='dark']) .delivery-page .review-card strong {
+  color: #edf4f1 !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .section-kicker {
+  color: #ffb15f !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .report-meta-grid > div,
+:global(:root[data-theme='dark']) .delivery-page .metric-card,
+:global(:root[data-theme='dark']) .delivery-page .report-content-card {
+  border-color: #33423d !important;
+  background: linear-gradient(145deg, #1b2724 0%, #17211f 100%) !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .report-meta-grid p:first-child,
+:global(:root[data-theme='dark']) .delivery-page .metric-card > p:first-of-type,
+:global(:root[data-theme='dark']) .delivery-page .metric-card > p:last-of-type,
+:global(:root[data-theme='dark']) .delivery-page .ratio-metric > p:last-child,
+:global(:root[data-theme='dark']) .delivery-page .report-content-card > div > div > p {
+  color: #91a19b !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .report-meta-grid p:last-child,
+:global(:root[data-theme='dark']) .delivery-page .metric-card > p:nth-of-type(2),
+:global(:root[data-theme='dark']) .delivery-page .ratio-metric > p:nth-child(2) {
+  color: #f2f7f5 !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .ratio-grid,
+:global(:root[data-theme='dark']) .delivery-page .summary-card {
+  border-color: #33423d !important;
+  background: #101a18 !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .ratio-metric + .ratio-metric {
+  border-color: #33423d !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .report-prose,
+:global(:root[data-theme='dark']) .delivery-page .report-prose :deep(*) {
+  color: #b6c3be !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .media-card {
+  border-color: #33423d !important;
+  background: #17211f !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .media-visual {
+  background: #0d1513 !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .media-caption {
+  border-color: #33423d;
+  background: linear-gradient(145deg, #1b2724 0%, #17211f 100%) !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .media-caption-title {
+  color: #f2f7f5 !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page .attachment-row,
+:global(:root[data-theme='dark']) .delivery-page .comment-card {
+  border-color: #33423d !important;
+  background: #1a2522 !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page input,
+:global(:root[data-theme='dark']) .delivery-page textarea {
+  border-color: #3b4a45 !important;
+  color: #eef4f1 !important;
+  background: #0f1816 !important;
+}
+
+:global(:root[data-theme='dark']) .delivery-page input::placeholder,
+:global(:root[data-theme='dark']) .delivery-page textarea::placeholder {
+  color: #72827c !important;
+}
+
+</style>

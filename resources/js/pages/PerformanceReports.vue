@@ -21,7 +21,7 @@
       </select>
     </div>
 
-    <div v-if="displayError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ displayError }}</div>
+    <div v-if="displayError && !formOpen" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ displayError }}</div>
     <div v-if="notice" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ notice }}</div>
 
     <div class="overflow-x-auto rounded-2xl border border-default bg-surface shadow-sm">
@@ -57,12 +57,14 @@
             <button type="button" class="rounded-xl p-2 text-content-muted hover:bg-surface-muted" @click="closeForm"><i class="fa-solid fa-xmark"></i></button>
           </div>
 
-          <form id="pms-report-form" class="max-h-[calc(100vh-11rem)] space-y-7 overflow-y-auto px-5 py-6 sm:px-7" @submit.prevent="submit(false)">
+          <div v-if="displayError" data-testid="pms-modal-error" class="mx-5 mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:mx-7">{{ displayError }}</div>
+
+          <form ref="reportForm" id="pms-report-form" class="max-h-[calc(100vh-11rem)] space-y-7 overflow-y-auto px-5 py-6 sm:px-7" @submit.prevent="submit(false)">
             <section>
               <h3 class="mb-4 text-sm font-extrabold uppercase tracking-wide text-content">Informasi Laporan</h3>
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <label class="text-xs font-bold text-content-soft">Jenis Laporan
-                  <select v-model="form.report_type" required class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select>
+                  <select v-model="form.report_type" required class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" @change="syncPeriodEnd"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select>
                 </label>
                 <label class="text-xs font-bold text-content-soft">Brand
                   <select v-model="form.brand_id" required class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content"><option value="" disabled>Pilih brand</option><option v-for="brand in availableBrands" :key="brand.id" :value="brand.id">{{ brand.name }}</option></select>
@@ -73,8 +75,8 @@
                 <label class="text-xs font-bold text-content-soft sm:col-span-2 lg:col-span-3">Judul
                   <input v-model="form.title" required maxlength="255" class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" placeholder="Contoh: Daily Report Suurlemon" />
                 </label>
-                <label class="text-xs font-bold text-content-soft">Tanggal Mulai<input v-model="form.period_start" type="date" required class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" /></label>
-                <label class="text-xs font-bold text-content-soft">Tanggal Selesai<input v-model="form.period_end" type="date" required class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" /></label>
+                <label class="text-xs font-bold text-content-soft">Tanggal Mulai<input v-model="form.period_start" type="date" required class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" @change="syncPeriodEnd" /></label>
+                <label class="text-xs font-bold text-content-soft">Tanggal Selesai<input v-model="form.period_end" type="date" required :min="form.period_start" class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" /></label>
                 <div class="rounded-xl bg-blue-50 px-4 py-3 text-xs leading-5 text-blue-700">{{ periodHint }}</div>
               </div>
             </section>
@@ -83,7 +85,22 @@
               <h3 class="mb-4 text-sm font-extrabold uppercase tracking-wide text-content">Data Performa</h3>
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <label v-for="field in metricFields" :key="field.key" class="text-xs font-bold text-content-soft">{{ field.label }}
-                  <input v-model.number="form[field.key]" type="number" min="0" :step="field.step" required class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" />
+                  <span v-if="field.currency" class="relative mt-1 block">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm font-bold text-blue-600">Rp.</span>
+                    <input
+                      type="tel"
+                      inputmode="numeric"
+                      pattern="[0-9.]*"
+                      autocomplete="off"
+                      enterkeyhint="next"
+                      :value="formatRupiahInput(form[field.key])"
+                      required
+                      placeholder="0"
+                      class="block w-full touch-manipulation rounded-xl border border-default bg-surface py-2.5 pl-12 pr-3 text-base font-semibold text-content sm:text-sm"
+                      @input="updateCurrencyField(field.key, $event)"
+                    />
+                  </span>
+                  <input v-else v-model.number="form[field.key]" type="number" min="0" :step="field.step" required class="mt-1 block w-full rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" />
                 </label>
               </div>
               <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -93,9 +110,10 @@
 
             <section class="space-y-5">
               <h3 class="text-sm font-extrabold uppercase tracking-wide text-content">Isi Laporan</h3>
-              <label v-for="editorField in editorFields" :key="editorField.key" class="block text-xs font-bold text-content-soft">{{ editorField.label }}
-                <RichTextEditor v-model="form[editorField.key]" class="mt-1" :placeholder="editorField.placeholder" />
-              </label>
+              <div v-for="editorField in editorFields" :key="editorField.key">
+                <p class="text-xs font-bold text-content-soft">{{ editorField.label }}</p>
+                <RichTextEditor v-model="form[editorField.key]" class="mt-1" :label="editorField.label" :placeholder="editorField.placeholder" />
+              </div>
             </section>
 
             <section>
@@ -104,7 +122,7 @@
               <div class="space-y-4">
                 <div v-for="(item, index) in mediaItems" :key="item.localKey || item.id" class="grid gap-4 rounded-2xl border border-default p-4 lg:grid-cols-[260px_1fr]">
                   <div><img :src="item.preview || item.url" :alt="item.title || item.original_name" class="h-44 w-full rounded-xl bg-surface-muted object-contain" /><p class="mt-2 truncate text-xs text-content-muted">{{ item.original_name }}</p></div>
-                  <div class="space-y-3"><div class="flex gap-3"><input v-model="item.title" maxlength="255" placeholder="Judul gambar" class="min-w-0 flex-1 rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" /><button type="button" class="h-10 w-10 shrink-0 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100" @click="removeMedia(index)"><i class="fa-solid fa-trash"></i></button></div><RichTextEditor v-model="item.notes" placeholder="Tulis catatan untuk gambar ini..." /></div>
+                  <div class="space-y-3"><div class="flex gap-3"><input v-model="item.title" maxlength="255" placeholder="Judul gambar" class="min-w-0 flex-1 rounded-xl border border-default bg-surface px-3 py-2.5 text-sm text-content" /><button type="button" class="h-10 w-10 shrink-0 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100" @click="removeMedia(index)"><i class="fa-solid fa-trash"></i></button></div><RichTextEditor v-model="item.notes" label="Catatan gambar" placeholder="Tulis catatan untuk gambar ini..." /></div>
                 </div>
               </div>
             </section>
@@ -132,6 +150,7 @@ import { useAuthStore } from '../stores/auth';
 const authStore = useAuthStore();
 const { reports, reportOptions, loading, error, fetchReports, fetchReport, fetchReportOptions, saveReport, publishReport, uploadMedia, updateMedia, deleteMedia, deleteReport } = usePerformanceReports();
 const formOpen = ref(false);
+const reportForm = ref(null);
 const selectedId = ref(null);
 const mediaItems = ref([]);
 const removedMediaIds = ref([]);
@@ -141,11 +160,12 @@ const notice = ref('');
 const filters = reactive({ search: '', report_type: '', status: '' });
 const emptyForm = () => ({ brand_id: '', report_type: 'daily', title: '', period_start: '', period_end: '', turnover: 0, order_count: 0, ad_spend: 0, ad_sales: 0, executive_summary: '', content: '', findings: '', action_plan: '', status: 'draft', secure_link: null });
 const form = reactive(emptyForm());
+const REPORT_DURATION_DAYS = { daily: 1, weekly: 7, monthly: 30 };
 const metricFields = [
-  { key: 'turnover', label: 'Omzet/Penjualan Toko', step: '0.01' },
-  { key: 'order_count', label: 'Jumlah Pesanan', step: '1' },
-  { key: 'ad_spend', label: 'Biaya Iklan', step: '0.01' },
-  { key: 'ad_sales', label: 'Penjualan dari Iklan', step: '0.01' },
+  { key: 'turnover', label: 'Omset / Penjualan Toko', currency: true },
+  { key: 'order_count', label: 'Jumlah Pesanan Toko', step: '1' },
+  { key: 'ad_spend', label: 'Budget Ads Terpakai (Biaya Iklan)', currency: true },
+  { key: 'ad_sales', label: 'Penjualan dari Iklan', currency: true },
 ];
 const editorFields = [
   { key: 'executive_summary', label: 'Ringkasan Laporan', placeholder: 'Tuliskan ringkasan performa...' },
@@ -155,10 +175,32 @@ const editorFields = [
 ];
 
 const availableBrands = computed(() => reportOptions.value.brands.filter(brand => brand.report_types.includes(form.report_type)));
-const periodHint = computed(() => ({ daily: 'Daily harus menggunakan tanggal mulai dan selesai yang sama.', weekly: 'Weekly dapat mencakup sampai 7 hari.', monthly: 'Monthly dapat mencakup sampai 31 hari dalam bulan yang sama.' }[form.report_type]));
+const periodHint = computed(() => ({ daily: 'Tanggal selesai otomatis sama dengan tanggal mulai.', weekly: 'Tanggal selesai otomatis diisi untuk periode 7 hari.', monthly: 'Tanggal selesai otomatis diisi untuk periode 30 hari.' }[form.report_type]));
 const displayError = computed(() => localError.value || (typeof error.value === 'string' ? error.value : error.value ? Object.values(error.value).flat()[0] : ''));
 const ratio = (top, bottom) => Number(bottom) > 0 ? Number(top) / Number(bottom) : null;
 const percent = value => value === null ? '-' : `${(value * 100).toFixed(2)}%`;
+const formatRupiahInput = value => {
+  if (value === null || value === undefined || value === '') return '';
+  const number = Number(String(value).replace(/\D/g, ''));
+  return Number.isFinite(number) ? new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(number) : '';
+};
+const updateCurrencyField = (field, event) => {
+  const digits = event.target.value.replace(/\D/g, '');
+  const numericValue = digits === '' ? null : Number(digits);
+  form[field] = numericValue;
+  event.target.value = formatRupiahInput(numericValue);
+};
+const syncPeriodEnd = () => {
+  if (!form.period_start) {
+    form.period_end = '';
+    return;
+  }
+
+  const duration = REPORT_DURATION_DAYS[form.report_type] || 1;
+  const [year, month, day] = form.period_start.split('-').map(Number);
+  const endDate = new Date(Date.UTC(year, month - 1, day + duration - 1));
+  form.period_end = endDate.toISOString().slice(0, 10);
+};
 const calculatedMetrics = computed(() => [
   { label: 'ROAS', value: ratio(form.ad_sales, form.ad_spend)?.toFixed(2) ?? '-' },
   { label: 'ACOS', value: percent(ratio(form.ad_spend, form.ad_sales)) },
@@ -208,8 +250,15 @@ const syncMedia = async reportId => {
     }
   } finally { savingMedia.value = false; }
 };
+const validateReportForm = () => {
+  if (reportForm.value?.checkValidity()) return true;
+  reportForm.value?.reportValidity();
+  localError.value = 'Lengkapi seluruh data laporan yang wajib diisi.';
+  return false;
+};
 const submit = async publishAfter => {
   resetMessages();
+  if (!validateReportForm()) return;
   const saved = await saveReport(selectedId.value, reportPayload());
   if (!saved) return;
   try { await syncMedia(saved.id); } catch (exception) { localError.value = exception.response?.data?.message || 'Sebagian gambar gagal disimpan. Laporan utama sudah tersimpan.'; return; }
