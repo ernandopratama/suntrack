@@ -41,6 +41,7 @@ class PerformanceReportBrandSeeder extends Seeder
 
                 if (! $brand) {
                     Brand::create(['company_id' => $company->id, 'name' => $name]);
+
                     continue;
                 }
 

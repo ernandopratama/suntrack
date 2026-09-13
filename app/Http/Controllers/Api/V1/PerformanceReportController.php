@@ -17,6 +17,7 @@ use App\Services\Reporting\PerformanceReportPublishingService;
 use App\Services\Workflow\WorkflowTransitionService;
 use App\Support\PerformanceReportRules;
 use App\Traits\ApiResponse;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -65,17 +66,18 @@ class PerformanceReportController extends Controller
     public function options(Request $request): JsonResponse
     {
         $this->authorize('viewAny', PerformanceReport::class);
+        /** @var Collection<int, Brand> $brands */
         $brands = $this->dataScope->scopeBrands(Brand::query(), $request->user())
             ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn (Brand $brand) => [
-                'id' => $brand->id,
-                'name' => $brand->name,
-                'report_types' => PerformanceReportRules::typesForBrand($brand->name),
-            ]);
+            ->get(['id', 'name']);
+        $brandOptions = $brands->map(fn (Brand $brand) => [
+            'id' => $brand->id,
+            'name' => $brand->name,
+            'report_types' => PerformanceReportRules::typesForBrand($brand->name),
+        ]);
 
         return $this->success('Pilihan laporan berhasil dimuat.', [
-            'brands' => $brands,
+            'brands' => $brandOptions,
             'report_types' => ['daily', 'weekly', 'monthly'],
         ]);
     }

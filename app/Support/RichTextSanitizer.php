@@ -53,6 +53,7 @@ final class RichTextSanitizer
             if (! in_array($tag, self::ALLOWED_TAGS, true)) {
                 if (in_array($tag, ['script', 'style', 'iframe', 'object', 'embed'], true)) {
                     $parent->removeChild($node);
+
                     continue;
                 }
 
@@ -61,6 +62,7 @@ final class RichTextSanitizer
                 }
                 $parent->removeChild($node);
                 $this->sanitizeChildren($parent);
+
                 continue;
             }
 

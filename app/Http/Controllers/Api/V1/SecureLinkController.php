@@ -11,6 +11,7 @@ use App\Http\Resources\SecureLinkResource;
 use App\Models\Campaign;
 use App\Models\PerformanceReport;
 use App\Models\Promotion;
+use App\Models\SecureLink;
 use App\Models\Task;
 use App\Services\ActivityLogger;
 use App\Services\Reporting\PerformanceReportPublishingService;
@@ -27,7 +28,7 @@ class SecureLinkController extends Controller
     public function reportLinks(Request $request): JsonResponse
     {
         abort_unless($request->user()->hasRole(RbacRegistry::SUPER_ADMIN), 403);
-        $query = \App\Models\SecureLink::query()
+        $query = SecureLink::query()
             ->where('linkable_type', PerformanceReport::class)
             ->with(['creator', 'linkable.brand', 'linkable.creator']);
 
@@ -42,7 +43,8 @@ class SecureLinkController extends Controller
         }
 
         $links = $query->latest()->paginate((int) $request->integer('per_page', 20));
-        $payload = $links->through(function ($link) {
+        $payload = $links->through(function (SecureLink $link): array {
+            /** @var PerformanceReport|null $report */
             $report = $link->linkable;
 
             return [

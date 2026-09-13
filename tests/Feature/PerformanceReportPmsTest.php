@@ -197,7 +197,7 @@ class PerformanceReportPmsTest extends TestCase
         $this->assertStringContainsString('REPORT_DURATION_DAYS = { daily: 1, weekly: 7, monthly: 30 }', $page);
         $this->assertStringContainsString('@change="syncPeriodEnd"', $page);
         $this->assertStringContainsString('day + duration - 1', $page);
-        $this->assertStringContainsString("form.period_end = endDate.toISOString().slice(0, 10)", $page);
+        $this->assertStringContainsString('form.period_end = endDate.toISOString().slice(0, 10)', $page);
     }
 
     public function test_publish_validates_required_fields_and_displays_api_errors_inside_modal(): void

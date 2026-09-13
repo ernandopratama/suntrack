@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\PerformanceReport;
 use App\Models\User;
 use App\Support\Rbac\RbacRegistry;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,10 @@ class PerformanceReportPolicy extends ScopedEntityPolicy
 
     public function update(User $user, Model $performanceReport): bool
     {
+        if (! $performanceReport instanceof PerformanceReport) {
+            return false;
+        }
+
         return $user->can('performance-report.update')
             && $this->dataScope->canAccess($user, $performanceReport)
             && ($performanceReport->created_by === $user->id || $user->hasRole(RbacRegistry::SUPER_ADMIN));
@@ -22,6 +27,10 @@ class PerformanceReportPolicy extends ScopedEntityPolicy
 
     public function delete(User $user, Model $performanceReport): bool
     {
+        if (! $performanceReport instanceof PerformanceReport) {
+            return false;
+        }
+
         return $user->can('performance-report.delete')
             && $this->dataScope->canAccess($user, $performanceReport)
             && ($performanceReport->created_by === $user->id || $user->hasRole(RbacRegistry::SUPER_ADMIN));
