@@ -127,7 +127,8 @@ const routes = [
         ]
     },
     {
-        path: '/review/:token',
+        path: '/r/:token',
+        alias: '/review/:token',
         name: 'PublicReview',
         component: () => import('./pages/PublicReview.vue'),
         meta: { public: true }

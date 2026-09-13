@@ -198,7 +198,7 @@
             <div class="flex items-center gap-3"><span class="section-icon bg-[#EEF7F5] text-[#236B61]"><i class="fa-solid fa-book-open"></i></span><div><p class="section-kicker">Penjelasan</p><h2 class="section-title">Pembahasan Laporan</h2></div></div>
             <div class="mt-5 grid gap-4 lg:grid-cols-2">
               <article v-for="(section, index) in reportContentSections" :key="section.title" class="report-content-card">
-                <div class="flex items-start gap-3"><span class="content-number">{{ String(index + 1).padStart(2, '0') }}</span><div><h3 class="text-base font-extrabold text-[#3C4643]">{{ section.title }}</h3><p class="mt-1 text-xs leading-5 text-[#929B98]">{{ section.description }}</p></div></div>
+                <div class="flex min-w-0 items-start gap-3"><span class="content-number">{{ String(index + 1).padStart(2, '0') }}</span><div class="min-w-0"><h3 class="break-words text-base font-extrabold text-[#3C4643]">{{ section.title }}</h3><p class="mt-1 break-words text-xs leading-5 text-[#929B98]">{{ section.description }}</p></div></div>
                 <div class="report-prose prose mt-5 max-w-none text-sm leading-7 text-[#65706D]" v-html="section.html"></div>
               </article>
             </div>
@@ -2978,6 +2978,9 @@ const getVariantStatusBadgeClass = (status) => {
 }
 
 .report-content-card {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   padding: 1.25rem;
   border: 1px solid #e7ebe9;
   border-radius: 20px;
@@ -3004,6 +3007,26 @@ const getVariantStatusBadgeClass = (status) => {
 
 .report-prose :deep(p:last-child) {
   margin-bottom: 0;
+}
+
+.report-prose {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.report-prose :deep(*) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal !important;
+}
+
+.report-prose :deep(pre) {
+  overflow-x: auto;
+  white-space: pre-wrap !important;
 }
 
 .media-card,

@@ -55,7 +55,7 @@ class SecureLinkController extends Controller
                 'period_end' => $report?->period_end?->format('Y-m-d'),
                 'pic' => $report?->creator?->name,
                 'report_status' => $report?->status,
-                'url' => url('/review/'.$link->token),
+                'url' => url('/r/'.$link->token),
                 'status' => $link->status,
                 'view_count' => $link->view_count,
                 'created_at' => $link->created_at?->toIso8601String(),

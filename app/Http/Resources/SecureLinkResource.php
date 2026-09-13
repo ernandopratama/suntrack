@@ -14,7 +14,7 @@ class SecureLinkResource extends JsonResource
         return [
             'id' => $this->id,
             'token' => $this->token,
-            'url' => url('/review/'.$this->token),
+            'url' => url('/r/'.$this->token),
             'status' => $this->status, // Active, Expired, Revoked
             'expires_at' => $this->expires_at ? $this->expires_at->toIso8601String() : null,
             'revoked_at' => $this->revoked_at ? $this->revoked_at->toIso8601String() : null,

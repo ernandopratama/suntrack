@@ -117,6 +117,13 @@ class PerformanceReportPmsTest extends TestCase
         $report = $this->createReport();
         $draftToken = $report->secureLinks()->firstOrFail()->token;
 
+        $this->assertLessThanOrEqual(64, strlen($draftToken));
+        $this->assertMatchesRegularExpression(
+            '/^suurlemon-daily-\d{8}-[A-Za-z0-9]{22}$/',
+            $draftToken,
+        );
+        $this->assertStringContainsString($report->created_at->format('Ymd'), $draftToken);
+
         $mediaResponse = $this->actingAs($this->creator)->post("/api/v1/admin/performance-reports/{$report->id}/media", [
             'image' => UploadedFile::fake()->image('shopee.png', 1000, 700),
             'title' => 'Performa Shopee',
@@ -130,12 +137,21 @@ class PerformanceReportPmsTest extends TestCase
             ->assertJsonPath('data.report.secure_link.status', 'Active');
 
         $this->assertSame($draftToken, $published->json('data.report.secure_link.token'));
+        $this->assertSame(url('/r/'.$draftToken), $published->json('data.report.secure_link.url'));
         $this->getJson('/api/v1/public/review/'.$draftToken)
             ->assertOk()
             ->assertJsonPath('data.type', 'PerformanceReport')
             ->assertJsonPath('data.media.0.title', 'Performa Shopee');
         $this->get('/api/v1/public/review/'.$draftToken.'/media/'.$mediaResponse->json('data.media.id'))
             ->assertOk();
+    }
+
+    public function test_short_public_route_keeps_the_legacy_route_as_an_alias(): void
+    {
+        $router = File::get(resource_path('js/router.js'));
+
+        $this->assertStringContainsString("path: '/r/:token'", $router);
+        $this->assertStringContainsString("alias: '/review/:token'", $router);
     }
 
     public function test_global_secure_link_list_is_super_admin_only(): void
@@ -209,6 +225,9 @@ class PerformanceReportPmsTest extends TestCase
         $this->assertStringContainsString('class="media-caption', $page);
         $this->assertStringContainsString('color: #ffffff !important;', $page);
         $this->assertStringContainsString('background: linear-gradient(145deg, #ffffff 0%, #fffaf2 100%) !important;', $page);
+        $this->assertStringContainsString('overflow-wrap: anywhere;', $page);
+        $this->assertStringContainsString('white-space: normal !important;', $page);
+        $this->assertStringContainsString('white-space: pre-wrap !important;', $page);
     }
 
     public function test_public_secure_report_supports_persistent_local_light_and_dark_modes(): void

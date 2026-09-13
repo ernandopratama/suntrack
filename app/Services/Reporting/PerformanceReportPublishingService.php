@@ -11,6 +11,10 @@ use Illuminate\Support\Str;
 
 class PerformanceReportPublishingService
 {
+    private const TOKEN_BRAND_LENGTH = 24;
+
+    private const TOKEN_CODE_LENGTH = 22;
+
     public function ensureDraftLink(PerformanceReport $report, User $creator): SecureLink
     {
         return DB::transaction(function () use ($report, $creator): SecureLink {
@@ -18,7 +22,7 @@ class PerformanceReportPublishingService
             $link = $locked->secureLinks()->oldest()->first();
 
             return $link ?? $locked->secureLinks()->create([
-                'token' => Str::random(64),
+                'token' => $this->makeToken($locked),
                 'revoked_at' => now(),
                 'created_by' => $creator->id,
             ]);
@@ -66,7 +70,7 @@ class PerformanceReportPublishingService
         $link = $report->secureLinks()->oldest()->first();
         if (! $link) {
             return $report->secureLinks()->create([
-                'token' => Str::random(64),
+                'token' => $this->makeToken($report),
                 'created_by' => $actor->id,
             ]);
         }
@@ -74,5 +78,20 @@ class PerformanceReportPublishingService
         $link->forceFill(['revoked_at' => null])->save();
 
         return $link;
+    }
+
+    private function makeToken(PerformanceReport $report): string
+    {
+        $brand = trim(Str::limit(Str::slug($report->brand?->name), self::TOKEN_BRAND_LENGTH, ''), '-');
+        $type = Str::slug($report->report_type);
+        $date = ($report->created_at ?? now())->format('Ymd');
+
+        return sprintf(
+            '%s-%s-%s-%s',
+            $brand !== '' ? $brand : 'brand',
+            $type !== '' ? $type : 'report',
+            $date,
+            Str::random(self::TOKEN_CODE_LENGTH),
+        );
     }
 }
