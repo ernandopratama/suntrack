@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Jobs\SendTaskPriorityReminderJob;
+use App\Models\ActivityLog;
 use App\Models\Brand;
 use App\Models\Company;
 use App\Models\NotificationLog;
@@ -154,6 +155,22 @@ class EnterpriseCollaborationTest extends TestCase
             ->assertJsonPath('data.dashboard.kpi.tasks.overdue', 1)
             ->assertJsonPath('data.dashboard.kpi.performance_reports.total', 1)
             ->assertJsonPath('data.dashboard.kpi.performance_reports.published', 1);
+    }
+
+    public function test_dashboard_returns_legacy_activity_logs_without_resolving_morph_types(): void
+    {
+        ActivityLog::create([
+            'loggable_type' => 'Tim',
+            'loggable_id' => $this->team->id,
+            'action' => 'Legacy Access Updated',
+            'description' => 'Legacy team access activity.',
+            'actor_type' => 'Tim',
+            'actor_name' => $this->team->name,
+        ]);
+
+        $this->actingAs($this->admin)->getJson('/api/v1/admin/dashboard/stats')
+            ->assertOk()
+            ->assertJsonPath('data.dashboard.recent_activities.0.target_type', 'Tim');
     }
 
     public function test_contract_audit_requires_observation_and_backup_evidence(): void

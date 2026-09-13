@@ -105,13 +105,22 @@ sudo -u "$APP_USER" git fetch origin main
 
 current_commit="$(sudo -u "$APP_USER" git rev-parse HEAD)"
 target_commit="$(sudo -u "$APP_USER" git rev-parse origin/main)"
+pending_migrations=0
+
+if sudo -u "$APP_USER" "$PHP_BIN" artisan migrate:status --no-ansi | grep -q 'Pending'; then
+    pending_migrations=1
+fi
 
 printf 'Current: %.7s\n' "$current_commit"
 printf 'Target : %.7s\n' "$target_commit"
 
-if [[ "$current_commit" = "$target_commit" ]]; then
+if [[ "$current_commit" = "$target_commit" && "$pending_migrations" -eq 0 ]]; then
     printf 'ALREADY_CURRENT\n'
     exit 0
+fi
+
+if [[ "$current_commit" = "$target_commit" ]]; then
+    printf 'SOURCE_CURRENT_PENDING_MIGRATIONS\n'
 fi
 
 printf '=== BACKUP ===\n'

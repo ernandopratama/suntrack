@@ -129,11 +129,14 @@ class DashboardRepository
     }
 
     /**
-     * Retrieve recent system activity logs with eager loaded relationships.
+     * Retrieve recent system activity logs.
+     *
+     * Dashboard only exposes stored log fields, so resolving polymorphic relations is unnecessary.
+     * It can also fail when historical logs reference a removed legacy morph type.
      */
     public function getRecentActivities(int $limit = 15, ?User $user = null): Collection
     {
-        return $this->scoped(ActivityLog::with(['actor', 'loggable']), $user)
+        return $this->scoped(ActivityLog::query(), $user)
             ->orderBy('created_at', 'desc')
             ->take($limit)
             ->get();
