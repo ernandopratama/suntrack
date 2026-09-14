@@ -39,10 +39,22 @@
             <td class="px-5 py-4">{{ report.pic?.name || '-' }}</td>
             <td class="px-5 py-4"><StatusBadge :status="report.status" /></td>
             <td class="px-5 py-4"><div class="flex justify-end gap-2">
-              <button v-if="report.secure_link?.status === 'Active'" type="button" class="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50" @click="copyLink(report.secure_link.url)"><i class="fa-solid fa-link mr-1"></i>Salin</button>
-              <button v-if="report.can_update" type="button" class="rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-50" @click="openEdit(report)">Edit</button>
-              <button v-if="report.can_update && report.status !== 'published'" type="button" class="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-violet-700" @click="publishExisting(report)">Publish</button>
-              <button v-if="report.can_delete && report.status !== 'published'" type="button" class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-50" @click="remove(report)"><i class="fa-solid fa-trash"></i></button>
+              <div v-if="report.secure_link?.status === 'Active'" class="group relative">
+                <button type="button" aria-label="Salin Secure Link" title="Salin Secure Link" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-200 text-emerald-700 transition hover:bg-emerald-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" @click="copyLink(report.secure_link.url)"><i class="fa-solid fa-link" aria-hidden="true"></i></button>
+                <span role="tooltip" class="pointer-events-none invisible absolute bottom-full right-0 z-30 mb-2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-white opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">Salin Secure Link</span>
+              </div>
+              <div v-if="report.can_update" class="group relative">
+                <button type="button" aria-label="Edit laporan" title="Edit laporan" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 text-blue-700 transition hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400" @click="openEdit(report)"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
+                <span role="tooltip" class="pointer-events-none invisible absolute bottom-full right-0 z-30 mb-2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-white opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">Edit laporan</span>
+              </div>
+              <div v-if="report.can_update && report.status !== 'published'" class="group relative">
+                <button type="button" aria-label="Publikasikan laporan" title="Publikasikan laporan" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-violet-300 text-violet-600 transition hover:bg-violet-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-violet-400" @click="publishExisting(report)"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
+                <span role="tooltip" class="pointer-events-none invisible absolute bottom-full right-0 z-30 mb-2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-white opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">Publikasikan laporan</span>
+              </div>
+              <div v-if="report.can_delete" class="group relative">
+                <button type="button" aria-label="Hapus laporan" title="Hapus laporan" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 text-rose-700 transition hover:bg-rose-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-rose-400" @click="remove(report)"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                <span role="tooltip" class="pointer-events-none invisible absolute bottom-full right-0 z-30 mb-2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-white opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">Hapus laporan</span>
+              </div>
             </div></td>
           </tr>
         </tbody>
@@ -279,7 +291,12 @@ const copyLink = async (url, showNotice = true) => {
   try { await navigator.clipboard.writeText(url); } catch { const input = document.createElement('textarea'); input.value = url; document.body.appendChild(input); input.select(); document.execCommand('copy'); input.remove(); }
   if (showNotice) notice.value = 'Secure Link berhasil disalin.';
 };
-const remove = async report => { if (window.confirm(`Hapus ${report.title}?`) && await deleteReport(report.id)) await loadReports(); };
+const remove = async report => {
+  const confirmed = window.confirm(`Hapus ${report.title} secara permanen? Secure Link, gambar, dan data terkait akan ikut dihapus.`);
+  if (!confirmed || !await deleteReport(report.id)) return;
+  notice.value = `Laporan ${report.title} berhasil dihapus permanen.`;
+  await loadReports();
+};
 function formatCurrency(value) { return value === null || !Number.isFinite(Number(value)) ? '-' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
 function formatDate(value) { if (!value) return '-'; return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }).format(new Date(`${value}T00:00:00+07:00`)); }
 </script>

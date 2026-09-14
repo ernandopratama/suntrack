@@ -24,15 +24,4 @@ class PerformanceReportPolicy extends ScopedEntityPolicy
             && $this->dataScope->canAccess($user, $performanceReport)
             && ($performanceReport->created_by === $user->id || $user->hasRole(RbacRegistry::SUPER_ADMIN));
     }
-
-    public function delete(User $user, Model $performanceReport): bool
-    {
-        if (! $performanceReport instanceof PerformanceReport) {
-            return false;
-        }
-
-        return $user->can('performance-report.delete')
-            && $this->dataScope->canAccess($user, $performanceReport)
-            && ($performanceReport->created_by === $user->id || $user->hasRole(RbacRegistry::SUPER_ADMIN));
-    }
 }

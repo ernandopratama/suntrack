@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
 
 class PerformanceReportPublishingService
 {
+    private const LINK_LIFETIME_DAYS = 7;
+
     private const TOKEN_BRAND_LENGTH = 24;
 
     private const TOKEN_CODE_LENGTH = 22;
@@ -23,6 +25,7 @@ class PerformanceReportPublishingService
 
             return $link ?? $locked->secureLinks()->create([
                 'token' => $this->makeToken($locked),
+                'expires_at' => now()->addDays(self::LINK_LIFETIME_DAYS),
                 'revoked_at' => now(),
                 'created_by' => $creator->id,
             ]);
@@ -71,11 +74,15 @@ class PerformanceReportPublishingService
         if (! $link) {
             return $report->secureLinks()->create([
                 'token' => $this->makeToken($report),
+                'expires_at' => now()->addDays(self::LINK_LIFETIME_DAYS),
                 'created_by' => $actor->id,
             ]);
         }
 
-        $link->forceFill(['revoked_at' => null])->save();
+        $link->forceFill([
+            'expires_at' => now()->addDays(self::LINK_LIFETIME_DAYS),
+            'revoked_at' => null,
+        ])->save();
 
         return $link;
     }

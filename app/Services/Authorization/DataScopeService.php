@@ -121,6 +121,14 @@ class DataScopeService
 
     public function scopePerformanceReports(Builder $query, User $user): Builder
     {
+        if ($this->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->hasRole(RbacRegistry::TEAM)) {
+            return $query->where('created_by', $user->id);
+        }
+
         return $this->scopeThroughBrand($query, $user, 'brand');
     }
 

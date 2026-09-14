@@ -59,6 +59,9 @@ class PerformanceReportPmsTest extends TestCase
 
         $summary = $response->json('data.report.executive_summary');
         $this->assertSame('<p>Baik</p>', $summary);
+        $expiresAt = $response->json('data.report.secure_link.expires_at');
+        $this->assertNotNull($expiresAt);
+        $this->assertEqualsWithDelta(now()->addDays(7)->timestamp, strtotime($expiresAt), 2);
         $this->assertDatabaseHas('secure_links', [
             'linkable_id' => $response->json('data.report.id'),
             'created_by' => $this->creator->id,
@@ -111,6 +114,35 @@ class PerformanceReportPmsTest extends TestCase
         ])->assertOk();
     }
 
+    public function test_team_only_sees_its_own_performance_reports(): void
+    {
+        $ownReport = $this->createReport();
+        $otherTeam = User::factory()->create();
+        $otherTeam->assignRole(RbacRegistry::TEAM);
+        $otherTeam->syncPermissions(RbacRegistry::TEAM_DEFAULT_PERMISSIONS);
+        $otherTeam->assignedBrands()->attach($this->brand->id, ['assigned_by' => $this->superAdmin->id]);
+
+        $otherReportId = $this->actingAs($otherTeam)
+            ->postJson('/api/v1/admin/performance-reports', $this->payload(['title' => 'Laporan Tim Lain']))
+            ->assertCreated()
+            ->json('data.report.id');
+
+        $this->actingAs($this->creator)
+            ->getJson('/api/v1/admin/performance-reports')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.reports.data')
+            ->assertJsonPath('data.reports.data.0.id', $ownReport->id);
+
+        $this->actingAs($this->creator)
+            ->getJson("/api/v1/admin/performance-reports/{$otherReportId}")
+            ->assertForbidden();
+
+        $this->actingAs($this->otherAdmin)
+            ->getJson('/api/v1/admin/performance-reports')
+            ->assertOk()
+            ->assertJsonCount(2, 'data.reports.data');
+    }
+
     public function test_image_publish_and_public_secure_report_use_the_same_token(): void
     {
         Storage::fake('local');
@@ -161,6 +193,146 @@ class PerformanceReportPmsTest extends TestCase
         $this->actingAs($this->otherAdmin)->getJson('/api/v1/admin/performance-report-links')->assertForbidden();
         $this->actingAs($this->superAdmin)->getJson('/api/v1/admin/performance-report-links')
             ->assertOk()->assertJsonCount(1, 'data.links.data');
+
+        $page = File::get(resource_path('js/pages/PerformanceReportLinks.vue'));
+        $this->assertStringContainsString('Berlaku sampai {{ formatExpiry(link.expires_at) }}', $page);
+        $this->assertStringContainsString('aria-label="Salin link"', $page);
+        $this->assertStringContainsString('aria-label="Buka link"', $page);
+        $this->assertStringContainsString('aria-label="Nonaktifkan link"', $page);
+        $this->assertStringContainsString('aria-label="Aktifkan link"', $page);
+        $this->assertStringContainsString('role="tooltip"', $page);
+        $this->assertStringNotContainsString('>Salin</button>', $page);
+        $this->assertStringNotContainsString('>Buka</a>', $page);
+        $this->assertStringNotContainsString('>Nonaktifkan</button>', $page);
+        $this->assertStringNotContainsString('>Aktifkan</button>', $page);
+    }
+
+    public function test_super_admin_can_reactivate_revoked_and_expired_report_links(): void
+    {
+        $report = $this->createReport();
+        $this->actingAs($this->creator)
+            ->postJson("/api/v1/admin/performance-reports/{$report->id}/publish")
+            ->assertOk();
+
+        $this->actingAs($this->superAdmin)
+            ->deleteJson("/api/v1/admin/performance-reports/{$report->id}/secure-link")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'Revoked');
+
+        $reactivated = $this->actingAs($this->superAdmin)
+            ->postJson("/api/v1/admin/performance-reports/{$report->id}/secure-link")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'Active');
+        $this->assertEqualsWithDelta(now()->addDays(7)->timestamp, strtotime($reactivated->json('data.expires_at')), 2);
+
+        $link = $report->secureLinks()->firstOrFail();
+        $link->forceFill(['expires_at' => now()->subMinute()])->save();
+        $this->getJson('/api/v1/public/review/'.$link->token)
+            ->assertForbidden()
+            ->assertJsonPath('status', 'Expired');
+
+        $renewed = $this->actingAs($this->superAdmin)
+            ->postJson("/api/v1/admin/performance-reports/{$report->id}/secure-link")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'Active');
+        $this->assertEqualsWithDelta(now()->addDays(7)->timestamp, strtotime($renewed->json('data.expires_at')), 2);
+        $this->getJson('/api/v1/public/review/'.$link->token)->assertOk();
+    }
+
+    public function test_authorized_users_can_permanently_delete_reports_and_all_related_data(): void
+    {
+        Storage::fake('local');
+        $report = $this->createReport();
+        $mediaId = $this->actingAs($this->creator)
+            ->post("/api/v1/admin/performance-reports/{$report->id}/media", [
+                'image' => UploadedFile::fake()->image('report.png'),
+            ])
+            ->assertCreated()
+            ->json('data.media.id');
+        $mediaPath = $report->media()->findOrFail($mediaId)->path;
+
+        $directPath = "attachments/performance-report/{$report->id}/brief.txt";
+        Storage::disk('local')->put($directPath, 'brief');
+        $directAttachment = $report->attachments()->create([
+            'uploaded_by' => $this->creator->id,
+            'disk' => 'local',
+            'path' => $directPath,
+            'original_name' => 'brief.txt',
+            'mime_type' => 'text/plain',
+            'size' => 5,
+        ]);
+        $comment = $report->comments()->create([
+            'user_id' => $this->creator->id,
+            'author_name' => $this->creator->name,
+            'author_type' => 'Tim',
+            'body' => 'Komentar laporan',
+        ]);
+        $commentPath = "attachments/comment/{$comment->id}/evidence.txt";
+        Storage::disk('local')->put($commentPath, 'evidence');
+        $commentAttachment = $comment->attachments()->create([
+            'uploaded_by' => $this->creator->id,
+            'disk' => 'local',
+            'path' => $commentPath,
+            'original_name' => 'evidence.txt',
+            'mime_type' => 'text/plain',
+            'size' => 8,
+        ]);
+
+        $this->actingAs($this->creator)
+            ->postJson("/api/v1/admin/performance-reports/{$report->id}/publish")
+            ->assertOk();
+        $link = $report->secureLinks()->firstOrFail();
+        $accessLog = $link->accessLogs()->create(['accessed_at' => now()]);
+        $activityLogIds = $report->activityLogs()->pluck('id');
+
+        $otherTeam = User::factory()->create();
+        $otherTeam->assignRole(RbacRegistry::TEAM);
+        $otherTeam->syncPermissions(RbacRegistry::TEAM_DEFAULT_PERMISSIONS);
+        $otherTeam->assignedBrands()->attach($this->brand->id, ['assigned_by' => $this->superAdmin->id]);
+        $this->actingAs($otherTeam)
+            ->deleteJson("/api/v1/admin/performance-reports/{$report->id}")
+            ->assertForbidden();
+
+        $this->actingAs($this->otherAdmin)
+            ->deleteJson("/api/v1/admin/performance-reports/{$report->id}")
+            ->assertOk()
+            ->assertJsonPath('message', 'Laporan dan seluruh data terkait berhasil dihapus permanen.');
+
+        $this->assertNull(PerformanceReport::withTrashed()->find($report->id));
+        $this->assertDatabaseMissing('performance_report_media', ['id' => $mediaId]);
+        $this->assertDatabaseMissing('secure_links', ['id' => $link->id]);
+        $this->assertDatabaseMissing('secure_link_access_logs', ['id' => $accessLog->id]);
+        $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
+        $this->assertDatabaseMissing('attachments', ['id' => $directAttachment->id]);
+        $this->assertDatabaseMissing('attachments', ['id' => $commentAttachment->id]);
+        foreach ($activityLogIds as $activityLogId) {
+            $this->assertDatabaseMissing('activity_logs', ['id' => $activityLogId]);
+        }
+        Storage::disk('local')->assertMissing($mediaPath);
+        Storage::disk('local')->assertMissing($directPath);
+        Storage::disk('local')->assertMissing($commentPath);
+
+        $page = File::get(resource_path('js/pages/PerformanceReports.vue'));
+        $this->assertStringContainsString('v-if="report.can_delete"', $page);
+        $this->assertStringContainsString('aria-label="Salin Secure Link"', $page);
+        $this->assertStringContainsString('aria-label="Edit laporan"', $page);
+        $this->assertStringContainsString('aria-label="Publikasikan laporan"', $page);
+        $this->assertStringContainsString('aria-label="Hapus laporan"', $page);
+        $this->assertStringContainsString('role="tooltip"', $page);
+        $this->assertStringNotContainsString('>Salin</button>', $page);
+        $this->assertStringNotContainsString('>Edit</button>', $page);
+        $this->assertStringNotContainsString('>Publish</button>', $page);
+        $this->assertStringNotContainsString("report.can_delete && report.status !== 'published'", $page);
+
+        $teamReport = $this->createReport();
+        $this->actingAs($this->creator)
+            ->deleteJson("/api/v1/admin/performance-reports/{$teamReport->id}")
+            ->assertOk();
+
+        $superAdminReport = $this->createReport();
+        $this->actingAs($this->superAdmin)
+            ->deleteJson("/api/v1/admin/performance-reports/{$superAdminReport->id}")
+            ->assertOk();
     }
 
     public function test_money_metrics_use_automatic_rupiah_inputs(): void

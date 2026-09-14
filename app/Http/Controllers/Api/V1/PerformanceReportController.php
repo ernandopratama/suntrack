@@ -13,6 +13,7 @@ use App\Models\Brand;
 use App\Models\PerformanceReport;
 use App\Services\ActivityLogger;
 use App\Services\Authorization\DataScopeService;
+use App\Services\Reporting\PerformanceReportDeletionService;
 use App\Services\Reporting\PerformanceReportPublishingService;
 use App\Services\Workflow\WorkflowTransitionService;
 use App\Support\PerformanceReportRules;
@@ -30,7 +31,8 @@ class PerformanceReportController extends Controller
     public function __construct(
         private DataScopeService $dataScope,
         private WorkflowTransitionService $transitions,
-        private PerformanceReportPublishingService $publishing
+        private PerformanceReportPublishingService $publishing,
+        private PerformanceReportDeletionService $deletion
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -178,14 +180,9 @@ class PerformanceReportController extends Controller
     public function destroy(PerformanceReport $performanceReport): JsonResponse
     {
         $this->authorize('delete', $performanceReport);
+        $this->deletion->delete($performanceReport);
 
-        if ($performanceReport->status === PerformanceReportStatus::Published->value) {
-            throw ValidationException::withMessages(['status' => 'Published reports cannot be deleted.']);
-        }
-
-        $performanceReport->delete();
-
-        return $this->success('Performance report deleted successfully.');
+        return $this->success('Laporan dan seluruh data terkait berhasil dihapus permanen.');
     }
 
     public function transition(WorkflowTransitionRequest $request, PerformanceReport $performanceReport): JsonResponse

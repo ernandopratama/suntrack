@@ -59,6 +59,7 @@ class SecureLinkController extends Controller
                 'report_status' => $report?->status,
                 'url' => url('/r/'.$link->token),
                 'status' => $link->status,
+                'expires_at' => $link->expires_at?->toIso8601String(),
                 'view_count' => $link->view_count,
                 'created_at' => $link->created_at?->toIso8601String(),
                 'last_accessed_at' => $link->last_accessed_at?->toIso8601String(),
@@ -116,12 +117,8 @@ class SecureLinkController extends Controller
         }
 
         $this->authorize('update', $performanceReport);
-        $data = $request->validate(['expires_at' => ['nullable', 'date', 'after:now']]);
         $existing = $performanceReport->secureLinks()->oldest()->first();
         $link = $this->reportPublishing->activateLink($performanceReport, $request->user());
-        if (array_key_exists('expires_at', $data)) {
-            $link->update(['expires_at' => $data['expires_at']]);
-        }
 
         return response()->json([
             'success' => true,
