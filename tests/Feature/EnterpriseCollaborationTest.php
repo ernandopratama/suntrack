@@ -145,7 +145,7 @@ class EnterpriseCollaborationTest extends TestCase
     {
         $this->task(['priority' => 'urgent', 'deadline' => now()->subDay()]);
         $this->task(['brand_id' => $this->outsideBrand->id, 'progress_status' => 'completed']);
-        $this->report(['status' => 'published']);
+        $this->report(['created_by' => $this->team->id, 'status' => 'published']);
         $this->report(['brand_id' => $this->outsideBrand->id, 'status' => 'draft']);
 
         $this->actingAs($this->team)->getJson('/api/v1/admin/dashboard/stats')
