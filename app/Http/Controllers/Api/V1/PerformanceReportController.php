@@ -269,6 +269,6 @@ class PerformanceReportController extends Controller
 
     private function loadReport(PerformanceReport $report): PerformanceReport
     {
-        return $report->load(['brand', 'author', 'pic', 'creator', 'media.uploader', 'secureLink.creator']);
+        return $report->load(['brand', 'author', 'pic', 'creator', 'media.uploader', 'attachments.uploader', 'secureLink.creator']);
     }
 }

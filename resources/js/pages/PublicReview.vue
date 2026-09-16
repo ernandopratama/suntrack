@@ -213,7 +213,18 @@
         </div>
         <div class="mt-6 grid gap-5" :class="reviewData.media.length > 1 ? 'lg:grid-cols-2' : ''">
           <article v-for="(media, index) in reviewData.media" :key="media.id" class="media-card overflow-hidden rounded-2xl border border-[#E4E8E6]">
-            <div class="media-visual relative bg-[#F5F7F6]"><img :src="media.url" :alt="media.title || media.original_name" loading="lazy" class="max-h-[680px] min-h-56 w-full object-contain" /><span class="absolute left-3 top-3 rounded-full bg-[#26302E]/80 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">Gambar {{ index + 1 }}</span></div>
+            <button
+              type="button"
+              class="media-visual group relative block w-full cursor-zoom-in overflow-hidden bg-[#F5F7F6] text-left"
+              :aria-label="`Perbesar ${media.title || media.original_name || `gambar ${index + 1}`}`"
+              @click="openMediaPreview(media)"
+            >
+              <img :src="media.url" :alt="media.title || media.original_name" loading="lazy" class="max-h-[680px] min-h-56 w-full object-contain transition duration-300 group-hover:scale-[1.015]" />
+              <span class="absolute left-3 top-3 rounded-full bg-[#26302E]/80 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">Gambar {{ index + 1 }}</span>
+              <span class="media-zoom-indicator absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-xl border border-white/30 bg-[#17211F]/80 text-sm text-white shadow-lg backdrop-blur transition group-hover:scale-105 group-hover:bg-[#17211F]" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass-plus"></i>
+              </span>
+            </button>
             <div class="media-caption p-5 sm:p-6">
               <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#B45309]">Keterangan gambar</p>
               <h3 class="media-caption-title mt-1.5 text-base font-extrabold">{{ media.title || media.original_name }}</h3>
@@ -227,14 +238,18 @@
         <div class="review-card rounded-3xl border border-[#ECEEEC] bg-white p-5 sm:p-6">
           <div class="flex items-center gap-3"><span class="section-icon bg-[#EEF3FF] text-[#315EB8]"><i class="fa-solid fa-paperclip"></i></span><div><p class="section-kicker">Berkas</p><h2 class="section-title">Lampiran</h2></div></div>
           <div v-if="!reviewData.attachments?.length" class="mt-5 rounded-2xl border border-dashed border-[#DFE4E1] bg-[#FAFBFA] px-4 py-7 text-center text-sm text-[#929B98]">Tidak ada berkas tambahan.</div>
-          <a
+          <div
             v-for="attachment in reviewData.attachments || []"
             :key="attachment.id"
-            :href="`/api/v1/public/review/${token}/attachments/${attachment.id}/download`"
             class="attachment-row mt-3 flex items-center gap-3 rounded-2xl border border-[#E4E8E6] p-3.5"
           >
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF3FF] text-[#315EB8]"><i class="fa-solid fa-file-arrow-down"></i></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm text-[#46504D]">{{ attachment.original_name }}</strong><small class="mt-0.5 block text-[10px] text-[#98A19E]">Klik untuk mengunduh</small></span><i class="fa-solid fa-arrow-down text-xs text-[#98A19E]"></i>
-          </a>
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF0F0] text-[#D73535]"><i class="fa-solid fa-file-pdf"></i></span>
+            <span class="min-w-0 flex-1"><strong class="block truncate text-sm text-[#46504D]">{{ attachment.original_name }}</strong><small class="mt-0.5 block text-[10px] text-[#98A19E]">Lampiran PDF · {{ formatAttachmentSize(attachment.size) }}</small></span>
+            <div class="flex shrink-0 items-center gap-2">
+              <a :href="`/api/v1/public/review/${token}/attachments/${attachment.id}/view`" target="_blank" rel="noopener noreferrer" class="attachment-action text-[#315EB8]" :aria-label="`Lihat ${attachment.original_name}`" title="Lihat PDF"><i class="fa-solid fa-eye"></i><span class="hidden sm:inline">Lihat</span></a>
+              <a :href="`/api/v1/public/review/${token}/attachments/${attachment.id}/download`" class="attachment-action text-[#236B61]" :aria-label="`Unduh ${attachment.original_name}`" title="Unduh PDF"><i class="fa-solid fa-download"></i><span class="hidden sm:inline">Unduh</span></a>
+            </div>
+          </div>
         </div>
 
         <div class="review-card rounded-3xl border border-[#ECEEEC] bg-white p-5 sm:p-6">
@@ -1346,6 +1361,52 @@
       </div>
     </div>
 
+    <Teleport to="body">
+      <Transition name="image-viewer">
+        <div
+          v-if="mediaPreview.open"
+          class="image-viewer fixed inset-0 z-[80] flex flex-col bg-[#07100E]/95 p-3 backdrop-blur-md sm:p-5"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="`Pratinjau ${mediaPreview.alt}`"
+          @click.self="closeMediaPreview"
+        >
+          <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-2.5 text-white shadow-xl sm:px-4">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-bold">{{ mediaPreview.alt }}</p>
+              <p class="mt-0.5 text-[10px] text-white/60">Gunakan tombol untuk memperbesar atau memperkecil gambar</p>
+            </div>
+            <div class="flex shrink-0 items-center gap-1.5">
+              <button type="button" class="image-viewer-control" :disabled="mediaPreview.zoom <= MIN_MEDIA_ZOOM" aria-label="Perkecil gambar" title="Perkecil" @click="zoomMediaOut">
+                <i class="fa-solid fa-magnifying-glass-minus"></i>
+              </button>
+              <span class="hidden min-w-14 text-center text-xs font-bold sm:inline">{{ mediaZoomLabel }}</span>
+              <button type="button" class="image-viewer-control" :disabled="mediaPreview.zoom >= MAX_MEDIA_ZOOM" aria-label="Perbesar gambar" title="Perbesar" @click="zoomMediaIn">
+                <i class="fa-solid fa-magnifying-glass-plus"></i>
+              </button>
+              <button type="button" class="image-viewer-control image-viewer-reset" aria-label="Kembalikan ukuran gambar" title="Ukuran awal" @click="resetMediaZoom">
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+              <button type="button" class="image-viewer-control ml-1 bg-red-500/80 hover:bg-red-500" aria-label="Tutup pratinjau gambar" title="Tutup" @click="closeMediaPreview">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="image-viewer-scroll mx-auto mt-3 w-full max-w-7xl flex-1 overflow-auto rounded-2xl border border-white/10 bg-black/25">
+            <div class="flex min-h-full min-w-full items-start justify-center p-3 sm:p-6">
+              <img
+                :src="mediaPreview.src"
+                :alt="mediaPreview.alt"
+                class="image-viewer-image h-auto object-contain"
+                :style="{ width: `${mediaPreview.zoom * 100}%` }"
+              />
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- =========================================================
          IDENTITY MODAL
     ========================================================== -->
@@ -1870,6 +1931,44 @@ const newCommentBody = ref('');
 const selectedVariantIds = ref([]);
 const batchLoading = ref(false);
 const pendingAction = ref(null);
+const MIN_MEDIA_ZOOM = 0.5;
+const MAX_MEDIA_ZOOM = 3;
+const MEDIA_ZOOM_STEP = 0.25;
+const mediaPreview = reactive({ open: false, src: '', alt: '', zoom: 1 });
+const mediaZoomLabel = computed(() => `${Math.round(mediaPreview.zoom * 100)}%`);
+let previousBodyOverflow = '';
+
+const openMediaPreview = (media) => {
+  mediaPreview.src = media?.url || '';
+  mediaPreview.alt = media?.title || media?.original_name || 'Dokumentasi performa';
+  mediaPreview.zoom = 1;
+  mediaPreview.open = Boolean(mediaPreview.src);
+
+  if (mediaPreview.open) {
+    previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
+};
+const closeMediaPreview = () => {
+  mediaPreview.open = false;
+  mediaPreview.zoom = 1;
+  document.body.style.overflow = previousBodyOverflow;
+};
+const zoomMediaIn = () => {
+  mediaPreview.zoom = Math.min(MAX_MEDIA_ZOOM, mediaPreview.zoom + MEDIA_ZOOM_STEP);
+};
+const zoomMediaOut = () => {
+  mediaPreview.zoom = Math.max(MIN_MEDIA_ZOOM, mediaPreview.zoom - MEDIA_ZOOM_STEP);
+};
+const resetMediaZoom = () => {
+  mediaPreview.zoom = 1;
+};
+const handleMediaPreviewKeydown = (event) => {
+  if (!mediaPreview.open) return;
+  if (event.key === 'Escape') closeMediaPreview();
+  if (event.key === '+' || event.key === '=') zoomMediaIn();
+  if (event.key === '-') zoomMediaOut();
+};
 const isDelivery = computed(() => ['Task', 'PerformanceReport'].includes(reviewData.value?.type));
 const reportTypeLabel = computed(() => ({
   daily: 'Harian',
@@ -1915,6 +2014,13 @@ const reportContentSections = computed(() => {
   ].filter(section => section.html);
 });
 const initialOf = name => String(name || '?').trim().charAt(0).toUpperCase();
+const formatAttachmentSize = bytes => {
+  const size = Number(bytes);
+  if (!Number.isFinite(size)) return '-';
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 const handleDeliveryComment = async () => {
   if (!reviewerIdentity.name?.trim() || !newCommentBody.value.trim()) return;
@@ -2125,6 +2231,8 @@ const onTaskFileChange = (e, taskId) => {
 };
 
 onUnmounted(() => {
+  document.removeEventListener('keydown', handleMediaPreviewKeydown);
+  document.body.style.overflow = previousBodyOverflow;
   // revoke all object URLs
   Object.values(taskVisualPreviews.value || {}).forEach((url) => {
     if (url) URL.revokeObjectURL(url);
@@ -2211,6 +2319,7 @@ const identityForm = reactive({
 });
 
 onMounted(async () => {
+  document.addEventListener('keydown', handleMediaPreviewKeydown);
   await fetchReviewData(token);
   if (isIdentified()) {
     await saveIdentity(token, reviewerIdentity);
@@ -3012,21 +3121,53 @@ const getVariantStatusBadgeClass = (status) => {
 .report-prose {
   min-width: 0;
   max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  white-space: normal;
 }
 
 .report-prose :deep(*) {
   min-width: 0;
   max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
   white-space: normal !important;
 }
 
+.report-prose :deep(p) {
+  margin-block: 0.75rem;
+}
+
+.report-prose :deep(ul),
+.report-prose :deep(ol) {
+  margin-block: 0.75rem;
+  padding-inline-start: 1.35rem;
+}
+
+.report-prose :deep(li) {
+  margin-block: 0.25rem;
+  padding-inline-start: 0.15rem;
+}
+
+.report-prose :deep(a) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .report-prose :deep(pre) {
+  max-width: 100%;
   overflow-x: auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   white-space: pre-wrap !important;
+}
+
+.report-prose :deep(table) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .media-card,
@@ -3038,6 +3179,56 @@ const getVariantStatusBadgeClass = (status) => {
 .media-card {
   color: #46504d !important;
   background: #ffffff !important;
+}
+
+.media-visual:focus-visible {
+  outline: 3px solid rgba(255, 162, 64, 0.75);
+  outline-offset: -3px;
+}
+
+.media-zoom-indicator {
+  pointer-events: none;
+}
+
+.image-viewer-control {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: background-color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+}
+
+.image-viewer-control:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.image-viewer-control:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.image-viewer-reset {
+  display: none;
+}
+
+.image-viewer-image {
+  max-width: none;
+  transition: width 0.2s ease;
+}
+
+.image-viewer-enter-active,
+.image-viewer-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.image-viewer-enter-from,
+.image-viewer-leave-to {
+  opacity: 0;
 }
 
 .media-caption {
@@ -3071,7 +3262,31 @@ const getVariantStatusBadgeClass = (status) => {
   transform: translateY(-1px);
 }
 
+.attachment-action {
+  display: inline-flex;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-inline: 0.7rem;
+  border: 1px solid currentColor;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.attachment-action:hover {
+  background-color: rgba(255, 255, 255, 0.7);
+  transform: translateY(-1px);
+}
+
 @media (min-width: 640px) {
+  .image-viewer-reset {
+    display: inline-flex;
+  }
+
   .ratio-metric + .ratio-metric {
     border-top: 0;
   }

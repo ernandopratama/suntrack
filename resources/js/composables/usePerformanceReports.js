@@ -108,6 +108,17 @@ export function usePerformanceReports() {
         await api.delete(`/admin/performance-reports/${reportId}/media/${mediaId}`);
     };
 
+    const uploadAttachments = async (reportId, files) => {
+        const payload = new FormData();
+        files.forEach(file => payload.append('files[]', file));
+        const response = await api.post(`/admin/performance-reports/${reportId}/attachments`, payload);
+        return response.data.data.attachments;
+    };
+
+    const deleteAttachment = async (reportId, attachmentId) => {
+        await api.delete(`/admin/performance-reports/${reportId}/attachments/${attachmentId}`);
+    };
+
     const deleteReport = async (id) => {
         try {
             await api.delete(`/admin/performance-reports/${id}`);
@@ -120,6 +131,6 @@ export function usePerformanceReports() {
 
     return {
         reports, reportOptions, pagination, loading, error, fetchReports, fetchReport, fetchReportOptions,
-        saveReport, publishReport, uploadMedia, updateMedia, deleteMedia, deleteReport,
+        saveReport, publishReport, uploadMedia, updateMedia, deleteMedia, uploadAttachments, deleteAttachment, deleteReport,
     };
 }

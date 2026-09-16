@@ -58,6 +58,7 @@ class PerformanceReportResource extends JsonResource
                 'name' => $this->creator->name,
             ] : null),
             'media' => PerformanceReportMediaResource::collection($this->whenLoaded('media')),
+            'attachments' => AttachmentResource::collection($this->whenLoaded('attachments')),
             'secure_link' => $this->whenLoaded('secureLink', fn () => $this->secureLink
                 ? new SecureLinkResource($this->secureLink)
                 : null),

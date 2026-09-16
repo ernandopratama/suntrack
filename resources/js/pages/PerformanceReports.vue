@@ -138,12 +138,27 @@
                 </div>
               </div>
             </section>
+
+            <section>
+              <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div><h3 class="text-sm font-extrabold uppercase tracking-wide text-content">Lampiran PDF</h3><p class="mt-1 text-xs text-content-muted">Opsional; maksimum 5 file baru dan 10 MB per file.</p></div>
+                <label class="cursor-pointer self-start rounded-xl border border-violet-200 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-50"><i class="fa-solid fa-file-pdf mr-2"></i>Tambah PDF<input type="file" accept="application/pdf,.pdf" multiple class="hidden" @change="addAttachments" /></label>
+              </div>
+              <div v-if="!attachmentItems.length" class="rounded-2xl border border-dashed border-default p-8 text-center text-sm text-content-muted">Tidak ada lampiran PDF.</div>
+              <div v-else class="space-y-3">
+                <div v-for="(attachment, index) in attachmentItems" :key="attachment.localKey || attachment.id" class="flex items-center gap-3 rounded-2xl border border-default bg-surface p-3.5">
+                  <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-lg text-rose-600"><i class="fa-solid fa-file-pdf"></i></span>
+                  <div class="min-w-0 flex-1"><p class="truncate text-sm font-bold text-content">{{ attachment.original_name }}</p><p class="mt-0.5 text-xs text-content-muted">{{ formatFileSize(attachment.size) }} · {{ attachment.id ? 'Tersimpan' : 'Siap diunggah' }}</p></div>
+                  <button type="button" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100" :aria-label="`Hapus ${attachment.original_name}`" @click="removeAttachment(index)"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </div>
+            </section>
           </form>
 
           <div class="flex flex-col-reverse gap-3 border-t border-default bg-surface-muted px-5 py-4 sm:flex-row sm:justify-end sm:px-7">
             <button type="button" class="rounded-xl border border-default bg-surface px-5 py-2.5 text-sm font-bold text-content-soft" @click="closeForm">Batal</button>
-            <button form="pms-report-form" :disabled="loading || savingMedia" class="rounded-xl border border-blue-200 bg-surface px-5 py-2.5 text-sm font-bold text-blue-700 disabled:opacity-50">{{ selectedId ? 'Simpan Perubahan' : 'Simpan Draft' }}</button>
-            <button v-if="form.status !== 'published'" type="button" :disabled="loading || savingMedia" class="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50" @click="submit(true)"><i class="fa-solid fa-paper-plane mr-2"></i>Publish & Salin Link</button>
+            <button form="pms-report-form" :disabled="loading || savingAssets" class="rounded-xl border border-blue-200 bg-surface px-5 py-2.5 text-sm font-bold text-blue-700 disabled:opacity-50">{{ selectedId ? 'Simpan Perubahan' : 'Simpan Draft' }}</button>
+            <button v-if="form.status !== 'published'" type="button" :disabled="loading || savingAssets" class="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50" @click="submit(true)"><i class="fa-solid fa-paper-plane mr-2"></i>Publish & Salin Link</button>
             <button v-else-if="form.secure_link?.url" type="button" class="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white" @click="copyLink(form.secure_link.url)"><i class="fa-solid fa-link mr-2"></i>Salin Secure Link</button>
           </div>
         </div>
@@ -160,13 +175,15 @@ import { usePerformanceReports } from '../composables/usePerformanceReports';
 import { useAuthStore } from '../stores/auth';
 
 const authStore = useAuthStore();
-const { reports, reportOptions, loading, error, fetchReports, fetchReport, fetchReportOptions, saveReport, publishReport, uploadMedia, updateMedia, deleteMedia, deleteReport } = usePerformanceReports();
+const { reports, reportOptions, loading, error, fetchReports, fetchReport, fetchReportOptions, saveReport, publishReport, uploadMedia, updateMedia, deleteMedia, uploadAttachments, deleteAttachment, deleteReport } = usePerformanceReports();
 const formOpen = ref(false);
 const reportForm = ref(null);
 const selectedId = ref(null);
 const mediaItems = ref([]);
 const removedMediaIds = ref([]);
-const savingMedia = ref(false);
+const attachmentItems = ref([]);
+const removedAttachmentIds = ref([]);
+const savingAssets = ref(false);
 const localError = ref('');
 const notice = ref('');
 const filters = reactive({ search: '', report_type: '', status: '' });
@@ -227,7 +244,7 @@ watch(() => form.report_type, () => {
 onMounted(async () => Promise.all([fetchReportOptions(), loadReports()]));
 const loadReports = () => fetchReports({ ...filters, per_page: 50 });
 const resetMessages = () => { localError.value = ''; notice.value = ''; };
-const openCreate = () => { resetMessages(); selectedId.value = null; Object.assign(form, emptyForm()); mediaItems.value = []; removedMediaIds.value = []; formOpen.value = true; };
+const openCreate = () => { resetMessages(); selectedId.value = null; Object.assign(form, emptyForm()); mediaItems.value = []; removedMediaIds.value = []; attachmentItems.value = []; removedAttachmentIds.value = []; formOpen.value = true; };
 const openEdit = async report => {
   resetMessages();
   const details = await fetchReport(report.id);
@@ -236,6 +253,8 @@ const openEdit = async report => {
   Object.assign(form, emptyForm(), details);
   mediaItems.value = (details.media || []).map(item => ({ ...item }));
   removedMediaIds.value = [];
+  attachmentItems.value = (details.attachments || []).map(item => ({ ...item }));
+  removedAttachmentIds.value = [];
   formOpen.value = true;
 };
 const closeForm = () => { mediaItems.value.forEach(item => item.preview && URL.revokeObjectURL(item.preview)); formOpen.value = false; };
@@ -251,16 +270,45 @@ const removeMedia = index => {
   if (item.id) removedMediaIds.value.push(item.id);
   if (item.preview) URL.revokeObjectURL(item.preview);
 };
+const addAttachments = event => {
+  const selectedFiles = Array.from(event.target.files || []);
+  const pendingCount = attachmentItems.value.filter(item => item.file).length;
+  const availableSlots = Math.max(0, 5 - pendingCount);
+
+  for (const file of selectedFiles.slice(0, availableSlots)) {
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    if (!isPdf || file.size > 10 * 1024 * 1024) {
+      localError.value = `${file.name} harus berupa PDF dengan ukuran maksimal 10 MB.`;
+      continue;
+    }
+    attachmentItems.value.push({ localKey: `${Date.now()}-${Math.random()}`, file, original_name: file.name, size: file.size });
+  }
+  if (selectedFiles.length > availableSlots) localError.value = 'Maksimal 5 lampiran PDF baru dalam satu kali penyimpanan.';
+  event.target.value = '';
+};
+const removeAttachment = index => {
+  const [attachment] = attachmentItems.value.splice(index, 1);
+  if (attachment.id) removedAttachmentIds.value.push(attachment.id);
+};
 const reportPayload = () => Object.fromEntries(['brand_id', 'report_type', 'title', 'period_start', 'period_end', 'turnover', 'order_count', 'ad_spend', 'ad_sales', 'executive_summary', 'content', 'findings', 'action_plan'].map(key => [key, form[key]]));
 const syncMedia = async reportId => {
-  savingMedia.value = true;
+  for (const mediaId of removedMediaIds.value) await deleteMedia(reportId, mediaId);
+  for (let index = 0; index < mediaItems.value.length; index += 1) {
+    const item = { ...mediaItems.value[index], sort_order: index };
+    if (item.id) await updateMedia(reportId, item); else await uploadMedia(reportId, item);
+  }
+};
+const syncAttachments = async reportId => {
+  for (const attachmentId of removedAttachmentIds.value) await deleteAttachment(reportId, attachmentId);
+  const newFiles = attachmentItems.value.filter(item => item.file).map(item => item.file);
+  if (newFiles.length) await uploadAttachments(reportId, newFiles);
+};
+const syncAssets = async reportId => {
+  savingAssets.value = true;
   try {
-    for (const mediaId of removedMediaIds.value) await deleteMedia(reportId, mediaId);
-    for (let index = 0; index < mediaItems.value.length; index += 1) {
-      const item = { ...mediaItems.value[index], sort_order: index };
-      if (item.id) await updateMedia(reportId, item); else await uploadMedia(reportId, item);
-    }
-  } finally { savingMedia.value = false; }
+    await syncMedia(reportId);
+    await syncAttachments(reportId);
+  } finally { savingAssets.value = false; }
 };
 const validateReportForm = () => {
   if (reportForm.value?.checkValidity()) return true;
@@ -273,7 +321,7 @@ const submit = async publishAfter => {
   if (!validateReportForm()) return;
   const saved = await saveReport(selectedId.value, reportPayload());
   if (!saved) return;
-  try { await syncMedia(saved.id); } catch (exception) { localError.value = exception.response?.data?.message || 'Sebagian gambar gagal disimpan. Laporan utama sudah tersimpan.'; return; }
+  try { await syncAssets(saved.id); } catch (exception) { localError.value = exception.response?.data?.message || 'Sebagian gambar atau lampiran gagal disimpan. Laporan utama sudah tersimpan.'; return; }
   let result = saved;
   if (publishAfter) result = await publishReport(saved.id);
   if (!result) return;
@@ -298,5 +346,6 @@ const remove = async report => {
   await loadReports();
 };
 function formatCurrency(value) { return value === null || !Number.isFinite(Number(value)) ? '-' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
+function formatFileSize(bytes) { if (!Number.isFinite(Number(bytes))) return '-'; if (bytes < 1024) return `${bytes} B`; if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`; return `${(bytes / (1024 * 1024)).toFixed(1)} MB`; }
 function formatDate(value) { if (!value) return '-'; return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }).format(new Date(`${value}T00:00:00+07:00`)); }
 </script>

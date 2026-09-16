@@ -349,6 +349,29 @@ class PublicReviewController extends Controller
         return Storage::disk($attachment->disk)->download($attachment->path, $attachment->original_name);
     }
 
+    public function viewAttachment(string $token, Attachment $attachment)
+    {
+        $link = $this->getSecureLink($token);
+        if (! ($link instanceof SecureLink)) {
+            return $link;
+        }
+        $entity = $this->linkable($link);
+        $direct = $attachment->attachable_type === $entity::class
+            && $attachment->attachable_id === $entity->getKey();
+        $commentAttachment = $attachment->attachable_type === Comment::class
+            && $entity->comments()->whereKey($attachment->attachable_id)->exists();
+        abort_unless($direct || $commentAttachment, 404);
+        abort_unless(Storage::disk($attachment->disk)->exists($attachment->path), 404);
+        abort_unless($attachment->mime_type === 'application/pdf', 415);
+
+        return Storage::disk($attachment->disk)->response(
+            $attachment->path,
+            $attachment->original_name,
+            ['Content-Type' => 'application/pdf'],
+            'inline'
+        );
+    }
+
     /**
      * Execute Batch Approval/Rejection on selected or all variants for external Brand reviewer (Sprint 8).
      */

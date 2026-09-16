@@ -350,6 +350,57 @@ class PerformanceReportPmsTest extends TestCase
         $this->assertStringNotContainsString('@pointerdown="focusMobileInput"', $page);
     }
 
+    public function test_optional_pdf_attachments_can_be_managed_and_opened_from_public_report(): void
+    {
+        Storage::fake('local');
+        $report = $this->createReport();
+
+        $this->actingAs($this->creator)
+            ->post("/api/v1/admin/performance-reports/{$report->id}/attachments", [
+                'files' => [UploadedFile::fake()->create('bukti.txt', 10, 'text/plain')],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('files.0');
+
+        $attachmentId = $this->actingAs($this->creator)
+            ->post("/api/v1/admin/performance-reports/{$report->id}/attachments", [
+                'files' => [UploadedFile::fake()->create('laporan.pdf', 100, 'application/pdf')],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.attachments.0.original_name', 'laporan.pdf')
+            ->json('data.attachments.0.id');
+
+        $this->actingAs($this->creator)
+            ->getJson("/api/v1/admin/performance-reports/{$report->id}")
+            ->assertOk()
+            ->assertJsonPath('data.report.attachments.0.id', $attachmentId);
+
+        $this->actingAs($this->creator)
+            ->postJson("/api/v1/admin/performance-reports/{$report->id}/publish")
+            ->assertOk();
+        $token = $report->secureLinks()->firstOrFail()->token;
+
+        $this->getJson("/api/v1/public/review/{$token}")
+            ->assertOk()
+            ->assertJsonPath('data.attachments.0.id', $attachmentId);
+
+        $view = $this->get("/api/v1/public/review/{$token}/attachments/{$attachmentId}/view")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('inline', (string) $view->headers->get('content-disposition'));
+
+        $download = $this->get("/api/v1/public/review/{$token}/attachments/{$attachmentId}/download")
+            ->assertOk();
+        $this->assertStringContainsString('attachment', (string) $download->headers->get('content-disposition'));
+
+        $form = File::get(resource_path('js/pages/PerformanceReports.vue'));
+        $publicPage = File::get(resource_path('js/pages/PublicReview.vue'));
+        $this->assertStringContainsString('accept="application/pdf,.pdf"', $form);
+        $this->assertStringContainsString('Lampiran PDF', $form);
+        $this->assertStringContainsString('/attachments/${attachment.id}/view', $publicPage);
+        $this->assertStringContainsString('/attachments/${attachment.id}/download', $publicPage);
+    }
+
     public function test_rich_text_editor_supports_mobile_keyboard_focus(): void
     {
         $editor = File::get(resource_path('js/components/RichTextEditor.vue'));
@@ -395,8 +446,17 @@ class PerformanceReportPmsTest extends TestCase
         $this->assertStringContainsString('Tulis pertanyaan atau tanggapan...', $page);
         $this->assertStringContainsString('class="delivery-title', $page);
         $this->assertStringContainsString('class="media-caption', $page);
+        $this->assertStringContainsString('v-html="section.html"', $page);
+        $this->assertStringContainsString('@click="openMediaPreview(media)"', $page);
+        $this->assertStringContainsString('fa-magnifying-glass-plus', $page);
+        $this->assertStringContainsString('v-if="mediaPreview.open"', $page);
+        $this->assertStringContainsString('@click="zoomMediaIn"', $page);
+        $this->assertStringContainsString('@click="zoomMediaOut"', $page);
         $this->assertStringContainsString('color: #ffffff !important;', $page);
         $this->assertStringContainsString('background: linear-gradient(145deg, #ffffff 0%, #fffaf2 100%) !important;', $page);
+        $this->assertStringContainsString('overflow-wrap: break-word;', $page);
+        $this->assertStringContainsString('word-break: normal;', $page);
+        $this->assertStringContainsString('hyphens: none;', $page);
         $this->assertStringContainsString('overflow-wrap: anywhere;', $page);
         $this->assertStringContainsString('white-space: normal !important;', $page);
         $this->assertStringContainsString('white-space: pre-wrap !important;', $page);

@@ -296,6 +296,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/approval', [PublicReviewController::class, 'approveVariant']);
         Route::post('/batch-approval', [PublicReviewController::class, 'batchApproval']);
         Route::post('/comment', [PublicReviewController::class, 'storeComment']);
+        Route::get('/attachments/{attachment}/view', [PublicReviewController::class, 'viewAttachment']);
         Route::get('/attachments/{attachment}/download', [PublicReviewController::class, 'downloadAttachment']);
         Route::post('/tasks/{task}/progress', [PublicReviewController::class, 'updateTaskProgress']);
         Route::post('/tasks/{task}/visual', [PublicReviewController::class, 'submitTaskVisual']);
