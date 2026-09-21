@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Jobs\SendTaskPriorityReminderJob;
+use App\Http\Resources\TaskResource;
 use App\Models\ActivityLog;
 use App\Models\Brand;
 use App\Models\Company;
@@ -78,6 +79,24 @@ class EnterpriseCollaborationTest extends TestCase
         $this->assertDatabaseCount('comments', 2);
         $this->assertDatabaseCount('attachments', 2);
         $this->assertDatabaseHas('comment_reads', ['comment_id' => $commentId, 'user_id' => $this->team->id]);
+    }
+
+    public function test_task_visual_url_uses_the_current_browser_origin(): void
+    {
+        config()->set('app.url', 'http://localhost:8000');
+        config()->set('filesystems.disks.public.url', 'http://localhost:8000/storage');
+        $task = $this->task([
+            'visual_file_path' => 'task-visuals/example.png',
+            'visual_file_name' => 'example.png',
+        ]);
+
+        $resource = (new TaskResource($task))->resolve(request());
+
+        $this->assertSame('/storage/task-visuals/example.png', $resource['visual_file_url']);
+        $this->assertStringNotContainsString('localhost', $resource['visual_file_url']);
+
+        $publicResource = file_get_contents(app_path('Http/Resources/PublicReviewResource.php'));
+        $this->assertStringContainsString("'/storage/'.ltrim(\$task->visual_file_path, '/')", $publicResource);
     }
 
     public function test_task_and_report_secure_links_enforce_readiness_and_record_each_access(): void

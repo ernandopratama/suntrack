@@ -16,14 +16,14 @@ enum TaskStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Pending => 'Pending',
-            self::Assigned => 'Assigned',
-            self::InProgress => 'In Progress',
-            self::OnHold => 'On Hold',
-            self::WaitingReview => 'Waiting Review',
-            self::Revision => 'Revision',
-            self::Completed => 'Completed',
-            self::Cancelled => 'Cancelled',
+            self::Pending => 'Menunggu',
+            self::Assigned => 'Ditugaskan',
+            self::InProgress => 'Sedang Dikerjakan',
+            self::OnHold => 'Ditunda',
+            self::WaitingReview => 'Menunggu Peninjauan',
+            self::Revision => 'Revisi',
+            self::Completed => 'Selesai',
+            self::Cancelled => 'Dibatalkan',
         };
     }
 }

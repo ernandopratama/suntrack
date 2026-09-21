@@ -1,7 +1,7 @@
 <template>
   <ModalForm
     :is-open="isOpen"
-    :title="isEdit ? 'Edit Task' : 'Create Task'"
+    :title="isEdit ? 'Ubah Task' : 'Buat Task'"
     @close="closeModal"
   >
     <form id="task-form" @submit.prevent="submit" class="space-y-5">
@@ -19,7 +19,7 @@
 
         <div>
           <p class="text-xs font-bold text-rose-700">
-            Unable to save task
+            Task tidak dapat disimpan
           </p>
           <p class="mt-0.5 text-xs text-rose-600">
             {{ error }}
@@ -27,20 +27,38 @@
         </div>
       </div>
 
+      <div v-if="!campaignId" class="rounded-xl border border-[#D0E7E6] bg-[#D0E7E6]/30 px-4 py-3">
+        <label class="flex items-start gap-3" :class="isEdit ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'">
+          <input
+            v-model="form.is_personal"
+            type="checkbox"
+            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#4274D9] focus:ring-[#4274D9]"
+            :disabled="isEdit"
+            @change="handlePersonalChange"
+          />
+          <span>
+            <span class="block text-sm font-bold text-[#293681]">Task pribadi</span>
+            <span class="mt-0.5 block text-[11px] leading-5 text-gray-500">
+              Hanya dapat dilihat dan dikelola oleh Anda. PIC dan pelaksana otomatis menggunakan akun Anda.
+            </span>
+          </span>
+        </label>
+      </div>
+
       <!-- Brand -->
-      <div>
+      <div v-if="!form.is_personal">
         <label class="mb-1.5 block text-xs font-bold text-gray-700">Brand <span class="text-rose-500">*</span></label>
         <select v-model="form.brand_id" required @change="handleBrandChange" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700">
-          <option value="" disabled>Select brand...</option>
+          <option value="" disabled>Pilih brand...</option>
           <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
         </select>
         <p v-if="hasError('brand_id')" class="mt-1.5 text-xs font-medium text-rose-600">{{ getError('brand_id') }}</p>
       </div>
 
       <!-- Campaign -->
-      <div v-if="!campaignId">
+      <div v-if="!campaignId && !form.is_personal">
         <label class="mb-1.5 block text-xs font-bold text-gray-700">
-          Campaign <span class="text-gray-400">(optional)</span>
+          Kampanye <span class="text-gray-400">(opsional)</span>
         </label>
 
         <div class="relative">
@@ -49,7 +67,7 @@
             class="block w-full appearance-none rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 pr-10 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
           >
             <option value="">
-              Standalone task
+              Task mandiri tanpa kampanye
             </option>
 
             <option
@@ -70,14 +88,14 @@
       </div>
 
       <div>
-        <label class="mb-1.5 block text-xs font-bold text-gray-700">Description / Instruction</label>
-        <textarea v-model="form.description" rows="3" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" placeholder="Describe the work to complete" />
+        <label class="mb-1.5 block text-xs font-bold text-gray-700">Deskripsi / Instruksi</label>
+        <textarea v-model="form.description" rows="3" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" placeholder="Jelaskan pekerjaan yang perlu diselesaikan" />
       </div>
 
       <!-- Task Name -->
       <div>
         <label class="mb-1.5 block text-xs font-bold text-gray-700">
-          Task Name
+          Nama Task
           <span class="text-rose-500">*</span>
         </label>
 
@@ -85,7 +103,7 @@
           type="text"
           v-model="form.name"
           required
-          placeholder="Enter task name..."
+          placeholder="Masukkan nama task..."
           class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
         />
 
@@ -112,14 +130,14 @@
               v-model="form.progress_status"
               class="block w-full appearance-none rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 pr-10 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
             >
-              <option value="pending">Pending</option>
-              <option value="assigned">Assigned</option>
-              <option value="in_progress">In Progress</option>
-              <option value="on_hold">On Hold</option>
-              <option value="waiting_review">Waiting Review</option>
-              <option value="revision">Revision</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="pending">Menunggu</option>
+              <option value="assigned">Ditugaskan</option>
+              <option value="in_progress">Sedang Dikerjakan</option>
+              <option value="on_hold">Ditunda</option>
+              <option value="waiting_review">Menunggu Peninjauan</option>
+              <option value="revision">Revisi</option>
+              <option value="completed">Selesai</option>
+              <option value="cancelled">Dibatalkan</option>
             </select>
 
             <div
@@ -133,12 +151,12 @@
         <!-- Deadline -->
         <div>
           <label class="mb-1.5 block text-xs font-bold text-gray-700">
-            Deadline
+            Tenggat
           </label>
 
           <div class="relative">
             <input
-              type="date"
+              type="datetime-local"
               v-model="form.deadline"
               class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
             />
@@ -149,38 +167,79 @@
               <i class="fa-regular fa-calendar text-sm"></i>
             </div>
           </div>
+          <p v-if="hasError('deadline')" class="mt-1.5 text-xs font-medium text-rose-600">{{ getError('deadline') }}</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label class="mb-1.5 block text-xs font-bold text-gray-700">Priority</label>
+          <label class="mb-1.5 block text-xs font-bold text-gray-700">Prioritas</label>
           <select v-model="form.priority" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
-            <option value="normal">Normal</option><option value="mid">Mid</option><option value="urgent">Urgent</option>
+            <option value="normal">Normal</option><option value="mid">Menengah</option><option value="urgent">Mendesak</option>
           </select>
         </div>
-        <div v-if="canManageOwnership">
+        <div v-if="canManageOwnership && !form.is_personal">
           <label class="mb-1.5 block text-xs font-bold text-gray-700">PIC</label>
           <select v-model="form.pic_id" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
-            <option :value="null">Select PIC</option><option v-for="pic in pics" :key="pic.id" :value="pic.id">{{ pic.name }}</option>
+            <option :value="null">Pilih PIC</option><option v-for="pic in pics" :key="pic.id" :value="pic.id">{{ pic.name }}</option>
           </select>
         </div>
-        <div v-if="canManageOwnership">
-          <label class="mb-1.5 block text-xs font-bold text-gray-700">Assignee Tim</label>
+        <div v-if="canManageOwnership && !form.is_personal">
+          <label class="mb-1.5 block text-xs font-bold text-gray-700">Pelaksana Tim</label>
           <select v-model="form.assignee_id" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
-            <option :value="null">Select assignee</option><option v-for="member in teamMembers" :key="member.id" :value="member.id">{{ member.name }}</option>
+            <option :value="null">Pilih pelaksana</option><option v-for="member in teamMembers" :key="member.id" :value="member.id">{{ member.name }}</option>
           </select>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-violet-100 bg-violet-50/50 px-4 py-4">
+        <label class="flex cursor-pointer items-start gap-3">
+          <input
+            v-model="recurrenceEnabled"
+            type="checkbox"
+            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+          />
+          <span>
+            <span class="block text-sm font-bold text-violet-900">Ulangi task ini</span>
+            <span class="mt-0.5 block text-[11px] leading-5 text-violet-700/70">
+              Sistem membuat task periode berikutnya sesuai jadwal yang dipilih.
+            </span>
+          </span>
+        </label>
+
+        <div v-if="recurrenceEnabled" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-xs font-bold text-gray-700">Pola Pengulangan</label>
+            <select v-model="form.recurrence_type" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
+              <option value="daily">Harian</option>
+              <option value="weekly">Mingguan</option>
+              <option value="monthly">Bulanan</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="mb-1.5 block text-xs font-bold text-gray-700">Berakhir Pada <span class="text-gray-400">(opsional)</span></label>
+            <input v-model="form.recurrence_ends_at" type="datetime-local" :min="form.deadline || undefined" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" />
+          </div>
+
+          <label class="flex cursor-pointer items-center gap-2 sm:col-span-2">
+            <input v-model="form.recurrence_notify" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500" />
+            <span class="text-xs font-semibold text-gray-700">Berikan pemberitahuan saat task periode berikutnya dibuat</span>
+          </label>
+
+          <p v-if="hasError('recurrence_ends_at')" class="text-xs font-medium text-rose-600 sm:col-span-2">{{ getError('recurrence_ends_at') }}</p>
+          <p v-if="hasError('recurrence_type')" class="text-xs font-medium text-rose-600 sm:col-span-2">{{ getError('recurrence_type') }}</p>
         </div>
       </div>
 
       <div v-if="isEdit">
-        <label class="mb-1.5 block text-xs font-bold text-gray-700">Completion Summary</label>
+        <label class="mb-1.5 block text-xs font-bold text-gray-700">Ringkasan Penyelesaian</label>
         <textarea v-model="form.completion_summary" rows="2" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" />
       </div>
 
       <div v-if="isEdit && form.progress_status !== props.task?.progress_status">
-        <label class="mb-1.5 block text-xs font-bold text-gray-700">Transition Note</label>
-        <textarea v-model="form.transition_note" rows="2" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" placeholder="Required for hold, revision, or cancellation" />
+        <label class="mb-1.5 block text-xs font-bold text-gray-700">Catatan Perubahan Status</label>
+        <textarea v-model="form.transition_note" rows="2" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" placeholder="Wajib untuk penundaan, revisi, atau pembatalan" />
       </div>
 
       <!-- Requires Visual -->
@@ -208,11 +267,11 @@
 
           <div>
             <span class="block text-sm font-bold text-[#293681]">
-              Requires Visual
+              Memerlukan Visual
             </span>
 
             <span class="block text-[11px] text-gray-500">
-              This task requires visual content.
+              Task ini memerlukan materi visual.
             </span>
           </div>
         </label>
@@ -221,18 +280,18 @@
       <!-- Visual Type -->
       <div v-if="form.requires_visual">
         <label class="mb-1.5 block text-xs font-bold text-gray-700">
-          Visual Type
+          Jenis Visual
         </label>
 
         <input
           type="text"
           v-model="form.visual_type"
-          placeholder="e.g. Banner, Poster, Video"
+          placeholder="Contoh: banner, poster, atau video"
           class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
         />
 
         <p class="mt-1.5 text-[11px] text-gray-400">
-          Specify the type of visual asset required for this task.
+          Tentukan jenis materi visual yang diperlukan untuk task ini.
         </p>
       </div>
     </form>
@@ -249,7 +308,7 @@
           @click="closeModal"
           class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900"
         >
-          Cancel
+          Batal
         </button>
 
         <!-- Save -->
@@ -271,7 +330,7 @@
           ></i>
 
           <span>
-            {{ loading ? 'Saving...' : 'Save Task' }}
+            {{ loading ? 'Menyimpan...' : 'Simpan Task' }}
           </span>
         </button>
 
@@ -310,6 +369,7 @@ const isEdit = ref(false);
 const form = reactive({
   name: '',
   description: '',
+  is_personal: false,
   brand_id: '',
   campaign_id: props.campaignId || '',
   pic_id: null,
@@ -320,8 +380,26 @@ const form = reactive({
   transition_note: '',
   requires_visual: false,
   visual_type: '',
-  deadline: ''
+  deadline: '',
+  recurrence_type: '',
+  recurrence_ends_at: '',
+  recurrence_notify: true
 });
+
+const recurrenceEnabled = computed({
+  get: () => Boolean(form.recurrence_type),
+  set: (enabled) => {
+    form.recurrence_type = enabled ? (form.recurrence_type || 'daily') : '';
+    if (!enabled) {
+      form.recurrence_ends_at = '';
+      form.recurrence_notify = true;
+    }
+  }
+});
+
+const toDateTimeLocal = (value) => value
+  ? String(value).replace(' ', 'T').slice(0, 16)
+  : '';
 
 onMounted(async () => {
   await Promise.all([fetchBrands({ per_page: 100 }), fetchCampaigns({ per_page: 100 })]);
@@ -341,6 +419,7 @@ watch(() => props.isOpen, (open) => {
     isEdit.value = true;
     form.name = props.task.name;
     form.description = props.task.description || '';
+    form.is_personal = Boolean(props.task.is_personal);
     form.brand_id = props.task.brand_id || '';
     form.campaign_id = props.task.campaign_id;
     form.pic_id = props.task.pic_id || null;
@@ -351,13 +430,15 @@ watch(() => props.isOpen, (open) => {
     form.transition_note = '';
     form.requires_visual = props.task.requires_visual || false;
     form.visual_type = props.task.visual_type || '';
-    form.deadline = props.task.deadline
-      ? props.task.deadline.slice(0, 10)
-      : '';
+    form.deadline = toDateTimeLocal(props.task.deadline);
+    form.recurrence_type = props.task.recurrence_type || '';
+    form.recurrence_ends_at = toDateTimeLocal(props.task.recurrence_ends_at);
+    form.recurrence_notify = props.task.recurrence_notify ?? true;
   } else {
     isEdit.value = false;
     form.name = '';
     form.description = '';
+    form.is_personal = false;
     form.brand_id = '';
     form.campaign_id = props.campaignId || '';
     form.progress_status = 'pending';
@@ -369,6 +450,9 @@ watch(() => props.isOpen, (open) => {
     form.requires_visual = false;
     form.visual_type = '';
     form.deadline = '';
+    form.recurrence_type = '';
+    form.recurrence_ends_at = '';
+    form.recurrence_notify = true;
     if (props.campaignId) {
       const campaign = campaigns.value.find(item => item.id === props.campaignId);
       form.brand_id = campaign?.brand_id || '';
@@ -384,6 +468,15 @@ const handleBrandChange = () => {
     form.campaign_id = '';
   }
   fetchWorkflowOptions(form.brand_id);
+};
+
+const handlePersonalChange = () => {
+  if (!form.is_personal) return;
+
+  form.brand_id = '';
+  form.campaign_id = '';
+  form.pic_id = null;
+  form.assignee_id = null;
 };
 
 const hasError = (field) =>
@@ -403,7 +496,14 @@ const getError = (field) =>
 const submit = async () => {
   let success = false;
 
-  const payload = { ...form };
+  const payload = {
+    ...form,
+    brand_id: form.is_personal ? null : (form.brand_id || null),
+    campaign_id: form.is_personal ? null : (form.campaign_id || null),
+    deadline: form.deadline || null,
+    recurrence_type: form.recurrence_type || null,
+    recurrence_ends_at: form.recurrence_ends_at || null
+  };
 
   if (isEdit.value) {
     success = await updateTask(props.task.id, payload);

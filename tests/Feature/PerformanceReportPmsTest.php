@@ -452,6 +452,12 @@ class PerformanceReportPmsTest extends TestCase
         $this->assertStringContainsString('v-if="mediaPreview.open"', $page);
         $this->assertStringContainsString('@click="zoomMediaIn"', $page);
         $this->assertStringContainsString('@click="zoomMediaOut"', $page);
+        $this->assertStringContainsString('@click="previewTaskVisual(task)"', $page);
+        $this->assertStringContainsString('@click="downloadTaskVisual(task)"', $page);
+        $this->assertStringContainsString('taskVisualDownloadName', $page);
+        $this->assertStringContainsString('link.download = taskVisualDownloadName(task)', $page);
+        $this->assertStringContainsString('aria-label="Lihat visual"', $page);
+        $this->assertStringContainsString('aria-label="Unduh visual"', $page);
         $this->assertStringContainsString('color: #ffffff !important;', $page);
         $this->assertStringContainsString('background: linear-gradient(145deg, #ffffff 0%, #fffaf2 100%) !important;', $page);
         $this->assertStringContainsString('overflow-wrap: break-word;', $page);
@@ -466,14 +472,43 @@ class PerformanceReportPmsTest extends TestCase
     {
         $layout = File::get(resource_path('js/layouts/PublicLayout.vue'));
         $toggle = File::get(resource_path('js/components/ThemeToggle.vue'));
+        $themeStore = File::get(resource_path('js/stores/theme.js'));
         $page = File::get(resource_path('js/pages/PublicReview.vue'));
 
         $this->assertStringContainsString('<ThemeToggle', $layout);
         $this->assertStringContainsString('local-only', $layout);
         $this->assertStringContainsString('show-label', $layout);
+        $this->assertStringContainsString('storage-key="suntrack_public_theme"', $layout);
+        $this->assertStringContainsString("const publicTheme = storedPublicTheme === 'dark' ? 'dark' : 'light';", $layout);
+        $this->assertStringContainsString('themeStore.apply(publicTheme, false)', $layout);
         $this->assertStringContainsString('if (localOnly)', $toggle);
-        $this->assertStringContainsString("themeStore.apply(themeStore.isDark ? 'light' : 'dark')", $toggle);
+        $this->assertStringContainsString('window.localStorage.setItem(storageKey, nextTheme)', $toggle);
+        $this->assertStringContainsString('apply(theme, persist = true)', $themeStore);
         $this->assertStringContainsString(":global(:root[data-theme='dark']) .delivery-page .review-card", $page);
+    }
+
+    public function test_public_secure_report_only_opens_identity_form_for_unidentified_reviewers(): void
+    {
+        $page = File::get(resource_path('js/pages/PublicReview.vue'));
+
+        $this->assertMatchesRegularExpression(
+            '/if \(!isIdentified\(\)\) \{\R\s+openIdentityModal\(true\);\R\s+return;/',
+            $page,
+        );
+        $this->assertStringContainsString('await saveIdentity(token, reviewerIdentity);', $page);
+        $this->assertStringContainsString('class="pms-reviewer-identity', $page);
+        $this->assertStringContainsString("v-if=\"reviewData.type === 'PerformanceReport'\"", $page);
+        $this->assertStringContainsString("@click=\"openIdentityModal(true)\"", $page);
+        $this->assertStringContainsString("? 'Ubah Identitas' : 'Identifikasi Diri'", $page);
+        $this->assertStringContainsString('@click.self="showIdentityModal = false"', $page);
+        $this->assertStringContainsString('aria-labelledby="reviewer-identity-title"', $page);
+        $this->assertStringContainsString('pt-24', $page);
+        $this->assertStringContainsString('sm:pt-28', $page);
+        $this->assertStringContainsString('max-h-[calc(100vh-7rem)]', $page);
+        $this->assertStringContainsString('sm:py-4', $page);
+        $this->assertStringContainsString('overflow-y: auto !important;', $page);
+        $this->assertStringContainsString('sm:grid-cols-2', $page);
+        $this->assertStringContainsString("event.key === 'Escape' && showIdentityModal.value", $page);
     }
 
     private function createReport(): PerformanceReport

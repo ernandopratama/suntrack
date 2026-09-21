@@ -10,10 +10,12 @@ use App\Http\Requests\WorkflowTransitionRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Brand;
 use App\Models\Campaign;
+use App\Models\NotificationLog;
 use App\Models\Task;
 use App\Repositories\TaskRepository;
 use App\Services\ActivityLogger;
 use App\Services\Authorization\DataScopeService;
+use App\Services\Workflow\RecurringTaskService;
 use App\Services\Workflow\TaskReminderService;
 use App\Services\Workflow\WorkflowAssignmentService;
 use App\Services\Workflow\WorkflowTransitionService;
@@ -31,7 +33,8 @@ class TaskController extends Controller
         protected DataScopeService $dataScope,
         protected WorkflowAssignmentService $assignments,
         protected WorkflowTransitionService $transitions,
-        protected TaskReminderService $reminders
+        protected TaskReminderService $reminders,
+        protected RecurringTaskService $recurringTasks
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -48,8 +51,26 @@ class TaskController extends Controller
             perPage: (int) $request->get('per_page', 15)
         );
 
-        return $this->success('Tasks retrieved successfully.', [
+        return $this->success('Data task berhasil dimuat.', [
             'tasks' => TaskResource::collection($tasks)->response()->getData(true),
+        ]);
+    }
+
+    public function notifications(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Task::class);
+
+        $notifications = NotificationLog::query()
+            ->where('type', 'in_app')
+            ->where('recipient', $request->user()->id)
+            ->where('notifiable_type', Task::class)
+            ->whereIn('status', ['sent', 'delivered'])
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'subject', 'body', 'notifiable_id', 'created_at']);
+
+        return $this->success('Pemberitahuan task berhasil dimuat.', [
+            'notifications' => $notifications,
         ]);
     }
 
@@ -60,38 +81,51 @@ class TaskController extends Controller
         $user = $request->user();
         $data = $request->validated();
 
-        $brand = Brand::findOrFail($data['brand_id']);
-        if (! $this->dataScope->canAccess($user, $brand)) {
-            abort(404);
-        }
+        $isPersonal = (bool) ($data['is_personal'] ?? false);
+        $brand = null;
 
-        $campaign = null;
-        if (! empty($data['campaign_id'])) {
-            $campaign = Campaign::findOrFail($data['campaign_id']);
-            if (! $this->dataScope->canAccess($user, $campaign)) {
+        if ($isPersonal) {
+            $data['brand_id'] = null;
+            $data['campaign_id'] = null;
+            $data['pic_id'] = $user->id;
+            $data['assignee_id'] = $user->id;
+            $data['progress_status'] = 'assigned';
+        } else {
+            $brand = Brand::findOrFail($data['brand_id']);
+            if (! $this->dataScope->canAccess($user, $brand)) {
                 abort(404);
             }
-            if ($campaign->brand_id !== $brand->id) {
-                return $this->error('Campaign must belong to the selected Brand.', ['campaign_id' => ['Brand mismatch.']], 422);
-            }
-        }
 
-        if (array_key_exists('pic_id', $data) || array_key_exists('assignee_id', $data)) {
-            $this->assignments->assertManager($user);
-            $this->assignments->assertPic($data['pic_id'] ?? null);
-            if (! empty($data['assignee_id'])) {
-                $this->assignments->assertTeamMember($data['assignee_id'], $brand->id);
+            if (! empty($data['campaign_id'])) {
+                $campaign = Campaign::findOrFail($data['campaign_id']);
+                if (! $this->dataScope->canAccess($user, $campaign)) {
+                    abort(404);
+                }
+                if ($campaign->brand_id !== $brand->id) {
+                    return $this->error('Kampanye harus berasal dari brand yang dipilih.', ['campaign_id' => ['Brand kampanye tidak sesuai.']], 422);
+                }
+            }
+
+            if (array_key_exists('pic_id', $data) || array_key_exists('assignee_id', $data)) {
+                $this->assignments->assertManager($user);
+                $this->assignments->assertPic($data['pic_id'] ?? null);
+                if (! empty($data['assignee_id'])) {
+                    $this->assignments->assertTeamMember($data['assignee_id'], $brand->id);
+                }
             }
         }
 
         $data['created_by'] = $user->id;
         $task = new Task;
         $task->forceFill($data)->save();
+        $this->recurringTasks->schedule($task);
         $this->reminders->schedule($task);
 
         ActivityLogger::log(
             action: ActivityType::Created->value,
-            description: "Task '{$task->name}' was created for Brand '{$brand->name}'.",
+            description: $task->is_personal
+                ? "Task pribadi '{$task->name}' dibuat."
+                : "Task '{$task->name}' dibuat untuk Brand '{$brand->name}'.",
             actorType: 'Admin',
             actorName: $user->name,
             loggable: $task,
@@ -104,7 +138,7 @@ class TaskController extends Controller
             ]
         );
 
-        return $this->success('Task created successfully.', [
+        return $this->success('Task berhasil dibuat.', [
             'task' => new TaskResource($task->load(['brand', 'campaign', 'pic', 'assignee', 'creator'])),
         ], 201);
     }
@@ -115,7 +149,7 @@ class TaskController extends Controller
 
         $task->load(['brand', 'campaign', 'pic', 'assignee', 'creator']);
 
-        return $this->success('Task retrieved successfully.', [
+        return $this->success('Detail task berhasil dimuat.', [
             'task' => new TaskResource($task),
         ]);
     }
@@ -131,25 +165,33 @@ class TaskController extends Controller
         unset($data['progress_status']);
         $transitionNote = $data['transition_note'] ?? null;
         unset($data['transition_note']);
-        $brandId = $data['brand_id'] ?? $task->brand_id;
+        $recurrenceChanged = collect(['deadline', 'recurrence_type', 'recurrence_ends_at'])
+            ->contains(fn (string $field) => array_key_exists($field, $data));
 
-        if (! $this->dataScope->canAccessBrandId($user, $brandId)) {
-            abort(404);
-        }
+        if ($task->is_personal) {
+            unset($data['brand_id'], $data['campaign_id'], $data['pic_id'], $data['assignee_id']);
+            $brandId = null;
+        } else {
+            $brandId = $data['brand_id'] ?? $task->brand_id;
 
-        if (! empty($data['campaign_id'])) {
-            $campaign = Campaign::findOrFail($data['campaign_id']);
-            if ($campaign->brand_id !== $brandId || ! $this->dataScope->canAccess($user, $campaign)) {
-                return $this->error('Campaign must belong to the selected Brand.', ['campaign_id' => ['Brand mismatch or inaccessible Campaign.']], 422);
+            if (! $this->dataScope->canAccessBrandId($user, $brandId)) {
+                abort(404);
             }
-        }
 
-        if (array_key_exists('pic_id', $data) || array_key_exists('assignee_id', $data) || $brandId !== $task->brand_id) {
-            $this->assignments->assertManager($user);
-            $this->assignments->assertPic($data['pic_id'] ?? $task->pic_id);
-            $assigneeId = $data['assignee_id'] ?? $task->assignee_id;
-            if ($assigneeId !== null) {
-                $this->assignments->assertTeamMember($assigneeId, $brandId);
+            if (! empty($data['campaign_id'])) {
+                $campaign = Campaign::findOrFail($data['campaign_id']);
+                if ($campaign->brand_id !== $brandId || ! $this->dataScope->canAccess($user, $campaign)) {
+                    return $this->error('Kampanye harus berasal dari brand yang dipilih.', ['campaign_id' => ['Brand kampanye tidak sesuai atau tidak dapat diakses.']], 422);
+                }
+            }
+
+            if (array_key_exists('pic_id', $data) || array_key_exists('assignee_id', $data) || $brandId !== $task->brand_id) {
+                $this->assignments->assertManager($user);
+                $this->assignments->assertPic($data['pic_id'] ?? $task->pic_id);
+                $assigneeId = $data['assignee_id'] ?? $task->assignee_id;
+                if ($assigneeId !== null) {
+                    $this->assignments->assertTeamMember($assigneeId, $brandId);
+                }
             }
         }
 
@@ -159,8 +201,11 @@ class TaskController extends Controller
             'pic_id' => $task->pic_id,
             'assignee_id' => $task->assignee_id,
         ];
-        $task = DB::transaction(function () use ($task, $data, $targetStatus, $transitionNote, $oldOwnership, $user): Task {
+        $task = DB::transaction(function () use ($task, $data, $targetStatus, $transitionNote, $oldOwnership, $user, $recurrenceChanged): Task {
             $task->update($data);
+            if ($recurrenceChanged) {
+                $this->recurringTasks->schedule($task);
+            }
             if (array_key_exists('priority', $data)) {
                 $this->reminders->schedule($task, true);
             }
@@ -175,7 +220,7 @@ class TaskController extends Controller
                 if ($oldOwnership !== $newOwnership) {
                     ActivityLogger::log(
                         action: 'Assignment Changed',
-                        description: 'Task ownership was updated.',
+                        description: 'Kepemilikan task diperbarui.',
                         actorType: 'Admin',
                         actorName: $user->name,
                         loggable: $task,
@@ -189,7 +234,7 @@ class TaskController extends Controller
 
             ActivityLogger::log(
                 action: ActivityType::Updated->value,
-                description: "Task '{$task->name}' was updated.",
+                description: "Task '{$task->name}' diperbarui.",
                 actorType: 'Admin',
                 actorName: $user->name,
                 loggable: $task,
@@ -203,7 +248,7 @@ class TaskController extends Controller
             return $task->refresh();
         });
 
-        return $this->success('Task updated successfully.', [
+        return $this->success('Task berhasil diperbarui.', [
             'task' => new TaskResource($task->load(['brand', 'campaign', 'pic', 'assignee', 'creator'])),
         ]);
     }
@@ -219,7 +264,7 @@ class TaskController extends Controller
             $request->validated('note')
         );
 
-        return $this->success('Task status updated successfully.', [
+        return $this->success('Status task berhasil diperbarui.', [
             'task' => new TaskResource($task->load(['brand', 'campaign', 'pic', 'assignee', 'creator'])),
         ]);
     }
@@ -235,13 +280,13 @@ class TaskController extends Controller
 
         ActivityLogger::log(
             action: ActivityType::Deleted->value,
-            description: "Task '{$taskName}' was deleted.",
+            description: "Task '{$taskName}' dihapus.",
             actorType: 'Admin',
             actorName: $user->name,
             loggable: $task,
             actorId: $user->id
         );
 
-        return $this->success('Task deleted successfully.');
+        return $this->success('Task berhasil dihapus.');
     }
 }

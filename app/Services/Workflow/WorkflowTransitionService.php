@@ -47,9 +47,6 @@ class WorkflowTransitionService
             if ($to === 'assigned') {
                 abort_unless($manager, 403);
                 $this->requireFields($campaign, ['pic_id', 'deadline']);
-                if (! $campaign->members()->exists()) {
-                    throw ValidationException::withMessages(['member_ids' => 'At least one Tim member is required before assignment.']);
-                }
             } elseif (in_array($to, ['in_progress', 'waiting_review'], true)) {
                 abort_unless($manager || $member, 403);
             } else {
@@ -119,7 +116,7 @@ class WorkflowTransitionService
             if ($to === 'waiting_review') {
                 $this->requireFields($task, ['completion_summary']);
                 if ($task->requires_visual && ! $task->visual_link && ! $task->visual_file_path) {
-                    throw ValidationException::withMessages(['evidence' => 'Visual evidence is required before review.']);
+                    throw ValidationException::withMessages(['evidence' => 'Bukti visual wajib dilengkapi sebelum peninjauan.']);
                 }
             }
             if ($to === 'revision') {
@@ -152,7 +149,7 @@ class WorkflowTransitionService
                     $task->assignee_id,
                     "Task '{$task->name}' memerlukan revisi: {$note}",
                     [
-                        'subject' => 'Revision Request',
+                        'subject' => 'Permintaan Revisi Task',
                         'related_entity' => Task::class,
                         'related_entity_id' => $task->id,
                         'event' => 'task.revision.requested',
@@ -236,21 +233,21 @@ class WorkflowTransitionService
     private function assertAllowed(string $from, string $to, array $allowed): void
     {
         if (! in_array($to, $allowed[$from] ?? [], true)) {
-            throw ValidationException::withMessages(['status' => "Transition from {$from} to {$to} is not allowed."]);
+            throw ValidationException::withMessages(['status' => "Perubahan status dari {$from} menjadi {$to} tidak diizinkan."]);
         }
     }
 
     private function assertTarget(?string $target, string $workflow): void
     {
         if ($target === null) {
-            throw ValidationException::withMessages(['status' => "Unknown {$workflow} status."]);
+            throw ValidationException::withMessages(['status' => "Status {$workflow} tidak dikenal."]);
         }
     }
 
     private function requireNote(?string $note): void
     {
         if (trim((string) $note) === '') {
-            throw ValidationException::withMessages(['note' => 'A note is required for this transition.']);
+            throw ValidationException::withMessages(['note' => 'Catatan wajib diisi untuk perubahan status ini.']);
         }
     }
 
@@ -260,7 +257,7 @@ class WorkflowTransitionService
         $missing = [];
         foreach ($fields as $field) {
             if ($model->getAttribute($field) === null || $model->getAttribute($field) === '') {
-                $missing[$field] = "The {$field} field is required before this transition.";
+                $missing[$field] = "Kolom {$field} wajib diisi sebelum perubahan status ini.";
             }
         }
         if ($missing !== []) {
@@ -272,7 +269,7 @@ class WorkflowTransitionService
     {
         ActivityLogger::log(
             action: 'Status Changed',
-            description: class_basename($model)." status changed from {$from} to {$to}.",
+            description: 'Status '.class_basename($model)." diubah dari {$from} menjadi {$to}.",
             actorType: 'Admin',
             actorName: $actor->name,
             loggable: $model,

@@ -34,7 +34,7 @@ class StoreCampaignRequest extends FormRequest
             'status' => ['required', new Enum(CampaignStatus::class)],
             'priority' => ['required', 'in:normal,mid,urgent'],
             'pic_id' => ['nullable', 'uuid', 'exists:users,id'],
-            'member_ids' => ['sometimes', 'array'],
+            'member_ids' => ['sometimes', 'nullable', 'array'],
             'member_ids.*' => ['uuid', 'distinct', 'exists:users,id'],
             'notes' => ['nullable', 'string'],
             'brand_id' => ['required', 'uuid', 'exists:brands,id'],

@@ -6,7 +6,6 @@ use App\Enums\TaskStatus;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 /** @mixin Task */
 class TaskResource extends JsonResource
@@ -28,10 +27,11 @@ class TaskResource extends JsonResource
             'visual_link' => $this->visual_link,
             'visual_file_path' => $this->visual_file_path,
             'visual_file_name' => $this->visual_file_name,
-            'visual_file_url' => $this->visual_file_path ? Storage::disk('public')->url($this->visual_file_path) : null,
+            'visual_file_url' => $this->visual_file_path ? '/storage/'.ltrim($this->visual_file_path, '/') : null,
             'campaign_id' => $this->campaign_id,
             'brand_id' => $this->brand_id,
             'created_by' => $this->created_by,
+            'is_personal' => $this->is_personal,
             'pic_id' => $this->pic_id,
             'assignee_id' => $this->assignee_id,
             'notes' => $this->notes,
@@ -43,6 +43,12 @@ class TaskResource extends JsonResource
             'next_reminder_at' => $this->next_reminder_at?->format('Y-m-d H:i:s'),
             'last_reminded_at' => $this->last_reminded_at?->format('Y-m-d H:i:s'),
             'reminder_count' => $this->reminder_count,
+            'recurrence_type' => $this->recurrence_type,
+            'recurrence_ends_at' => $this->recurrence_ends_at?->format('Y-m-d H:i:s'),
+            'next_recurrence_at' => $this->next_recurrence_at?->format('Y-m-d H:i:s'),
+            'recurrence_notify' => $this->recurrence_notify,
+            'recurrence_source_id' => $this->recurrence_source_id,
+            'recurrence_occurrence_at' => $this->recurrence_occurrence_at?->format('Y-m-d H:i:s'),
             'brand' => $this->whenLoaded('brand', fn () => $this->brand ? [
                 'id' => $this->brand->id,
                 'name' => $this->brand->name,

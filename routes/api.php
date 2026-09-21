@@ -88,6 +88,8 @@ Route::prefix('v1')->group(function () {
             ->middlewareFor('update', 'permission:brand.update')
             ->middlewareFor('destroy', 'permission:brand.delete');
 
+        Route::get('tasks/notifications', [TaskController::class, 'notifications'])
+            ->middleware('permission:task.view');
         Route::apiResource('tasks', TaskController::class)
             ->middlewareFor(['index', 'show'], 'permission:task.view')
             ->middlewareFor('store', 'permission:task.create')

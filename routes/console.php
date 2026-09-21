@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\CleanTemporaryFilesJob;
+use App\Jobs\GenerateRecurringTasksJob;
 use App\Jobs\MonitorExpiredLinksJob;
 use App\Jobs\SendApprovalReminderJob;
 use App\Jobs\SendDeadlineReminderJob;
@@ -24,6 +25,8 @@ Schedule::job(new SendApprovalReminderJob)->dailyAt('08:00')->name('suntrack:rem
 Schedule::job(new SendDeadlineReminderJob)->dailyAt('09:00')->name('suntrack:remind-deadlines')->withoutOverlapping();
 
 Schedule::job(new SendTaskPriorityReminderJob)->everyFifteenMinutes()->name('suntrack:remind-priority-tasks')->withoutOverlapping();
+
+Schedule::job(new GenerateRecurringTasksJob)->everyFifteenMinutes()->name('suntrack:generate-recurring-tasks')->withoutOverlapping();
 
 // Hourly monitoring of expired secure public links
 Schedule::job(new MonitorExpiredLinksJob)->hourly()->name('suntrack:monitor-links')->withoutOverlapping();

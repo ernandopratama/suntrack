@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +20,7 @@ class Task extends Model
         'campaign_id',
         'brand_id',
         'created_by',
+        'is_personal',
         'pic_id',
         'assignee_id',
         'name',
@@ -35,6 +37,12 @@ class Task extends Model
         'visual_type',
         'creative_brief',
         'deadline',
+        'recurrence_type',
+        'recurrence_ends_at',
+        'next_recurrence_at',
+        'recurrence_notify',
+        'recurrence_source_id',
+        'recurrence_occurrence_at',
         'visual_link',
         'visual_file_path',
         'visual_file_name',
@@ -47,8 +55,13 @@ class Task extends Model
 
     protected $casts = [
         'requires_visual' => 'boolean',
+        'is_personal' => 'boolean',
         'creative_brief' => 'array',
         'deadline' => 'datetime',
+        'recurrence_ends_at' => 'datetime',
+        'next_recurrence_at' => 'datetime',
+        'recurrence_notify' => 'boolean',
+        'recurrence_occurrence_at' => 'datetime',
         'submitted_at' => 'datetime',
         'completed_at' => 'datetime',
         'next_reminder_at' => 'datetime',
@@ -84,6 +97,18 @@ class Task extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    /** @return BelongsTo<Task, $this> */
+    public function recurrenceSource(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'recurrence_source_id');
+    }
+
+    /** @return HasMany<Task, $this> */
+    public function recurrenceOccurrences(): HasMany
+    {
+        return $this->hasMany(self::class, 'recurrence_source_id');
     }
 
     /** @return MorphMany<SecureLink, $this> */

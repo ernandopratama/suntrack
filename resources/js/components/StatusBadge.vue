@@ -1,6 +1,6 @@
 <template>
   <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', colorClass]">
-    {{ label }}
+    {{ displayLabel }}
   </span>
 </template>
 
@@ -9,6 +9,7 @@ import { computed } from 'vue';
 
 const props = defineProps({
   status: { type: String, required: true },
+  label: { type: String, default: '' },
 });
 
 const colorClass = computed(() => {
@@ -20,7 +21,7 @@ const colorClass = computed(() => {
   return 'bg-gray-100 text-gray-800'; // Default for Pending, Draft, Not Started
 });
 
-const label = computed(() => props.status
+const displayLabel = computed(() => props.label || props.status
   .replaceAll('_', ' ')
   .replace(/\b\w/g, character => character.toUpperCase()));
 </script>

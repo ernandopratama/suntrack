@@ -46,13 +46,13 @@ class SendTaskPriorityReminderJob implements ShouldQueue
                 }
 
                 $title = $task->progress_status === 'on_hold'
-                    ? "Evaluasi Task On Hold: {$task->name}"
-                    : "Reminder Task {$task->priority}: {$task->name}";
+                    ? "Evaluasi Task yang Ditunda: {$task->name}"
+                    : "Pengingat Task {$task->priority}: {$task->name}";
                 $message = implode(' | ', [
                     $task->name,
-                    'Brand: '.$task->brand->name,
-                    'Priority: '.strtoupper($task->priority),
-                    'Deadline: '.($task->deadline?->format('Y-m-d H:i') ?? '-'),
+                    'Brand: '.($task->brand?->name ?? 'Pribadi'),
+                    'Prioritas: '.strtoupper($task->priority),
+                    'Tenggat: '.($task->deadline?->format('Y-m-d H:i') ?? '-'),
                     'Status: '.str_replace('_', ' ', $task->progress_status),
                     url("/tasks?task={$task->id}"),
                 ]);
@@ -69,8 +69,8 @@ class SendTaskPriorityReminderJob implements ShouldQueue
                 );
 
                 ActivityLogger::log(
-                    'Task Priority Reminder',
-                    "Reminder #{$task->reminder_count} sent for Task '{$task->name}'.",
+                    'Pengingat Prioritas Task',
+                    "Pengingat ke-{$task->reminder_count} dikirim untuk Task '{$task->name}'.",
                     'System',
                     'LaravelScheduler',
                     $task,

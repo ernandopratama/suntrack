@@ -8,7 +8,6 @@ use App\Models\Variant;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @mixin Campaign
@@ -104,7 +103,7 @@ class PublicReviewResource extends JsonResource
                     'visual_link' => $task->visual_link,
                     'visual_file_path' => $task->visual_file_path,
                     'visual_file_name' => $task->visual_file_name,
-                    'visual_file_url' => $task->visual_file_path ? Storage::disk('public')->url($task->visual_file_path) : null,
+                    'visual_file_url' => $task->visual_file_path ? '/storage/'.ltrim($task->visual_file_path, '/') : null,
                     'submitted_by' => $task->submitted_by,
                     'submitted_at' => $task->submitted_at ? $task->submitted_at->toIso8601String() : null,
                 ];

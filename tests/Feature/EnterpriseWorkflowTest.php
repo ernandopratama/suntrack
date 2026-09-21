@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Support\Rbac\RbacRegistry;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -133,6 +134,29 @@ class EnterpriseWorkflowTest extends TestCase
 
         $this->assertNotNull($campaign->fresh()->completed_at);
         $this->assertGreaterThanOrEqual(8, ActivityLog::whereMorphedTo('loggable', $campaign)->count());
+    }
+
+    public function test_campaign_can_be_assigned_to_pic_without_members(): void
+    {
+        $campaignId = $this->actingAs($this->admin)->postJson('/api/v1/admin/campaigns', [
+            'brand_id' => $this->brand->id,
+            'name' => 'PIC Only Campaign',
+            'priority' => 'normal',
+            'pic_id' => $this->admin->id,
+            'member_ids' => null,
+            'deadline' => now()->addWeek()->toISOString(),
+        ])->assertCreated()
+            ->assertJsonCount(0, 'data.campaign.members')
+            ->json('data.campaign.id');
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/v1/admin/campaigns/{$campaignId}/transition", ['status' => 'assigned'])
+            ->assertOk()
+            ->assertJsonPath('data.campaign.status', 'assigned');
+
+        $form = File::get(resource_path('js/components/CampaignForm.vue'));
+        $this->assertStringNotContainsString('Campaign Members', $form);
+        $this->assertStringNotContainsString('v-model="form.member_ids"', $form);
     }
 
     public function test_campaign_rejects_team_member_outside_brand_scope(): void

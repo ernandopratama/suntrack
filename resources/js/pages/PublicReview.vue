@@ -144,6 +144,49 @@
         </div>
       </section>
 
+      <section
+        v-if="reviewData.type === 'PerformanceReport'"
+        class="pms-reviewer-identity relative overflow-hidden rounded-[24px] p-5 text-white shadow-[0_16px_40px_rgba(41,51,49,0.12)] sm:p-6"
+        style="background: linear-gradient(135deg, #C93434 0%, #EB4545 46%, #F79B3B 100%)"
+      >
+        <div class="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#FFA240]/15"></div>
+        <div class="absolute -bottom-20 -right-5 h-40 w-40 rounded-full bg-[#FFD41D]/10"></div>
+
+        <div class="relative flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+          <div class="flex min-w-0 items-center gap-4">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-xl">
+              <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+            </span>
+
+            <div class="min-w-0">
+              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#FFDFA7]">
+                Reviewer Identity
+              </p>
+              <p class="mt-1 truncate text-sm font-bold sm:text-base">
+                {{
+                  isIdentified()
+                    ? `${reviewerIdentity.name} (${reviewerIdentity.position || 'Reviewer'})`
+                    : 'Belum Teridentifikasi'
+                }}
+              </p>
+              <p v-if="reviewData.brand?.name || reviewerIdentity.companyName" class="mt-0.5 text-xs text-[#FFF0B5]">
+                {{ reviewData.brand?.name || reviewerIdentity.companyName }}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="relative inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-white/15 sm:w-auto sm:text-sm"
+            :aria-label="isIdentified() ? 'Ubah identitas reviewer' : 'Identifikasi reviewer'"
+            @click="openIdentityModal(true)"
+          >
+            <span>{{ isIdentified() ? 'Ubah Identitas' : 'Identifikasi Diri' }}</span>
+            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+          </button>
+        </div>
+      </section>
+
       <section class="review-card rounded-3xl border border-[#ECEEEC] bg-white p-5 shadow-sm sm:p-8">
 
         <template v-if="reviewData.type === 'Task'">
@@ -1024,40 +1067,61 @@
                 v-if="task.visual_link || task.visual_file_url"
                 class="mb-4 p-4 rounded-xl bg-[#FFD41D]/15 border border-[#FFD41D]/40 text-xs text-[#654C00]"
               >
-                <p class="font-bold mb-2">
-                  Visual sudah dikirim:
-                  {{ task.visual_file_name || 'via Link' }}
-                </p>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div class="min-w-0">
+                    <p class="font-bold">Visual sudah dikirim</p>
+                    <p v-if="task.visual_file_url" class="mt-1 truncate text-[#755700]">
+                      <i class="fa-solid fa-image mr-1.5" aria-hidden="true"></i>{{ task.visual_file_name || 'Gambar visual' }}
+                    </p>
+                    <p v-if="task.visual_link" class="mt-1 truncate text-[#755700]">
+                      <i class="fa-solid fa-link mr-1.5" aria-hidden="true"></i>{{ task.visual_link }}
+                    </p>
+                  </div>
 
-                <p
-                  v-if="task.visual_link"
-                  class="mb-1"
-                >
-                  🔗 Link:
-                  <a
-                    :href="task.visual_link"
-                    target="_blank"
-                    rel="noopener"
-                    class="underline font-semibold"
-                  >
-                    {{ task.visual_link }}
-                  </a>
-                </p>
-
-                <p
-                  v-if="task.visual_file_url"
-                  class="mb-1"
-                >
-                  🖼️ File:
-                  <a
-                    :href="task.visual_file_url"
-                    target="_blank"
-                    rel="noopener"
-                    class="underline font-semibold"
-                  >
-                    {{ task.visual_file_name || 'Lihat gambar' }}
-                  </a>
-                </p>
+                  <div class="flex shrink-0 items-center gap-2">
+                    <a
+                      v-if="task.visual_link"
+                      :href="task.visual_link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#A66A00]/25 bg-white text-[#8A5A00] transition hover:-translate-y-0.5 hover:bg-[#FFF8E5]"
+                      aria-label="Buka link visual"
+                      title="Buka link visual"
+                    >
+                      <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                    <button
+                      v-if="task.visual_file_url"
+                      type="button"
+                      class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-600 transition hover:-translate-y-0.5 hover:bg-blue-50"
+                      aria-label="Lihat visual"
+                      title="Lihat visual"
+                      @click="previewTaskVisual(task)"
+                    >
+                      <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      v-if="task.visual_file_url"
+                      type="button"
+                      class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-white text-emerald-600 transition hover:-translate-y-0.5 hover:bg-emerald-50"
+                      aria-label="Unduh visual"
+                      title="Unduh visual"
+                      @click="downloadTaskVisual(task)"
+                    >
+                      <i class="fa-solid fa-download" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      v-if="task.visual_file_url || task.visual_link"
+                      type="button"
+                      class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-white text-[#D73535] transition hover:-translate-y-0.5 hover:bg-red-50"
+                      aria-label="Hapus visual"
+                      title="Hapus visual"
+                      @click="handleDeleteVisual(task)"
+                    >
+                      <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
 
                 <p
                   v-if="task.submitted_by"
@@ -1071,13 +1135,6 @@
                   }}
                 </p>
 
-                <button
-                  v-if="task.visual_file_url || task.visual_link"
-                  @click="handleDeleteVisual(task)"
-                  class="mt-3 px-3 py-1.5 text-[#D73535] bg-white border border-[#D73535]/25 rounded-lg text-xs font-bold hover:bg-[#D73535]/10"
-                >
-                  Hapus Visual
-                </button>
               </div>
 
               <form @submit.prevent="handleSubmitVisual(task)">
@@ -1279,7 +1336,7 @@
       <!-- =======================================================
            ACTIVITY TIMELINE
       ======================================================== -->
-      <div
+      <!-- <div
         class="review-card bg-white rounded-[24px] p-6 sm:p-8 border border-[#ECEEEC] shadow-[0_8px_30px_rgba(41,51,49,0.05)]"
       >
         <h2
@@ -1358,7 +1415,9 @@
             </p>
           </div>
         </div>
-      </div>
+
+      </div> -->
+
     </div>
 
     <Teleport to="body">
@@ -1412,47 +1471,58 @@
     ========================================================== -->
     <div
       v-if="showIdentityModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#4A514F]/65 backdrop-blur-sm"
+      class="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-[#25302D]/65 px-3 pb-4 pt-24 backdrop-blur-sm sm:px-6 sm:pb-6 sm:pt-28"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reviewer-identity-title"
+      @click.self="showIdentityModal = false"
     >
       <div
-        class="modal-card bg-white rounded-[26px] max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#ECEEEC]"
+        class="identity-modal modal-card max-h-[calc(100vh-7rem)] w-full max-w-2xl overflow-y-auto rounded-[26px] border border-white/70 bg-white shadow-2xl sm:max-h-[calc(100vh-8.5rem)] sm:rounded-[30px]"
       >
         <div
-          class="flex items-center justify-between pb-4 border-b border-[#F0F1EF] mb-5"
+          class="relative flex items-start gap-2.5 border-b border-[#EEEFEA] bg-gradient-to-br from-[#FFF9E6] via-white to-[#FFF1EE] px-5 py-3.5 pr-14 sm:gap-3 sm:px-6 sm:py-4 sm:pr-16"
         >
-          <div>
+          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D73535] text-sm text-white shadow-lg shadow-[#D73535]/20 sm:h-10 sm:w-10">
+            <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+          </span>
+
+          <div class="min-w-0">
             <span
-              class="text-[10px] font-extrabold uppercase tracking-wider text-[#D73535]"
+              class="text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#D73535]"
             >
-              Reviewer
+              Identitas reviewer
             </span>
 
-            <h3 class="text-lg font-bold tracking-[-0.01em] text-[#46504D] mt-1">
+            <h3 id="reviewer-identity-title" class="mt-0.5 text-lg font-extrabold tracking-[-0.025em] text-[#37413F] sm:text-xl">
               {{
                 isIdentified()
                   ? 'Ubah Identitas Reviewer'
                   : 'Identifikasi Reviewer'
               }}
             </h3>
+
+            <p class="mt-1 max-w-xl text-[11px] leading-4 text-[#707B78] sm:text-xs sm:leading-5">
+              Identitas digunakan untuk mencatat aktivitas review pada laporan ini.
+            </p>
           </div>
 
           <button
+            type="button"
             @click="showIdentityModal = false"
-            class="w-8 h-8 rounded-lg text-[#98A19E] hover:bg-[#F6F5F2] hover:text-[#46504D] transition"
+            class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl border border-[#E6E9E6] bg-white/90 text-sm text-[#7D8784] shadow-sm transition hover:border-[#D73535]/25 hover:bg-[#FFF3F3] hover:text-[#D73535] focus:outline-none focus:ring-4 focus:ring-[#D73535]/10 sm:right-5 sm:top-4"
+            aria-label="Tutup form identitas reviewer"
+            title="Tutup"
           >
-            ✕
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
           </button>
         </div>
 
-        <p class="text-xs text-[#77817E] mb-5 leading-relaxed">
-          Lengkapi identitas Anda untuk pencatatan audit trail pada setiap
-          aktivitas review.
-        </p>
-
         <form
           @submit.prevent="submitIdentityForm"
-          class="space-y-4"
+          class="p-5 sm:p-7"
         >
+          <div class="grid gap-4 sm:grid-cols-2 sm:gap-x-5">
           <div>
             <label
               class="block text-xs font-bold text-[#687370] mb-1.5"
@@ -1465,8 +1535,10 @@
               v-model="identityForm.name"
               type="text"
               required
+              autocomplete="name"
+              autofocus
               placeholder="Contoh: Budi Santoso"
-              class="w-full rounded-xl border border-[#E1E4E2] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25 focus:border-[#FFA240]"
+              class="w-full rounded-xl border border-[#DDE2DF] px-3.5 py-2.5 text-sm text-[#46504D] focus:border-[#FFA240] focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25"
             />
           </div>
 
@@ -1483,8 +1555,9 @@
             <input
               v-model="identityForm.position"
               type="text"
+              autocomplete="organization-title"
               placeholder="Brand Manager / Marketing Director"
-              class="w-full rounded-xl border border-[#E1E4E2] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25 focus:border-[#FFA240]"
+              class="w-full rounded-xl border border-[#DDE2DF] px-3.5 py-2.5 text-sm text-[#46504D] focus:border-[#FFA240] focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25"
             />
           </div>
 
@@ -1499,7 +1572,7 @@
               v-model="identityForm.companyName"
               type="text"
               disabled
-              class="w-full rounded-xl border border-[#ECEEEC] bg-[#F6F5F2] px-3.5 py-2.5 text-sm text-[#98A19E]"
+              class="w-full cursor-not-allowed rounded-xl border border-[#E7EAE7] bg-[#F5F7F5] px-3.5 py-2.5 text-sm text-[#89928F]"
             />
           </div>
 
@@ -1515,28 +1588,32 @@
 
             <input
               v-model="identityForm.whatsappNumber"
-              type="text"
+              type="tel"
+              inputmode="tel"
+              autocomplete="tel"
               placeholder="081234567890"
-              class="w-full rounded-xl border border-[#E1E4E2] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25 focus:border-[#FFA240]"
+              class="w-full rounded-xl border border-[#DDE2DF] px-3.5 py-2.5 text-sm text-[#46504D] focus:border-[#FFA240] focus:outline-none focus:ring-2 focus:ring-[#FFA240]/25"
             />
+          </div>
           </div>
 
           <div
-            class="flex items-center justify-end gap-3 pt-4 border-t border-[#F0F1EF]"
+            class="mt-6 flex flex-col-reverse gap-2.5 border-t border-[#EEEFEA] pt-5 sm:flex-row sm:items-center sm:justify-end sm:gap-3"
           >
             <button
               type="button"
               @click="showIdentityModal = false"
-              class="px-4 py-2.5 rounded-xl border border-[#E1E4E2] text-xs font-bold text-[#77817E] hover:bg-[#FCFBF8] transition"
+              class="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#DDE2DF] px-5 py-2.5 text-sm font-bold text-[#65706D] transition hover:bg-[#F7F8F6]"
             >
-              Batal
+              Tutup
             </button>
 
             <button
               type="submit"
               :disabled="!identityForm.name.trim() || loading"
-              class="px-5 py-2.5 rounded-xl bg-[#D73535] hover:bg-[#B92D2D] disabled:opacity-50 text-white text-xs font-bold transition shadow-sm"
+              class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#D73535] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#D73535]/20 transition hover:bg-[#B92D2D] disabled:cursor-not-allowed disabled:opacity-50"
             >
+              <i class="fa-solid fa-check" aria-hidden="true"></i>
               Simpan Identitas
             </button>
           </div>
@@ -1949,6 +2026,40 @@ const openMediaPreview = (media) => {
     document.body.style.overflow = 'hidden';
   }
 };
+const previewTaskVisual = task => {
+  openMediaPreview({
+    url: task?.visual_file_url,
+    title: reviewData.value?.name || task?.visual_file_name || 'Visual laporan',
+  });
+};
+const taskVisualDownloadName = task => {
+  const sourceName = task?.visual_file_name || task?.visual_file_url || '';
+  const extension = sourceName.split('?')[0].match(/\.(jpe?g|png|webp|gif)$/i)?.[1]?.toLowerCase() || 'jpg';
+  const reportTitle = String(reviewData.value?.name || task?.name || 'Laporan')
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
+    .replace(/\.(jpe?g|png|webp|gif)$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return `${reportTitle || 'Laporan'}.${extension}`;
+};
+const downloadTaskVisual = async task => {
+  try {
+    const response = await fetch(task.visual_file_url, { credentials: 'same-origin' });
+    if (!response.ok || !response.headers.get('content-type')?.startsWith('image/')) {
+      throw new Error('Visual tidak dapat diunduh.');
+    }
+    const objectUrl = URL.createObjectURL(await response.blob());
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = taskVisualDownloadName(task);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    showToast('error', 'Visual tidak dapat diunduh.');
+  }
+};
 const closeMediaPreview = () => {
   mediaPreview.open = false;
   mediaPreview.zoom = 1;
@@ -1964,6 +2075,11 @@ const resetMediaZoom = () => {
   mediaPreview.zoom = 1;
 };
 const handleMediaPreviewKeydown = (event) => {
+  if (event.key === 'Escape' && showIdentityModal.value) {
+    showIdentityModal.value = false;
+    return;
+  }
+
   if (!mediaPreview.open) return;
   if (event.key === 'Escape') closeMediaPreview();
   if (event.key === '+' || event.key === '=') zoomMediaIn();
@@ -2320,10 +2436,16 @@ const identityForm = reactive({
 
 onMounted(async () => {
   document.addEventListener('keydown', handleMediaPreviewKeydown);
-  await fetchReviewData(token);
-  if (isIdentified()) {
-    await saveIdentity(token, reviewerIdentity);
+  const data = await fetchReviewData(token);
+
+  if (!data) return;
+
+  if (!isIdentified()) {
+    openIdentityModal(true);
+    return;
   }
+
+  await saveIdentity(token, reviewerIdentity);
 });
 
 const openIdentityModal = (open) => {
@@ -2975,6 +3097,11 @@ const getVariantStatusBadgeClass = (status) => {
   .review-card:hover {
     transform: none;
   }
+}
+
+.identity-modal {
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
 }
 
 /* Public delivery and performance report */

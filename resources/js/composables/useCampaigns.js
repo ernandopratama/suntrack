@@ -23,7 +23,7 @@ export function useCampaigns() {
                 };
             }
         } catch (e) {
-            error.value = e.response?.data?.message || 'Error fetching campaigns';
+            error.value = e.response?.data?.message || 'Gagal memuat data kampanye';
         } finally {
             loading.value = false;
         }
@@ -38,7 +38,7 @@ export function useCampaigns() {
                 campaign.value = response.data.data.campaign;
             }
         } catch (e) {
-            error.value = e.response?.data?.message || 'Error fetching campaign';
+            error.value = e.response?.data?.message || 'Gagal memuat kampanye';
         } finally {
             loading.value = false;
         }
@@ -51,7 +51,7 @@ export function useCampaigns() {
             const response = await api.post('/admin/campaigns', data);
             return response.data.success;
         } catch (e) {
-            error.value = e.response?.data?.errors || e.response?.data?.message || 'Error creating campaign';
+            error.value = e.response?.data?.errors || e.response?.data?.message || 'Gagal membuat kampanye';
             return false;
         } finally {
             loading.value = false;
@@ -65,7 +65,7 @@ export function useCampaigns() {
             const response = await api.put(`/admin/campaigns/${id}`, data);
             return response.data.success;
         } catch (e) {
-            error.value = e.response?.data?.errors || e.response?.data?.message || 'Error updating campaign';
+            error.value = e.response?.data?.errors || e.response?.data?.message || 'Gagal memperbarui kampanye';
             return false;
         } finally {
             loading.value = false;
@@ -79,7 +79,7 @@ export function useCampaigns() {
             const response = await api.delete(`/admin/campaigns/${id}`);
             return response.data.success;
         } catch (e) {
-            error.value = e.response?.data?.message || 'Error deleting campaign';
+            error.value = e.response?.data?.message || 'Gagal menghapus kampanye';
             return false;
         } finally {
             loading.value = false;

@@ -60,6 +60,7 @@
           <ThemeToggle
             local-only
             show-label
+            storage-key="suntrack_public_theme"
             class="public-theme-toggle"
           />
 
@@ -234,6 +235,14 @@
 <script setup>
 import { computed } from 'vue';
 import ThemeToggle from '../components/ThemeToggle.vue';
+import { useThemeStore } from '../stores/theme';
+
+const PUBLIC_THEME_KEY = 'suntrack_public_theme';
+const themeStore = useThemeStore();
+const storedPublicTheme = window.localStorage.getItem(PUBLIC_THEME_KEY);
+const publicTheme = storedPublicTheme === 'dark' ? 'dark' : 'light';
+
+themeStore.apply(publicTheme, false);
 
 const currentYear = computed(() => new Date().getFullYear());
 </script>

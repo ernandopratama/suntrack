@@ -28,7 +28,7 @@
           <span
             class="rounded-full bg-[#D0E7E6] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#293681]"
           >
-            Task Management
+            Manajemen Task
           </span>
         </div>
 
@@ -36,11 +36,11 @@
         <h1
           class="mt-3 text-2xl font-extrabold tracking-tight text-[#293681] sm:text-3xl"
         >
-          Tasks
+          Daftar Task
         </h1>
 
         <p class="mt-1 text-sm text-gray-500">
-          Manage campaign tasks and track progress.
+          Kelola task bersama, task pribadi, jadwal berulang, dan progres pekerjaan.
         </p>
       </div>
 
@@ -69,9 +69,33 @@
           </svg>
         </span>
 
-        <span>New Task</span>
+        <span>Buat Task</span>
       </button>
     </div>
+
+    <section v-if="notifications.length" class="rounded-2xl border border-violet-100 bg-violet-50/60 p-4">
+      <div class="mb-3 flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-700">
+          <i class="fa-solid fa-bell text-xs"></i>
+        </span>
+        <div>
+          <h2 class="text-sm font-extrabold text-violet-950">Pemberitahuan Task</h2>
+          <p class="text-[11px] text-violet-700/70">Pembaruan jadwal dan pengingat task milik Anda.</p>
+        </div>
+      </div>
+
+      <div class="grid gap-2 lg:grid-cols-2">
+        <article v-for="notification in notifications" :key="notification.id" class="rounded-xl border border-violet-100 bg-white px-3.5 py-3">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-gray-900">{{ notification.subject }}</p>
+              <p class="mt-1 line-clamp-2 text-[11px] leading-5 text-gray-500">{{ notification.body }}</p>
+            </div>
+            <time class="shrink-0 text-[10px] font-semibold text-violet-600">{{ formatDateTime(notification.created_at) }}</time>
+          </div>
+        </article>
+      </div>
+    </section>
 
     <!-- Main Table -->
     <div
@@ -81,6 +105,7 @@
         :columns="columns"
         :data="tasks"
         :loading="loading"
+        :labels="tableLabels"
         @search="handleSearch"
       >
         <!-- No -->
@@ -127,7 +152,10 @@
                 </div>
 
                 <div class="mt-0.5 text-[11px] text-gray-400">
-                  Campaign Task
+                  {{ taskTypeLabel(row) }}
+                  <span v-if="row.recurrence_type" class="ml-1 rounded-full bg-violet-50 px-1.5 py-0.5 font-semibold text-violet-700">
+                    {{ recurrenceLabel(row.recurrence_type) }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -156,7 +184,7 @@
             </span>
 
             <span class="text-sm font-semibold text-gray-600">
-              {{ row.campaign?.name || '-' }}
+              {{ row.is_personal ? 'Pribadi' : (row.campaign?.name || 'Tanpa kampanye') }}
             </span>
           </div>
         </template>
@@ -195,6 +223,9 @@
             <span class="text-sm font-medium text-gray-600">
               {{ row.deadline ? row.deadline.slice(0, 10) : '-' }}
             </span>
+            <span v-if="row.next_recurrence_at" class="block text-[10px] font-semibold text-violet-600">
+              Dibuat lagi: {{ formatDateTime(row.next_recurrence_at) }}
+            </span>
           </div>
         </template>
 
@@ -202,6 +233,7 @@
         <template #cell-actions="{ row }">
           <div class="flex items-center justify-end gap-2">
             <button
+              v-if="!row.is_personal"
               type="button"
               @click="openCollaboration(row)"
               class="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700"
@@ -228,7 +260,7 @@
                 />
               </svg>
 
-              <span>Edit</span>
+              <span>Ubah</span>
             </button>
 
             <!-- Delete -->
@@ -252,7 +284,7 @@
                 />
               </svg>
 
-              <span>Delete</span>
+              <span>Hapus</span>
             </button>
           </div>
         </template>
@@ -283,7 +315,7 @@
                 />
               </svg>
 
-              Previous
+              Sebelumnya
             </button>
 
             <span
@@ -301,7 +333,7 @@
               type="button"
               class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-[#95CCDD] hover:bg-[#D0E7E6]/40 hover:text-[#293681] disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Next
+              Berikutnya
 
               <svg
                 class="ml-1.5 h-4 w-4"
@@ -324,11 +356,11 @@
             class="hidden flex-1 items-center justify-between sm:flex"
           >
             <p class="text-xs text-gray-500">
-              Page
+              Halaman
               <span class="font-bold text-[#293681]">
                 {{ pagination.current_page }}
               </span>
-              of
+              dari
               <span class="font-bold text-[#293681]">
                 {{ pagination.last_page }}
               </span>
@@ -338,12 +370,12 @@
               <span class="font-semibold text-gray-700">
                 {{ pagination.total }}
               </span>
-              total tasks
+              task
             </p>
 
             <nav
               class="flex items-center gap-1"
-              aria-label="Pagination"
+              aria-label="Paginasi"
             >
               <button
                 @click="prevPage"
@@ -436,11 +468,11 @@
 
             <div>
               <h3 class="text-base font-extrabold text-[#293681]">
-                Delete Task
+                Hapus Task
               </h3>
 
               <p class="mt-0.5 text-xs text-gray-400">
-                This action cannot be undone.
+                Tindakan ini tidak dapat dibatalkan.
               </p>
             </div>
           </div>
@@ -449,7 +481,7 @@
         <!-- Modal Body -->
         <div class="px-6 py-5">
           <p class="text-sm leading-6 text-gray-600">
-            Are you sure you want to delete
+            Apakah Anda yakin ingin menghapus
             <span class="font-bold text-gray-900">
               {{ taskToDelete?.name }}
             </span>
@@ -466,7 +498,7 @@
             type="button"
             class="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-[#95CCDD] hover:bg-[#D0E7E6]/40 hover:text-[#293681]"
           >
-            Cancel
+            Batal
           </button>
 
           <button
@@ -474,7 +506,7 @@
             type="button"
             class="rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-rose-700 hover:shadow-md"
           >
-            Delete Task
+            Hapus Task
           </button>
         </div>
       </div>
@@ -491,7 +523,7 @@
     <div v-if="collaborationTask" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-slate-950/60" @click="collaborationTask = null"></div>
       <div class="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-surface p-6 shadow-2xl">
-        <div class="mb-5 flex items-center justify-between gap-3"><div><h2 class="text-lg font-bold text-content">{{ collaborationTask.name }}</h2><p class="text-xs text-content-muted">Attachment, diskusi, dan Secure Link</p></div><button type="button" class="text-content-muted" @click="collaborationTask = null"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="mb-5 flex items-center justify-between gap-3"><div><h2 class="text-lg font-bold text-content">{{ collaborationTask.name }}</h2><p class="text-xs text-content-muted">Lampiran, diskusi, dan tautan aman</p></div><button type="button" class="text-content-muted" aria-label="Tutup kolaborasi" @click="collaborationTask = null"><i class="fa-solid fa-xmark"></i></button></div>
         <CollaborationPanel entity-type="task" :entity="collaborationTask" :can-update="$can('task.update')" />
       </div>
     </div>
@@ -509,18 +541,29 @@ const {
   tasks,
   loading,
   pagination,
+  notifications,
   fetchTasks,
+  fetchTaskNotifications,
   deleteTask
 } = useTasks();
 
 const columns = [
-  { key: 'no', label: 'No', sortable: false },
-  { key: 'name', label: 'Task Name', sortable: true },
-  { key: 'campaign', label: 'Campaign', sortable: false },
+  { key: 'no', label: 'No.', sortable: false },
+  { key: 'name', label: 'Nama Task', sortable: true },
+  { key: 'campaign', label: 'Keterkaitan', sortable: false },
   { key: 'progress_status', label: 'Status', sortable: true },
-  { key: 'deadline', label: 'Deadline', sortable: true },
-  { key: 'actions', label: '', sortable: false },
+  { key: 'deadline', label: 'Tenggat', sortable: true },
+  { key: 'actions', label: 'Aksi', sortable: false },
 ];
+
+const tableLabels = {
+  searchPlaceholder: 'Cari task...',
+  searchHelper: 'Cari data pada tabel task',
+  loading: 'Memuat task...',
+  emptyTitle: 'Task tidak ditemukan',
+  emptyDescription: 'Ubah kata pencarian atau filter.',
+  scrollHint: 'Geser ke samping untuk melihat data lainnya',
+};
 
 const searchQuery = ref('');
 const isModalOpen = ref(false);
@@ -530,7 +573,10 @@ const taskToDelete = ref(null);
 const collaborationTask = ref(null);
 const openCollaboration = row => { collaborationTask.value = row; };
 
-onMounted(() => fetchData());
+onMounted(() => {
+  fetchData();
+  fetchTaskNotifications();
+});
 
 const fetchData = () =>
   fetchTasks({
@@ -542,6 +588,7 @@ const handleSearch = (q) => {
   searchQuery.value = q;
   pagination.value.current_page = 1;
   fetchData();
+  fetchTaskNotifications();
 };
 
 const prevPage = () => {
@@ -608,16 +655,35 @@ const statusClass = (status) => {
 
 const statusLabel = (status) => {
   const map = {
-    pending: 'Pending',
-    assigned: 'Assigned',
-    in_progress: 'In Progress',
-    on_hold: 'On Hold',
-    waiting_review: 'Waiting Review',
-    revision: 'Revision',
-    completed: 'Completed',
-    cancelled: 'Cancelled'
+    pending: 'Menunggu',
+    assigned: 'Ditugaskan',
+    in_progress: 'Sedang Dikerjakan',
+    on_hold: 'Ditunda',
+    waiting_review: 'Menunggu Peninjauan',
+    revision: 'Revisi',
+    completed: 'Selesai',
+    cancelled: 'Dibatalkan'
   };
 
   return map[status] || status;
 };
+
+const recurrenceLabel = (type) => ({
+  daily: 'Harian',
+  weekly: 'Mingguan',
+  monthly: 'Bulanan',
+}[type] || type);
+
+const taskTypeLabel = (task) => {
+  if (task.is_personal) return 'Task Pribadi';
+  if (task.campaign_id) return 'Task Kampanye';
+  return 'Task Mandiri';
+};
+
+const formatDateTime = (value) => value
+  ? new Date(String(value).replace(' ', 'T')).toLocaleString('id-ID', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    })
+  : '-';
 </script>

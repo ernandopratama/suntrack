@@ -4,6 +4,7 @@ import api from '../utils/api';
 export function useTasks() {
     const tasks = ref([]);
     const task = ref(null);
+    const notifications = ref([]);
     const loading = ref(false);
     const error = ref(null);
     const pagination = ref({ current_page: 1, last_page: 1, total: 0, per_page: 15 });
@@ -23,7 +24,7 @@ export function useTasks() {
                 };
             }
         } catch (e) {
-            error.value = e.response?.data?.message || 'Error fetching tasks';
+            error.value = e.response?.data?.message || 'Gagal memuat task';
         } finally {
             loading.value = false;
         }
@@ -38,9 +39,18 @@ export function useTasks() {
                 task.value = response.data.data.task;
             }
         } catch (e) {
-            error.value = e.response?.data?.message || 'Error fetching task';
+            error.value = e.response?.data?.message || 'Gagal memuat detail task';
         } finally {
             loading.value = false;
+        }
+    };
+
+    const fetchTaskNotifications = async () => {
+        try {
+            const response = await api.get('/admin/tasks/notifications');
+            notifications.value = response.data.data?.notifications || [];
+        } catch (e) {
+            notifications.value = [];
         }
     };
 
@@ -51,7 +61,7 @@ export function useTasks() {
             const response = await api.post('/admin/tasks', data);
             return response.data.success;
         } catch (e) {
-            error.value = e.response?.data?.errors || e.response?.data?.message || 'Error creating task';
+            error.value = e.response?.data?.errors || e.response?.data?.message || 'Gagal membuat task';
             return false;
         } finally {
             loading.value = false;
@@ -65,7 +75,7 @@ export function useTasks() {
             const response = await api.put(`/admin/tasks/${id}`, data);
             return response.data.success;
         } catch (e) {
-            error.value = e.response?.data?.errors || e.response?.data?.message || 'Error updating task';
+            error.value = e.response?.data?.errors || e.response?.data?.message || 'Gagal memperbarui task';
             return false;
         } finally {
             loading.value = false;
@@ -79,7 +89,7 @@ export function useTasks() {
             const response = await api.delete(`/admin/tasks/${id}`);
             return true;
         } catch (e) {
-            error.value = e.response?.data?.message || 'Error deleting task';
+            error.value = e.response?.data?.message || 'Gagal menghapus task';
             return false;
         } finally {
             loading.value = false;
@@ -89,11 +99,13 @@ export function useTasks() {
     return {
         tasks,
         task,
+        notifications,
         loading,
         error,
         pagination,
         fetchTasks,
         fetchTask,
+        fetchTaskNotifications,
         createTask,
         updateTask,
         deleteTask,

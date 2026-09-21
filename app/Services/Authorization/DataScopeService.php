@@ -116,7 +116,25 @@ class DataScopeService
 
     public function scopeTasks(Builder $query, User $user): Builder
     {
-        return $this->scopeThroughBrand($query, $user, 'brand');
+        if ($this->hasGlobalScope($user)) {
+            return $query->where(function (Builder $tasks) use ($user) {
+                $tasks->where('is_personal', false)
+                    ->orWhere(function (Builder $personal) use ($user) {
+                        $personal->where('is_personal', true)
+                            ->where('created_by', $user->id);
+                    });
+            });
+        }
+
+        return $query->where(function (Builder $tasks) use ($user) {
+            $tasks->where(function (Builder $personal) use ($user) {
+                $personal->where('is_personal', true)
+                    ->where('created_by', $user->id);
+            })->orWhere(function (Builder $shared) use ($user) {
+                $shared->where('is_personal', false)
+                    ->whereHas('brand', fn (Builder $brand) => $this->scopeBrands($brand, $user));
+            });
+        });
     }
 
     public function scopePerformanceReports(Builder $query, User $user): Builder
@@ -221,6 +239,10 @@ class DataScopeService
 
     public function canAccess(User $user, Model $model): bool
     {
+        if ($model instanceof Task && $model->is_personal) {
+            return $model->created_by === $user->id;
+        }
+
         if ($this->hasGlobalScope($user)) {
             return true;
         }

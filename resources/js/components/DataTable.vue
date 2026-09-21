@@ -35,7 +35,7 @@
               <input
                 v-model="searchQuery"
                 type="text"
-                placeholder="Search data in this table..."
+                :placeholder="labels.searchPlaceholder"
                 @input="$emit('search', searchQuery)"
                 class="block w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-20 text-sm text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
               />
@@ -56,7 +56,7 @@
             <div class="mt-2 flex items-center gap-2 px-1">
               <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
               <span class="text-xs font-medium text-gray-400">
-                Search data in this table
+                {{ labels.searchHelper }}
               </span>
             </div>
           </div>
@@ -175,7 +175,7 @@
                   </svg>
 
                   <span class="mt-3 text-sm font-medium text-gray-400">
-                    Loading data...
+                    {{ labels.loading }}
                   </span>
                 </div>
               </td>
@@ -207,11 +207,11 @@
                   </div>
 
                   <p class="mt-3 text-sm font-semibold text-gray-700">
-                    No data found
+                    {{ labels.emptyTitle }}
                   </p>
 
                   <p class="mt-1 text-xs text-gray-400">
-                    Try changing your search or filter.
+                    {{ labels.emptyDescription }}
                   </p>
                 </div>
               </td>
@@ -247,7 +247,7 @@
         v-if="data.length"
         class="border-t border-gray-100 bg-gray-50/50 px-4 py-1.5 text-center text-[10px] font-medium uppercase tracking-wider text-gray-400"
       >
-        Scroll horizontally to view more
+        {{ labels.scrollHint }}
       </div>
 
       <!-- Pagination -->
@@ -293,6 +293,18 @@ const props = defineProps({
   pagination: {
     type: Boolean,
     default: true,
+  },
+
+  labels: {
+    type: Object,
+    default: () => ({
+      searchPlaceholder: 'Search data in this table...',
+      searchHelper: 'Search data in this table',
+      loading: 'Loading data...',
+      emptyTitle: 'No data found',
+      emptyDescription: 'Try changing your search or filter.',
+      scrollHint: 'Scroll horizontally to view more',
+    }),
   },
 });
 

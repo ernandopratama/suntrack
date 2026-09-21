@@ -23,13 +23,15 @@ export const useThemeStore = defineStore('theme', {
     },
 
     actions: {
-        apply(theme) {
+        apply(theme, persist = true) {
             const nextTheme = THEMES.includes(theme) ? theme : 'light';
             this.theme = nextTheme;
 
             document.documentElement.dataset.theme = nextTheme;
             document.documentElement.style.colorScheme = nextTheme;
-            window.localStorage.setItem(STORAGE_KEY, nextTheme);
+            if (persist) {
+                window.localStorage.setItem(STORAGE_KEY, nextTheme);
+            }
 
             const themeColor = document.querySelector('meta[name="theme-color"]');
             themeColor?.setAttribute('content', nextTheme === 'dark' ? '#0b1120' : '#f8fafc');

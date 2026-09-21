@@ -1,7 +1,7 @@
 <template>
   <ModalForm
     :is-open="isOpen"
-    :title="isEdit ? 'Edit Campaign' : 'Create Campaign'"
+    :title="isEdit ? 'Ubah Kampanye' : 'Buat Kampanye'"
     @close="closeModal"
   >
     <form
@@ -34,7 +34,7 @@
 
         <div>
           <p class="text-xs font-bold uppercase tracking-wide text-rose-700">
-            Unable to save
+            Tidak dapat menyimpan
           </p>
           <p class="mt-0.5 text-sm leading-5 text-rose-600">
             {{ error }}
@@ -65,10 +65,10 @@
 
           <div>
             <h3 class="text-sm font-bold text-gray-900">
-              Campaign Information
+              Informasi Kampanye
             </h3>
             <p class="text-xs text-gray-500">
-              Define the campaign identity and associated brand.
+              Tentukan identitas kampanye dan brand terkait.
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@
                 @input="onBrandSearch"
                 @focus="brandDropdownOpen = true"
                 @blur="onBrandBlur"
-                placeholder="Search and select brand..."
+                placeholder="Cari dan pilih brand..."
                 class="block w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-10 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
               />
 
@@ -204,10 +204,10 @@
               </div>
 
               <p class="text-xs font-semibold text-gray-700">
-                No brand found
+                Brand tidak ditemukan
               </p>
               <p class="mt-0.5 text-[11px] text-gray-400">
-                Try another brand name.
+                Coba gunakan nama brand lain.
               </p>
             </div>
 
@@ -224,7 +224,7 @@
             <label
               class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600"
             >
-              Campaign Name
+              Nama Kampanye
               <span class="text-rose-500">*</span>
             </label>
 
@@ -232,7 +232,7 @@
               v-model="form.name"
               type="text"
               required
-              placeholder="Enter campaign name"
+              placeholder="Masukkan nama kampanye"
               class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
             />
 
@@ -247,15 +247,15 @@
           <!-- Description -->
           <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
-              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Objective</label>
-              <input v-model="form.objective" type="text" placeholder="Campaign objective" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10" />
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Tujuan</label>
+              <input v-model="form.objective" type="text" placeholder="Masukkan tujuan kampanye" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10" />
             </div>
             <div>
-              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Priority</label>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Prioritas</label>
               <select v-model="form.priority" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10">
                 <option value="normal">Normal</option>
-                <option value="mid">Mid</option>
-                <option value="urgent">Urgent</option>
+                <option value="mid">Menengah</option>
+                <option value="urgent">Mendesak</option>
               </select>
             </div>
           </div>
@@ -266,18 +266,18 @@
               <label
                 class="block text-xs font-bold uppercase tracking-wide text-gray-600"
               >
-                Description
+                Deskripsi
               </label>
 
               <span class="text-[11px] font-medium text-gray-400">
-                Optional
+                Opsional
               </span>
             </div>
 
             <textarea
               v-model="form.description"
               rows="4"
-              placeholder="Describe the campaign objectives, promotion details, or other notes..."
+              placeholder="Jelaskan tujuan kampanye, detail promosi, atau catatan lainnya..."
               class="block w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm leading-6 text-gray-900 outline-none transition placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
             />
           </div>
@@ -307,10 +307,10 @@
 
           <div>
             <h3 class="text-sm font-bold text-gray-900">
-              Schedule & Status
+              Jadwal dan Status
             </h3>
             <p class="text-xs text-gray-500">
-              Configure campaign dates and current workflow status.
+              Atur tanggal kampanye dan status alur kerja saat ini.
             </p>
           </div>
         </div>
@@ -322,7 +322,7 @@
               <label
                 class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600"
               >
-                Start Date
+                Tanggal Mulai
               </label>
 
               <input
@@ -336,7 +336,7 @@
               <label
                 class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600"
               >
-                End Date
+                Tanggal Selesai
               </label>
 
               <input
@@ -353,7 +353,7 @@
               <label
                 class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600"
               >
-                Deadline
+                Tenggat
               </label>
 
               <div class="relative">
@@ -396,14 +396,14 @@
                 required
                 class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm font-medium text-gray-900 outline-none transition hover:border-gray-300 hover:bg-white focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
               >
-                <option value="draft">Draft</option>
-                <option value="assigned">Assigned</option>
-                <option value="in_progress">In Progress</option>
-                <option value="waiting_review">Waiting Review</option>
-                <option value="revision">Revision</option>
-                <option value="approved">Approved</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="draft">Draf</option>
+                <option value="assigned">Ditugaskan</option>
+                <option value="in_progress">Sedang Berjalan</option>
+                <option value="waiting_review">Menunggu Peninjauan</option>
+                <option value="revision">Revisi</option>
+                <option value="approved">Disetujui</option>
+                <option value="completed">Selesai</option>
+                <option value="cancelled">Dibatalkan</option>
               </select>
 
               <p
@@ -421,10 +421,10 @@
           >
             <div>
               <p class="text-xs font-bold text-gray-700">
-                Current Campaign Status
+                Status Kampanye Saat Ini
               </p>
               <p class="mt-0.5 text-[11px] text-gray-400">
-                This status will be saved with the campaign.
+                Status ini akan disimpan bersama data kampanye.
               </p>
             </div>
 
@@ -451,25 +451,19 @@
             </span>
           </div>
 
-          <div v-if="canManageOwnership" class="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div v-if="canManageOwnership">
             <div>
               <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">PIC</label>
               <select v-model="form.pic_id" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900">
-                <option :value="null">Select PIC</option>
+                <option :value="null">Pilih PIC</option>
                 <option v-for="pic in pics" :key="pic.id" :value="pic.id">{{ pic.name }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Campaign Members</label>
-              <select v-model="form.member_ids" multiple class="block min-h-24 w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900">
-                <option v-for="member in teamMembers" :key="member.id" :value="member.id">{{ member.name }}</option>
               </select>
             </div>
           </div>
 
           <div v-if="isEdit && form.status !== props.campaign?.status">
-            <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Transition Note</label>
-            <textarea v-model="form.transition_note" rows="2" placeholder="Required for revision, completion confirmation, or cancellation" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900" />
+            <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Catatan Perubahan Status</label>
+            <textarea v-model="form.transition_note" rows="2" placeholder="Wajib untuk revisi, konfirmasi penyelesaian, atau pembatalan" class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900" />
           </div>
         </div>
       </div>
@@ -484,7 +478,7 @@
           class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-100"
           @click="closeModal"
         >
-          Cancel
+          Batal
         </button>
 
         <button
@@ -530,7 +524,7 @@
             />
           </svg>
 
-          {{ loading ? 'Saving...' : isEdit ? 'Update Campaign' : 'Save Campaign' }}
+          {{ loading ? 'Menyimpan...' : isEdit ? 'Perbarui Kampanye' : 'Simpan Kampanye' }}
         </button>
       </div>
     </template>
@@ -569,7 +563,7 @@ const {
 } = useCampaigns();
 
 const { brands, fetchBrands } = useBrands();
-const { pics, teamMembers, fetchWorkflowOptions } = useWorkflowOptions();
+const { pics, fetchWorkflowOptions } = useWorkflowOptions();
 const authStore = useAuthStore();
 const canManageOwnership = computed(() => authStore.hasRole('Super Admin') || authStore.hasRole('Admin'));
 
@@ -590,7 +584,6 @@ const defaultForm = () => ({
   status: 'draft',
   brand_id: null,
   pic_id: null,
-  member_ids: [],
   transition_note: ''
 });
 
@@ -652,7 +645,6 @@ watch(
           props.campaign.brand_id;
         fetchWorkflowOptions(props.campaign.brand_id);
       }
-      form.member_ids = props.campaign.members?.map(member => member.id) || [];
     } else {
       isEdit.value = false;
     }
@@ -688,9 +680,9 @@ const selectBrand = (brand) => {
 };
 
 const statusLabel = (status) => ({
-  draft: 'Draft', assigned: 'Assigned', in_progress: 'In Progress',
-  waiting_review: 'Waiting Review', revision: 'Revision', approved: 'Approved',
-  completed: 'Completed', cancelled: 'Cancelled'
+  draft: 'Draf', assigned: 'Ditugaskan', in_progress: 'Sedang Berjalan',
+  waiting_review: 'Menunggu Peninjauan', revision: 'Revisi', approved: 'Disetujui',
+  completed: 'Selesai', cancelled: 'Dibatalkan'
 }[status] || status);
 
 const hasError = (field) => {
@@ -711,7 +703,7 @@ const getError = (field) => {
 
 const submit = async () => {
   if (!form.brand_id) {
-    error.value = 'Please select a brand.';
+    error.value = 'Silakan pilih brand.';
     return;
   }
 

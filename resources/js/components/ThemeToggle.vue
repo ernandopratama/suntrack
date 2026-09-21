@@ -23,16 +23,23 @@
 import { computed } from 'vue';
 import { useThemeStore } from '../stores/theme';
 
-const { localOnly, showLabel } = defineProps({
+const { localOnly, showLabel, storageKey } = defineProps({
   localOnly: { type: Boolean, default: false },
   showLabel: { type: Boolean, default: false },
+  storageKey: { type: String, default: '' },
 });
 
 const themeStore = useThemeStore();
 const label = computed(() => themeStore.isDark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap');
 const toggleTheme = () => {
   if (localOnly) {
-    themeStore.apply(themeStore.isDark ? 'light' : 'dark');
+    const nextTheme = themeStore.isDark ? 'light' : 'dark';
+    themeStore.apply(nextTheme, !storageKey);
+
+    if (storageKey) {
+      window.localStorage.setItem(storageKey, nextTheme);
+    }
+
     return;
   }
 

@@ -30,7 +30,7 @@
           <span
             class="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-600"
           >
-            Campaign Management
+            Manajemen Campaign
           </span>
         </div>
 
@@ -38,7 +38,7 @@
           <h1
             class="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl"
           >
-            Campaigns
+            Campaign
           </h1>
 
           <!-- Total Campaign -->
@@ -50,7 +50,7 @@
         </div>
 
         <p class="mt-1 text-sm text-gray-500">
-          Manage your promotional campaigns across all brands.
+          Kelola kampanye promosi untuk seluruh brand.
         </p>
       </div>
 
@@ -67,7 +67,7 @@
           <i class="fa-solid fa-plus text-[9px]"></i>
         </span>
 
-        <span>New Campaign</span>
+        <span>Buat Kampanye</span>
       </button>
     </div>
 
@@ -76,6 +76,7 @@
       :columns="columns"
       :data="campaigns"
       :loading="loading"
+      :labels="tableLabels"
       @search="handleSearch"
       @sort="handleSort"
     >
@@ -89,13 +90,13 @@
               @change="handleMonitoringFilter"
               class="block min-w-[190px] appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm outline-none transition-all hover:border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
             >
-              <option value="">All Campaigns</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-              <option value="approaching_deadline">Approaching Deadline</option>
-              <option value="overdue">Overdue</option>
-              <option value="waiting_review">Waiting Review</option>
-              <option value="revision">Revision</option>
+              <option value="">Semua Kampanye</option>
+              <option value="active">Aktif</option>
+              <option value="completed">Selesai</option>
+              <option value="approaching_deadline">Mendekati Tenggat</option>
+              <option value="overdue">Terlambat</option>
+              <option value="waiting_review">Menunggu Peninjauan</option>
+              <option value="revision">Revisi</option>
             </select>
 
             <div
@@ -123,15 +124,15 @@
               @change="handleStatusFilter"
               class="block min-w-[160px] appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm outline-none transition-all hover:border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
             >
-              <option value="">All Statuses</option>
-              <option value="draft">Draft</option>
-              <option value="assigned">Assigned</option>
-              <option value="in_progress">In Progress</option>
-              <option value="waiting_review">Waiting Review</option>
-              <option value="revision">Revision</option>
-              <option value="approved">Approved</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="">Semua Status</option>
+              <option value="draft">Draf</option>
+              <option value="assigned">Ditugaskan</option>
+              <option value="in_progress">Sedang Berjalan</option>
+              <option value="waiting_review">Menunggu Peninjauan</option>
+              <option value="revision">Revisi</option>
+              <option value="approved">Disetujui</option>
+              <option value="completed">Selesai</option>
+              <option value="cancelled">Dibatalkan</option>
             </select>
 
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
@@ -145,10 +146,10 @@
               @change="handleFilter"
               class="block min-w-[140px] appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm outline-none transition-all hover:border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
             >
-              <option value="">All Priorities</option>
+              <option value="">Semua Prioritas</option>
               <option value="normal">Normal</option>
-              <option value="mid">Mid</option>
-              <option value="urgent">Urgent</option>
+              <option value="mid">Menengah</option>
+              <option value="urgent">Mendesak</option>
             </select>
 
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
@@ -163,7 +164,7 @@
             @click="clearFilters"
           >
             <i class="fa-solid fa-xmark text-[10px]"></i>
-            Clear
+            Bersihkan
           </button>
         </div>
       </template>
@@ -197,7 +198,7 @@
               </div>
 
               <div class="mt-0.5 text-[11px] text-gray-400">
-                {{ row.brand?.name || 'Unknown Brand' }}
+                {{ row.brand?.name || 'Brand tidak diketahui' }}
                 <span v-if="row.pic?.name"> · PIC {{ row.pic.name }}</span>
               </div>
             </div>
@@ -249,7 +250,7 @@
 
           <div>
             <span class="font-semibold text-gray-700">
-              {{ row.deadline || 'No deadline' }}
+              {{ row.deadline || 'Belum ada tenggat' }}
             </span>
 
             <span
@@ -259,7 +260,7 @@
                 ? 'bg-rose-50 text-rose-700'
                 : 'bg-amber-50 text-amber-700'"
             >
-              {{ row.deadline_state_label }}
+              {{ deadlineStateLabel(row.deadline_state) }}
             </span>
           </div>
 
@@ -276,13 +277,13 @@
             'bg-rose-50 text-rose-700': row.priority === 'urgent'
           }"
         >
-          {{ row.priority || 'normal' }}
+          {{ priorityLabel(row.priority) }}
         </span>
       </template>
 
       <!-- Status -->
       <template #cell-status="{ row }">
-        <StatusBadge :status="row.status" />
+        <StatusBadge :status="row.status" :label="statusLabel(row.status)" />
       </template>
 
       <!-- Actions -->
@@ -293,7 +294,7 @@
           <router-link
             :to="`/campaigns/${row.id}`"
             class="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-600 transition-all duration-200 hover:border-blue-200 hover:bg-blue-100 hover:text-blue-700"
-            title="View Campaign"
+            title="Lihat Kampanye"
           >
             <svg
               class="h-4 w-4"
@@ -316,7 +317,7 @@
               />
             </svg>
 
-            <span>View</span>
+            <span>Lihat</span>
           </router-link>
 
           <!-- Edit -->
@@ -325,7 +326,7 @@
             type="button"
             @click="openEditModal(row)"
             class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900"
-            title="Edit Campaign"
+            title="Ubah Kampanye"
           >
             <svg
               class="h-4 w-4"
@@ -341,7 +342,7 @@
               />
             </svg>
 
-            <span>Edit</span>
+            <span>Ubah</span>
           </button>
 
           <!-- Delete -->
@@ -350,10 +351,10 @@
             type="button"
             @click="confirmDelete(row)"
             class="inline-flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-600 transition-all duration-200 hover:bg-red-100 hover:text-red-700"
-            title="Delete Campaign"
+            title="Hapus Kampanye"
           >
             <i class="fa-solid fa-trash-can text-[11px]"></i>
-            <span>Delete</span>
+            <span>Hapus</span>
           </button>
 
         </div>
@@ -385,7 +386,7 @@
               />
             </svg>
 
-            Previous
+            Sebelumnya
           </button>
 
           <span
@@ -402,7 +403,7 @@
             "
             class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Next
+            Berikutnya
 
             <svg
               class="ml-1.5 h-4 w-4"
@@ -426,12 +427,12 @@
         >
           <div>
             <p class="text-xs text-gray-500">
-              Showing
+              Menampilkan
               <span class="font-bold text-gray-700">
-                page {{ pagination.current_page }}
+                halaman {{ pagination.current_page }}
               </span>
 
-              of
+              dari
 
               <span class="font-bold text-gray-700">
                 {{ pagination.last_page }}
@@ -443,13 +444,13 @@
                 {{ pagination.total }}
               </span>
 
-              total results
+              hasil
             </p>
           </div>
 
           <nav
             class="flex items-center gap-1"
-            aria-label="Pagination"
+            aria-label="Paginasi"
           >
             <button
               @click="prevPage"
@@ -534,22 +535,22 @@ const {
 const columns = [
   {
     key: 'name',
-    label: 'Campaign Name',
+    label: 'Nama Kampanye',
     sortable: true
   },
   {
     key: 'start_date',
-    label: 'Start Date',
+    label: 'Tanggal Mulai',
     sortable: true
   },
   {
     key: 'deadline',
-    label: 'Deadline',
+    label: 'Tenggat',
     sortable: true
   },
   {
     key: 'priority',
-    label: 'Priority',
+    label: 'Prioritas',
     sortable: true
   },
   {
@@ -559,10 +560,41 @@ const columns = [
   },
   {
     key: 'actions',
-    label: 'Actions',
+    label: 'Aksi',
     sortable: false
   }
 ];
+
+const tableLabels = {
+  searchPlaceholder: 'Cari data kampanye...',
+  searchHelper: 'Cari data pada tabel kampanye',
+  loading: 'Memuat data...',
+  emptyTitle: 'Data kampanye tidak ditemukan',
+  emptyDescription: 'Ubah kata pencarian atau filter.',
+  scrollHint: 'Geser ke samping untuk melihat data lainnya',
+};
+
+const statusLabel = (status) => ({
+  draft: 'Draf',
+  assigned: 'Ditugaskan',
+  in_progress: 'Sedang Berjalan',
+  waiting_review: 'Menunggu Peninjauan',
+  revision: 'Revisi',
+  approved: 'Disetujui',
+  completed: 'Selesai',
+  cancelled: 'Dibatalkan',
+}[status] || status);
+
+const priorityLabel = (priority) => ({
+  normal: 'Normal',
+  mid: 'Menengah',
+  urgent: 'Mendesak',
+}[priority || 'normal']);
+
+const deadlineStateLabel = (state) => ({
+  approaching_deadline: 'Mendekati Tenggat',
+  overdue: 'Terlambat',
+}[state] || state);
 
 const searchQuery = ref('');
 const statusFilter = ref('');
@@ -663,7 +695,7 @@ const handleSaved = () => {
 };
 
 const confirmDelete = async (campaign) => {
-  if (!window.confirm(`Delete campaign "${campaign.name}"?`)) return;
+  if (!window.confirm(`Hapus kampanye "${campaign.name}"?`)) return;
 
   if (await deleteCampaign(campaign.id)) {
     if (campaigns.value.length === 1 && pagination.value.current_page > 1) {
