@@ -5,6 +5,7 @@ export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: null,
         isAuthenticated: false,
+        showTaskLoginNotifications: false,
     }),
     getters: {
         activeRole: (state) => state.user?.role || state.user?.roles?.[0] || null,
@@ -37,6 +38,7 @@ export const useAuthStore = defineStore('auth', {
             
             if (response.data.success) {
                 this.setUser(response.data.data.user);
+                this.showTaskLoginNotifications = true;
                 return true;
             }
             return false;
@@ -46,6 +48,7 @@ export const useAuthStore = defineStore('auth', {
             await api.post('/auth/logout');
             this.user = null;
             this.isAuthenticated = false;
+            this.showTaskLoginNotifications = false;
         },
 
         async fetchUser() {
@@ -53,6 +56,7 @@ export const useAuthStore = defineStore('auth', {
                 const response = await api.get('/auth/user');
                 if (response.data.success) {
                     this.setUser(response.data.data.user);
+                    this.showTaskLoginNotifications = false;
                     return true;
                 }
             } catch (error) {
@@ -60,6 +64,13 @@ export const useAuthStore = defineStore('auth', {
             }
 
             return false;
+        },
+
+        consumeTaskLoginNotifications() {
+            const shouldShow = this.showTaskLoginNotifications;
+            this.showTaskLoginNotifications = false;
+
+            return shouldShow;
         }
     }
 });

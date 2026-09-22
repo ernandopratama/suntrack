@@ -65,13 +65,41 @@ class TaskController extends Controller
             ->where('recipient', $request->user()->id)
             ->where('notifiable_type', Task::class)
             ->whereIn('status', ['sent', 'delivered'])
+            ->whereNull('read_at')
             ->latest()
-            ->limit(5)
-            ->get(['id', 'subject', 'body', 'notifiable_id', 'created_at']);
+            ->limit(50)
+            ->get(['id', 'subject', 'body', 'notifiable_id', 'created_at'])
+            ->unique('notifiable_id')
+            ->take(10)
+            ->values();
 
         return $this->success('Pemberitahuan task berhasil dimuat.', [
             'notifications' => $notifications,
         ]);
+    }
+
+    public function readNotifications(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Task::class);
+
+        $data = $request->validate([
+            'notification_ids' => ['sometimes', 'array', 'min:1'],
+            'notification_ids.*' => ['uuid', 'distinct'],
+        ]);
+
+        $query = NotificationLog::query()
+            ->where('type', 'in_app')
+            ->where('recipient', $request->user()->id)
+            ->where('notifiable_type', Task::class)
+            ->whereNull('read_at');
+
+        if (! empty($data['notification_ids'])) {
+            $query->whereIn('id', $data['notification_ids']);
+        }
+
+        $query->update(['read_at' => now()]);
+
+        return $this->success('Pemberitahuan task telah ditandai sebagai dibaca.');
     }
 
     public function store(StoreTaskRequest $request): JsonResponse
@@ -165,7 +193,16 @@ class TaskController extends Controller
         unset($data['progress_status']);
         $transitionNote = $data['transition_note'] ?? null;
         unset($data['transition_note']);
-        $recurrenceChanged = collect(['deadline', 'recurrence_type', 'recurrence_ends_at'])
+        $recurrenceChanged = collect([
+            'deadline',
+            'recurrence_type',
+            'recurrence_interval',
+            'recurrence_time',
+            'recurrence_weekdays',
+            'recurrence_month_day',
+            'recurrence_ends_at',
+            'recurrence_max_occurrences',
+        ])
             ->contains(fn (string $field) => array_key_exists($field, $data));
 
         if ($task->is_personal) {
@@ -206,7 +243,7 @@ class TaskController extends Controller
             if ($recurrenceChanged) {
                 $this->recurringTasks->schedule($task);
             }
-            if (array_key_exists('priority', $data)) {
+            if ($recurrenceChanged || array_key_exists('priority', $data)) {
                 $this->reminders->schedule($task, true);
             }
             $newOwnership = [

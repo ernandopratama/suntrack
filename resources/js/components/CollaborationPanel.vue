@@ -4,13 +4,13 @@
 
     <section class="rounded-2xl border border-default bg-surface p-4">
       <div class="flex items-center justify-between gap-3">
-        <div><h3 class="font-bold text-content">Attachment</h3><p class="text-xs text-content-muted">Maksimum 5 file, masing-masing 10 MB.</p></div>
+        <div><h3 class="font-bold text-content">Lampiran</h3><p class="text-xs text-content-muted">Maksimum 5 berkas, masing-masing 10 MB.</p></div>
         <label v-if="canUpdate" class="cursor-pointer rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white">
-          Upload<input type="file" multiple class="hidden" @change="uploadFiles" />
+          Unggah<input type="file" multiple class="hidden" @change="uploadFiles" />
         </label>
       </div>
       <div class="mt-4 space-y-2">
-        <p v-if="!attachments.length" class="text-sm text-content-muted">Belum ada attachment.</p>
+        <p v-if="!attachments.length" class="text-sm text-content-muted">Belum ada lampiran.</p>
         <div v-for="file in attachments" :key="file.id" class="flex items-center justify-between gap-3 rounded-xl bg-surface-muted p-3 text-sm">
           <button type="button" class="min-w-0 truncate text-left font-semibold text-blue-700" @click="download(file)">{{ file.original_name }}</button>
           <button v-if="canUpdate && (isManager || file.uploaded_by === auth.user?.id)" type="button" class="text-xs font-bold text-rose-600" @click="removeFile(file)">Hapus</button>
@@ -43,15 +43,15 @@
 
     <section v-if="isManager" class="rounded-2xl border border-default bg-surface p-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <div><h3 class="font-bold text-content">Secure Link</h3><p class="text-xs text-content-muted">{{ eligible ? 'Siap dibagikan kepada Client.' : eligibilityText }}</p></div>
+        <div><h3 class="font-bold text-content">Tautan Aman</h3><p class="text-xs text-content-muted">{{ eligible ? 'Siap dibagikan kepada klien.' : eligibilityText }}</p></div>
         <div class="flex gap-2">
-          <button v-if="eligible" type="button" class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white" @click="createLink">{{ secureLink ? 'Regenerate' : 'Buat Link' }}</button>
-          <button v-if="secureLink?.status === 'Active'" type="button" class="rounded-lg bg-rose-600 px-3 py-2 text-xs font-bold text-white" @click="revokeLink">Revoke</button>
+          <button v-if="eligible" type="button" class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white" @click="createLink">{{ secureLink ? 'Buat Ulang' : 'Buat Tautan' }}</button>
+          <button v-if="secureLink?.status === 'Active'" type="button" class="rounded-lg bg-rose-600 px-3 py-2 text-xs font-bold text-white" @click="revokeLink">Nonaktifkan</button>
         </div>
       </div>
       <div v-if="secureLink" class="mt-4 rounded-xl bg-surface-muted p-3 text-sm">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><a :href="secureLink.url" target="_blank" class="truncate font-semibold text-blue-700">{{ secureLink.url }}</a><span class="text-xs font-bold">{{ secureLink.status }} · {{ secureLink.view_count }} view</span></div>
-        <button type="button" class="mt-3 text-xs font-bold text-blue-700" @click="loadAccessLogs">Lihat Access Log</button>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><a :href="secureLink.url" target="_blank" class="truncate font-semibold text-blue-700">{{ secureLink.url }}</a><span class="text-xs font-bold">{{ secureLinkStatusLabel }} · {{ secureLink.view_count }} kali dilihat</span></div>
+        <button type="button" class="mt-3 text-xs font-bold text-blue-700" @click="loadAccessLogs">Lihat Riwayat Akses</button>
       </div>
       <div v-if="accessLogs.length" class="mt-3 max-h-40 space-y-2 overflow-y-auto text-xs text-content-muted">
         <div v-for="log in accessLogs" :key="log.id" class="rounded-lg border border-default p-2">{{ formatDate(log.accessed_at) }} · {{ log.ip_address || 'IP tidak tersedia' }}</div>
@@ -85,7 +85,8 @@ const error = ref('');
 const base = computed(() => props.entityType === 'task' ? `/admin/tasks/${props.entity.id}` : `/admin/performance-reports/${props.entity.id}`);
 const isManager = computed(() => auth.hasRole('Super Admin') || auth.hasRole('Admin'));
 const eligible = computed(() => props.entityType === 'task' ? props.entity.progress_status === 'completed' : props.entity.status === 'published');
-const eligibilityText = computed(() => props.entityType === 'task' ? 'Task harus completed.' : 'Report harus published.');
+const eligibilityText = computed(() => props.entityType === 'task' ? 'Task harus berstatus selesai.' : 'Laporan harus berstatus dipublikasikan.');
+const secureLinkStatusLabel = computed(() => secureLink.value?.status === 'Active' ? 'Aktif' : 'Tidak Aktif');
 const formatDate = value => value ? new Date(value).toLocaleString('id-ID') : '-';
 
 const load = async () => {

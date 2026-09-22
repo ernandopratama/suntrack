@@ -18,7 +18,7 @@ class NotificationLog extends Model
     protected $fillable = [
         'type', 'recipient', 'subject', 'body', 'status',
         'attempts', 'max_attempts',
-        'processing_at', 'sent_at', 'delivered_at', 'failed_at', 'cancelled_at', 'scheduled_at',
+        'processing_at', 'sent_at', 'delivered_at', 'read_at', 'failed_at', 'cancelled_at', 'scheduled_at',
         'failure_reason', 'metadata',
         'notifiable_type', 'notifiable_id',
     ];
@@ -28,6 +28,7 @@ class NotificationLog extends Model
         'processing_at' => 'datetime',
         'sent_at' => 'datetime',
         'delivered_at' => 'datetime',
+        'read_at' => 'datetime',
         'failed_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'scheduled_at' => 'datetime',

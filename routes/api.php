@@ -90,6 +90,8 @@ Route::prefix('v1')->group(function () {
 
         Route::get('tasks/notifications', [TaskController::class, 'notifications'])
             ->middleware('permission:task.view');
+        Route::post('tasks/notifications/read', [TaskController::class, 'readNotifications'])
+            ->middleware('permission:task.view');
         Route::apiResource('tasks', TaskController::class)
             ->middlewareFor(['index', 'show'], 'permission:task.view')
             ->middlewareFor('store', 'permission:task.create')

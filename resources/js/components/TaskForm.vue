@@ -210,7 +210,7 @@
         <div v-if="recurrenceEnabled" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label class="mb-1.5 block text-xs font-bold text-gray-700">Pola Pengulangan</label>
-            <select v-model="form.recurrence_type" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
+            <select v-model="form.recurrence_type" @change="syncRecurrenceDefaults" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
               <option value="daily">Harian</option>
               <option value="weekly">Mingguan</option>
               <option value="monthly">Bulanan</option>
@@ -218,8 +218,56 @@
           </div>
 
           <div>
-            <label class="mb-1.5 block text-xs font-bold text-gray-700">Berakhir Pada <span class="text-gray-400">(opsional)</span></label>
+            <label class="mb-1.5 block text-xs font-bold text-gray-700">Waktu Pengulangan</label>
+            <input v-model="form.recurrence_time" type="time" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" />
+          </div>
+
+          <div>
+            <label class="mb-1.5 block text-xs font-bold text-gray-700">Ulangi Setiap</label>
+            <div class="flex items-center gap-2">
+              <input v-model.number="form.recurrence_interval" type="number" min="1" max="365" class="block min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" />
+              <span class="min-w-16 text-xs font-semibold text-gray-500">{{ recurrenceUnitLabel }}</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="mb-1.5 block text-xs font-bold text-gray-700">Pengulangan Berakhir</label>
+            <select v-model="recurrenceEndMode" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
+              <option value="never">Tidak pernah</option>
+              <option value="date">Pada tanggal tertentu</option>
+              <option value="count">Setelah beberapa pengulangan</option>
+            </select>
+          </div>
+
+          <div v-if="form.recurrence_type === 'weekly'" class="sm:col-span-2">
+            <label class="mb-2 block text-xs font-bold text-gray-700">Hari Pengulangan</label>
+            <div class="grid grid-cols-4 gap-2 sm:grid-cols-7">
+              <label v-for="day in weekdayOptions" :key="day.value" class="cursor-pointer">
+                <input v-model="form.recurrence_weekdays" type="checkbox" :value="day.value" class="peer sr-only" />
+                <span class="flex h-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-500 transition peer-checked:border-violet-500 peer-checked:bg-violet-600 peer-checked:text-white">
+                  {{ day.short }}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div v-if="form.recurrence_type === 'monthly'">
+            <label class="mb-1.5 block text-xs font-bold text-gray-700">Tanggal Pengulangan</label>
+            <select v-model="form.recurrence_month_day" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700">
+              <option v-for="day in 31" :key="day" :value="String(day)">Tanggal {{ day }}</option>
+              <option value="last">Hari terakhir bulan</option>
+            </select>
+          </div>
+
+          <div v-if="recurrenceEndMode === 'date'">
+            <label class="mb-1.5 block text-xs font-bold text-gray-700">Berakhir Pada</label>
             <input v-model="form.recurrence_ends_at" type="datetime-local" :min="form.deadline || undefined" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" />
+          </div>
+
+          <div v-if="recurrenceEndMode === 'count'">
+            <label class="mb-1.5 block text-xs font-bold text-gray-700">Jumlah Pengulangan</label>
+            <input v-model.number="form.recurrence_max_occurrences" type="number" min="1" max="1000" class="block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700" />
+            <p class="mt-1 text-[11px] text-gray-500">Tidak termasuk task pertama.</p>
           </div>
 
           <label class="flex cursor-pointer items-center gap-2 sm:col-span-2">
@@ -227,8 +275,16 @@
             <span class="text-xs font-semibold text-gray-700">Berikan pemberitahuan saat task periode berikutnya dibuat</span>
           </label>
 
+          <div class="rounded-lg border border-violet-100 bg-white/70 px-3 py-2.5 text-[11px] leading-5 text-violet-800 sm:col-span-2">
+            <strong>Pengingat tenggat:</strong>
+            {{ form.recurrence_type === 'daily' ? '1 hari dan 1 jam sebelumnya.' : '3 hari dan 1 hari sebelumnya.' }}
+          </div>
+
           <p v-if="hasError('recurrence_ends_at')" class="text-xs font-medium text-rose-600 sm:col-span-2">{{ getError('recurrence_ends_at') }}</p>
           <p v-if="hasError('recurrence_type')" class="text-xs font-medium text-rose-600 sm:col-span-2">{{ getError('recurrence_type') }}</p>
+          <p v-if="hasError('recurrence_weekdays')" class="text-xs font-medium text-rose-600 sm:col-span-2">{{ getError('recurrence_weekdays') }}</p>
+          <p v-if="hasError('recurrence_month_day')" class="text-xs font-medium text-rose-600 sm:col-span-2">{{ getError('recurrence_month_day') }}</p>
+          <p v-if="hasError('recurrence_max_occurrences')" class="text-xs font-medium text-rose-600 sm:col-span-2">{{ getError('recurrence_max_occurrences') }}</p>
         </div>
       </div>
 
@@ -382,16 +438,44 @@ const form = reactive({
   visual_type: '',
   deadline: '',
   recurrence_type: '',
+  recurrence_interval: 1,
+  recurrence_time: '',
+  recurrence_weekdays: [],
+  recurrence_month_day: '',
   recurrence_ends_at: '',
+  recurrence_max_occurrences: null,
   recurrence_notify: true
 });
+
+const recurrenceEndMode = ref('never');
+const weekdayOptions = [
+  { value: 1, short: 'Sen' },
+  { value: 2, short: 'Sel' },
+  { value: 3, short: 'Rab' },
+  { value: 4, short: 'Kam' },
+  { value: 5, short: 'Jum' },
+  { value: 6, short: 'Sab' },
+  { value: 7, short: 'Min' },
+];
+const recurrenceUnitLabel = computed(() => ({
+  daily: 'hari',
+  weekly: 'minggu',
+  monthly: 'bulan',
+}[form.recurrence_type] || 'periode'));
 
 const recurrenceEnabled = computed({
   get: () => Boolean(form.recurrence_type),
   set: (enabled) => {
     form.recurrence_type = enabled ? (form.recurrence_type || 'daily') : '';
+    if (enabled) syncRecurrenceDefaults();
     if (!enabled) {
+      form.recurrence_interval = 1;
+      form.recurrence_time = '';
+      form.recurrence_weekdays = [];
+      form.recurrence_month_day = '';
       form.recurrence_ends_at = '';
+      form.recurrence_max_occurrences = null;
+      recurrenceEndMode.value = 'never';
       form.recurrence_notify = true;
     }
   }
@@ -400,6 +484,29 @@ const recurrenceEnabled = computed({
 const toDateTimeLocal = (value) => value
   ? String(value).replace(' ', 'T').slice(0, 16)
   : '';
+
+const deadlineParts = () => {
+  const value = form.deadline ? new Date(form.deadline) : new Date();
+  const javascriptDay = value.getDay();
+
+  return {
+    time: `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`,
+    weekday: javascriptDay === 0 ? 7 : javascriptDay,
+    monthDay: String(value.getDate()),
+  };
+};
+
+const syncRecurrenceDefaults = () => {
+  const defaults = deadlineParts();
+  form.recurrence_interval = Math.max(1, Number(form.recurrence_interval) || 1);
+  if (!form.recurrence_time) form.recurrence_time = defaults.time;
+  if (form.recurrence_type === 'weekly' && !form.recurrence_weekdays.length) {
+    form.recurrence_weekdays = [defaults.weekday];
+  }
+  if (form.recurrence_type === 'monthly' && !form.recurrence_month_day) {
+    form.recurrence_month_day = defaults.monthDay;
+  }
+};
 
 onMounted(async () => {
   await Promise.all([fetchBrands({ per_page: 100 }), fetchCampaigns({ per_page: 100 })]);
@@ -432,8 +539,17 @@ watch(() => props.isOpen, (open) => {
     form.visual_type = props.task.visual_type || '';
     form.deadline = toDateTimeLocal(props.task.deadline);
     form.recurrence_type = props.task.recurrence_type || '';
+    form.recurrence_interval = props.task.recurrence_interval || 1;
+    form.recurrence_time = String(props.task.recurrence_time || '').slice(0, 5);
+    form.recurrence_weekdays = [...(props.task.recurrence_weekdays || [])];
+    form.recurrence_month_day = props.task.recurrence_month_day || '';
     form.recurrence_ends_at = toDateTimeLocal(props.task.recurrence_ends_at);
+    form.recurrence_max_occurrences = props.task.recurrence_max_occurrences || null;
+    recurrenceEndMode.value = form.recurrence_max_occurrences
+      ? 'count'
+      : (form.recurrence_ends_at ? 'date' : 'never');
     form.recurrence_notify = props.task.recurrence_notify ?? true;
+    if (form.recurrence_type) syncRecurrenceDefaults();
   } else {
     isEdit.value = false;
     form.name = '';
@@ -451,7 +567,13 @@ watch(() => props.isOpen, (open) => {
     form.visual_type = '';
     form.deadline = '';
     form.recurrence_type = '';
+    form.recurrence_interval = 1;
+    form.recurrence_time = '';
+    form.recurrence_weekdays = [];
+    form.recurrence_month_day = '';
     form.recurrence_ends_at = '';
+    form.recurrence_max_occurrences = null;
+    recurrenceEndMode.value = 'never';
     form.recurrence_notify = true;
     if (props.campaignId) {
       const campaign = campaigns.value.find(item => item.id === props.campaignId);
@@ -502,7 +624,14 @@ const submit = async () => {
     campaign_id: form.is_personal ? null : (form.campaign_id || null),
     deadline: form.deadline || null,
     recurrence_type: form.recurrence_type || null,
-    recurrence_ends_at: form.recurrence_ends_at || null
+    recurrence_interval: form.recurrence_type ? form.recurrence_interval : 1,
+    recurrence_time: form.recurrence_type ? (form.recurrence_time || null) : null,
+    recurrence_weekdays: form.recurrence_type === 'weekly' ? form.recurrence_weekdays : null,
+    recurrence_month_day: form.recurrence_type === 'monthly' ? (form.recurrence_month_day || null) : null,
+    recurrence_ends_at: form.recurrence_type && recurrenceEndMode.value === 'date' ? (form.recurrence_ends_at || null) : null,
+    recurrence_max_occurrences: form.recurrence_type && recurrenceEndMode.value === 'count'
+      ? (form.recurrence_max_occurrences || null)
+      : null
   };
 
   if (isEdit.value) {

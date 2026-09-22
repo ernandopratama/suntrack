@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\SendTaskPriorityReminderJob;
 use App\Http\Resources\TaskResource;
+use App\Jobs\SendTaskPriorityReminderJob;
 use App\Models\ActivityLog;
 use App\Models\Brand;
 use App\Models\Company;
@@ -141,7 +141,7 @@ class EnterpriseCollaborationTest extends TestCase
             ->assertOk()->assertJsonCount(1, 'data.data');
     }
 
-    public function test_priority_reminder_is_deduplicated_and_logged(): void
+    public function test_deadline_reminder_is_deduplicated_and_logged(): void
     {
         $task = $this->task([
             'progress_status' => 'assigned',
@@ -153,7 +153,7 @@ class EnterpriseCollaborationTest extends TestCase
 
         $task->refresh();
         $this->assertSame(1, $task->reminder_count);
-        $this->assertTrue($task->next_reminder_at->isFuture());
+        $this->assertNull($task->next_reminder_at);
         $this->assertSame(2, NotificationLog::where('notifiable_id', $task->id)->count());
 
         app()->call([new SendTaskPriorityReminderJob, 'handle']);

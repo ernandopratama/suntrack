@@ -699,6 +699,66 @@
       </Transition>
     </Teleport>
 
+    <Teleport to="body">
+      <div
+        v-if="showTaskNotificationModal"
+        class="fixed inset-0 z-[10020] flex items-center justify-center overflow-y-auto bg-slate-950/55 px-4 py-8 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-notification-title"
+      >
+        <button class="absolute inset-0 h-full w-full cursor-default" aria-label="Tutup pemberitahuan" @click="closeTaskNotificationModal"></button>
+
+        <section class="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-2xl">
+          <header class="relative overflow-hidden border-b border-violet-100 bg-gradient-to-br from-violet-50 via-white to-blue-50 px-5 py-5 sm:px-7">
+            <div class="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-violet-200/35 blur-2xl"></div>
+            <div class="relative flex items-start gap-4 pr-12">
+              <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-200">
+                <i class="fa-solid fa-bell"></i>
+              </span>
+              <div>
+                <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-violet-600">Pemberitahuan Task</p>
+                <h2 id="task-notification-title" class="mt-1 text-xl font-black text-slate-900 sm:text-2xl">
+                  Anda memiliki {{ taskLoginNotifications.length }} tugas yang perlu diperhatikan
+                </h2>
+                <p class="mt-1 text-sm leading-6 text-slate-500">Periksa tenggat dan detail task berikut sebelum melanjutkan pekerjaan.</p>
+              </div>
+            </div>
+            <button type="button" class="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-800" aria-label="Tutup" @click="closeTaskNotificationModal">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </header>
+
+          <div class="max-h-[55vh] space-y-3 overflow-y-auto p-5 sm:p-7">
+            <article v-for="notification in taskLoginNotifications" :key="notification.id" class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-violet-200 hover:bg-violet-50/40">
+              <div class="flex items-start gap-3">
+                <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                  <i class="fa-solid fa-clock"></i>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-extrabold text-slate-900">{{ notification.subject || 'Pengingat Task' }}</h3>
+                  <p class="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{{ notification.body }}</p>
+                  <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <time class="text-[11px] font-semibold text-slate-400">{{ formatTaskNotificationDate(notification.created_at) }}</time>
+                    <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-violet-700" @click="openNotificationTask(notification)">
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                      Lihat Task
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <footer class="flex justify-end border-t border-slate-100 bg-slate-50 px-5 py-4 sm:px-7">
+            <button type="button" :disabled="closingTaskNotifications" class="rounded-xl bg-[#293681] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#202b68] disabled:cursor-wait disabled:opacity-60" @click="closeTaskNotificationModal">
+              {{ closingTaskNotifications ? 'Menyimpan...' : 'Saya Mengerti' }}
+            </button>
+          </footer>
+        </section>
+      </div>
+    </Teleport>
+
   </div>
 </template>
 
@@ -707,9 +767,51 @@ import { reactive, ref, watch, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import ThemeToggle from "../components/ThemeToggle.vue";
+import api from "../utils/api";
 
 const authStore = useAuthStore();
 const router = useRouter();
+const showTaskNotificationModal = ref(false);
+const taskLoginNotifications = ref([]);
+const closingTaskNotifications = ref(false);
+
+const formatTaskNotificationDate = (value) => value
+    ? new Date(value).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })
+    : "";
+
+const loadLoginTaskNotifications = async () => {
+    if (!authStore.consumeTaskLoginNotifications() || !authStore.can("task.view")) return;
+
+    try {
+        const response = await api.get("/admin/tasks/notifications");
+        taskLoginNotifications.value = response.data.data?.notifications || [];
+        showTaskNotificationModal.value = taskLoginNotifications.value.length > 0;
+    } catch {
+        taskLoginNotifications.value = [];
+        showTaskNotificationModal.value = false;
+    }
+};
+
+const closeTaskNotificationModal = async () => {
+    if (closingTaskNotifications.value) return;
+
+    closingTaskNotifications.value = true;
+    try {
+        if (taskLoginNotifications.value.length) {
+            await api.post("/admin/tasks/notifications/read");
+        }
+    } finally {
+        showTaskNotificationModal.value = false;
+        taskLoginNotifications.value = [];
+        closingTaskNotifications.value = false;
+    }
+};
+
+const openNotificationTask = async (notification) => {
+    const taskId = notification.notifiable_id;
+    await closeTaskNotificationModal();
+    await router.push({ path: "/tasks", query: taskId ? { task: taskId } : {} });
+};
 
 const SIDEBAR_AUTO_CLOSE_DELAY_MS = 5000;
 const SIDEBAR_TOOLTIP_THEMES = {
@@ -859,6 +961,7 @@ const handleResize = () => {
 onMounted(() => {
     window.addEventListener("resize", handleResize);
     handleResize();
+    loadLoginTaskNotifications();
 });
 
 onUnmounted(() => {

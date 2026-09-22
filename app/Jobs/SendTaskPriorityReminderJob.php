@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Services\ActivityLogger;
 use App\Services\Notification\NotificationService;
 use App\Services\Workflow\TaskReminderService;
+use Carbon\CarbonInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -35,7 +36,7 @@ class SendTaskPriorityReminderJob implements ShouldQueue
                     }
                     $task->forceFill([
                         'last_reminded_at' => now(),
-                        'next_reminder_at' => $reminders->nextAt($task),
+                        'next_reminder_at' => $reminders->nextAt($task, now()),
                         'reminder_count' => $task->reminder_count + 1,
                     ])->save();
 
@@ -45,17 +46,15 @@ class SendTaskPriorityReminderJob implements ShouldQueue
                     return;
                 }
 
-                $title = $task->progress_status === 'on_hold'
-                    ? "Evaluasi Task yang Ditunda: {$task->name}"
-                    : "Pengingat Task {$task->priority}: {$task->name}";
-                $message = implode(' | ', [
-                    $task->name,
-                    'Brand: '.($task->brand?->name ?? 'Pribadi'),
-                    'Prioritas: '.strtoupper($task->priority),
-                    'Tenggat: '.($task->deadline?->format('Y-m-d H:i') ?? '-'),
-                    'Status: '.str_replace('_', ' ', $task->progress_status),
-                    url("/tasks?task={$task->id}"),
+                $title = "Pengingat Task: {$task->name}";
+                $remaining = now()->diffForHumans($task->deadline, [
+                    'parts' => 2,
+                    'short' => false,
+                    'syntax' => CarbonInterface::DIFF_RELATIVE_TO_NOW,
                 ]);
+                $message = "Task '{$task->name}' memiliki tenggat {$task->deadline?->format('d-m-Y H:i')} ({$remaining})."
+                    .' Prioritas: '.strtoupper($task->priority)
+                    .'. Brand: '.($task->brand?->name ?? 'Pribadi').'.';
 
                 collect([$task->assignee_id, $task->pic_id])->filter()->unique()->each(
                     fn (string $recipient) => $notifications->sendReminder(

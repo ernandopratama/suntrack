@@ -16,6 +16,7 @@ class ActivityLogResource extends JsonResource
             'action' => $this->action,
             'description' => $this->description,
             'actor_type' => $this->actor_type,
+            'actor_id' => $this->actor_id,
             'actor_name' => $this->actor_name,
             'actor_position' => $this->actor_position,
             'target_type' => class_basename($this->loggable_type ?? ''),

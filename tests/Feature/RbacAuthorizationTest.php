@@ -305,6 +305,50 @@ class RbacAuthorizationTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_activity_log_endpoint_filters_secure_link_events_and_returns_detail_fields(): void
+    {
+        $this->team->assignedCompanies()->attach($this->companyA->id, ['assigned_by' => $this->admin->id]);
+
+        $viewed = ActivityLog::create([
+            'loggable_type' => Brand::class,
+            'loggable_id' => $this->brandA1->id,
+            'action' => 'Secure Link Viewed',
+            'description' => 'Public review link opened from IP 127.0.0.1',
+            'actor_type' => 'Brand',
+            'actor_name' => 'Public Reviewer',
+            'properties' => ['ip' => '127.0.0.1', 'view_count' => 4],
+        ]);
+        ActivityLog::create([
+            'loggable_type' => Brand::class,
+            'loggable_id' => $this->brandA1->id,
+            'action' => 'Reviewer Identified',
+            'description' => 'Reviewer identified as Surya',
+            'actor_type' => 'Brand',
+            'actor_name' => 'Surya',
+            'actor_position' => 'Owner',
+            'properties' => ['company_name' => 'Suurlemon'],
+        ]);
+
+        $this->actingAs($this->team)
+            ->getJson('/api/v1/admin/activity-logs?action=Secure%20Link%20Viewed')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.activity_logs.data')
+            ->assertJsonPath('data.activity_logs.data.0.id', $viewed->id)
+            ->assertJsonPath('data.activity_logs.data.0.properties.ip', '127.0.0.1')
+            ->assertJsonPath('data.activity_logs.data.0.properties.view_count', 4)
+            ->assertJsonPath('data.activity_logs.data.0.actor_id', null)
+            ->assertJsonPath('data.filter_options.actions', [
+                'Reviewer Identified',
+                'Secure Link Viewed',
+            ]);
+
+        $this->actingAs($this->team)
+            ->getJson('/api/v1/admin/activity-logs?search=Surya')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.activity_logs.data')
+            ->assertJsonPath('data.activity_logs.data.0.action', 'Reviewer Identified');
+    }
+
     public function test_team_cannot_inject_out_of_scope_ids_into_operational_requests(): void
     {
         $this->team->assignedCompanies()->attach($this->companyA->id, ['assigned_by' => $this->admin->id]);

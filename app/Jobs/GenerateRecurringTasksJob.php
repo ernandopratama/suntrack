@@ -41,6 +41,13 @@ class GenerateRecurringTasksJob implements ShouldQueue
                         return null;
                     }
 
+                    if ($source->recurrence_max_occurrences !== null
+                        && $source->recurrence_generated_count >= $source->recurrence_max_occurrences) {
+                        $source->forceFill(['next_recurrence_at' => null])->save();
+
+                        return null;
+                    }
+
                     $occurrenceAt = $recurringTasks->nextOccurrenceAt($source, $source->next_recurrence_at);
                     if ($source->recurrence_ends_at !== null && $occurrenceAt->isAfter($source->recurrence_ends_at)) {
                         $source->forceFill(['next_recurrence_at' => null])->save();
@@ -73,10 +80,15 @@ class GenerateRecurringTasksJob implements ShouldQueue
                         ]
                     );
 
+                    $generatedCount = $source->recurrence_generated_count + ($occurrence->wasRecentlyCreated ? 1 : 0);
                     $followingOccurrence = $recurringTasks->nextOccurrenceAt($source, $occurrenceAt);
+                    $reachedOccurrenceLimit = $source->recurrence_max_occurrences !== null
+                        && $generatedCount >= $source->recurrence_max_occurrences;
                     $source->forceFill([
-                        'next_recurrence_at' => $source->recurrence_ends_at !== null
-                            && $followingOccurrence->isAfter($source->recurrence_ends_at)
+                        'recurrence_generated_count' => $generatedCount,
+                        'next_recurrence_at' => $reachedOccurrenceLimit
+                            || ($source->recurrence_ends_at !== null
+                            && $followingOccurrence->isAfter($source->recurrence_ends_at))
                                 ? null
                                 : $occurrenceAt,
                     ])->save();
