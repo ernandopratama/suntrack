@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\SavedFilter;
 use App\Models\UserPreference;
-use App\Services\Cache\CacheService;
 use Illuminate\Support\Collection;
 
 /**
@@ -12,21 +11,12 @@ use Illuminate\Support\Collection;
  */
 class UserPreferenceService
 {
-    public function __construct(
-        protected CacheService $cache = new CacheService
-    ) {}
-
     /**
      * Get or create user preferences.
      */
     public function getPreferences(string $userId): UserPreference
     {
-        return $this->cache->remember(
-            ['user_preferences'],
-            "user_pref_{$userId}",
-            3600,
-            fn () => UserPreference::firstOrCreate(['user_id' => $userId], $this->defaults())
-        );
+        return UserPreference::firstOrCreate(['user_id' => $userId], $this->defaults());
     }
 
     /**
@@ -40,8 +30,6 @@ class UserPreferenceService
             'default_landing_page', 'default_page_size', 'theme', 'locale', 'timezone',
             'dashboard_widgets', 'extended',
         ])));
-
-        $this->cache->flushTags(['user_preferences']);
 
         return $pref->fresh();
     }
