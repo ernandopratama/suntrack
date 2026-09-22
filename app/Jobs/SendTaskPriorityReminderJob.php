@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Brand;
 use App\Models\Task;
 use App\Services\ActivityLogger;
 use App\Services\Notification\NotificationService;
@@ -52,9 +53,11 @@ class SendTaskPriorityReminderJob implements ShouldQueue
                     'short' => false,
                     'syntax' => CarbonInterface::DIFF_RELATIVE_TO_NOW,
                 ]);
+                $brand = $task->getRelation('brand');
+                $brandName = $brand instanceof Brand ? $brand->name : 'Pribadi';
                 $message = "Task '{$task->name}' memiliki tenggat {$task->deadline?->format('d-m-Y H:i')} ({$remaining})."
                     .' Prioritas: '.strtoupper($task->priority)
-                    .'. Brand: '.($task->brand?->name ?? 'Pribadi').'.';
+                    .'. Brand: '.$brandName.'.';
 
                 collect([$task->assignee_id, $task->pic_id])->filter()->unique()->each(
                     fn (string $recipient) => $notifications->sendReminder(

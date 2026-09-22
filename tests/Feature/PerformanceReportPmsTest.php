@@ -498,7 +498,7 @@ class PerformanceReportPmsTest extends TestCase
         $this->assertStringContainsString('await saveIdentity(token, reviewerIdentity);', $page);
         $this->assertStringContainsString('class="pms-reviewer-identity', $page);
         $this->assertStringContainsString("v-if=\"reviewData.type === 'PerformanceReport'\"", $page);
-        $this->assertStringContainsString("@click=\"openIdentityModal(true)\"", $page);
+        $this->assertStringContainsString('@click="openIdentityModal(true)"', $page);
         $this->assertStringContainsString("? 'Ubah Identitas' : 'Identifikasi Diri'", $page);
         $this->assertStringContainsString('@click.self="showIdentityModal = false"', $page);
         $this->assertStringContainsString('aria-labelledby="reviewer-identity-title"', $page);
