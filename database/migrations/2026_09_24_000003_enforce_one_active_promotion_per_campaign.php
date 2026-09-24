@@ -1,9 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 return new class extends Migration
@@ -78,19 +76,15 @@ return new class extends Migration
             }
         }
 
-        Schema::table('promotions', function (Blueprint $table) {
-            $table->uuid('active_campaign_id')
-                ->nullable()
-                ->storedAs('CASE WHEN deleted_at IS NULL THEN campaign_id ELSE NULL END');
-            $table->unique('active_campaign_id', 'promotions_active_campaign_unique');
-        });
+        // The database constraint is installed by the following migration.
+        // Keeping it separate lets shared-hosting MariaDB installations avoid
+        // unsupported generated-column expressions while preserving this data
+        // normalization step for installations that already ran it.
     }
 
     public function down(): void
     {
-        Schema::table('promotions', function (Blueprint $table) {
-            $table->dropUnique('promotions_active_campaign_unique');
-            $table->dropColumn('active_campaign_id');
-        });
+        // Campaign copies created to preserve duplicate promotions are retained
+        // on rollback so no campaign or promotion data is destroyed.
     }
 };

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Promotion extends Model
 {
@@ -38,11 +39,35 @@ class Promotion extends Model
      */
     protected static function booted(): void
     {
+        static::saving(function (Promotion $promotion) {
+            if ($promotion->hasActiveSlotColumn()) {
+                $promotion->active_slot = $promotion->trashed() ? null : 1;
+            }
+        });
+
         static::creating(function (Promotion $promotion) {
             if (empty($promotion->code)) {
                 $promotion->code = static::generateCode();
             }
         });
+
+        static::deleting(function (Promotion $promotion) {
+            if (! $promotion->isForceDeleting() && $promotion->hasActiveSlotColumn()) {
+                DB::connection($promotion->getConnectionName())
+                    ->table($promotion->getTable())
+                    ->where($promotion->getKeyName(), $promotion->getKey())
+                    ->update(['active_slot' => null]);
+
+                $promotion->active_slot = null;
+            }
+        });
+    }
+
+    private function hasActiveSlotColumn(): bool
+    {
+        return $this->getConnection()
+            ->getSchemaBuilder()
+            ->hasColumn($this->getTable(), 'active_slot');
     }
 
     /**
