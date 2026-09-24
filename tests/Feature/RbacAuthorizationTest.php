@@ -203,7 +203,7 @@ class RbacAuthorizationTest extends TestCase
             ->assertCreated();
 
         $this->actingAs($this->admin)
-            ->putJson('/api/v1/admin/promotions/' . $firstPromotion->json('data.promotion.id'), [
+            ->putJson('/api/v1/admin/promotions/'.$firstPromotion->json('data.promotion.id'), [
                 'campaign_id' => $campaign->id,
                 'name' => 'Updated First Promotion',
                 'status' => 'Pending',

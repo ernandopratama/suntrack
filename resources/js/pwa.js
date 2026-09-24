@@ -18,7 +18,6 @@ export const initializePwa = () => {
   ios.value = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 
   window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
     deferredInstallPrompt.value = event;
   });
 

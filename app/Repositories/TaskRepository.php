@@ -20,7 +20,7 @@ class TaskRepository extends BaseRepository
         if ($scope instanceof User) {
             $query = $this->scopeForUser($query, $scope);
         } elseif ($scope !== null) {
-            $query->whereHas('brand', fn($brand) => $brand->where('company_id', $scope));
+            $query->whereHas('brand', fn ($brand) => $brand->where('company_id', $scope));
         }
 
         if ($campaignId) {

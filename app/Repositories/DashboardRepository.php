@@ -422,19 +422,17 @@ class DashboardRepository
 
                     'title' => $campaign->name,
 
-                    'subtitle' =>
-                    $campaign->brand?->name
-                        ?? 'Standalone',
+                    'subtitle' => $campaign->brand !== null
+                        ? $campaign->brand->name
+                        : 'Standalone',
 
-                    'deadline' =>
-                    $campaign->deadline?->format(
+                    'deadline' => $campaign->deadline?->format(
                         'Y-m-d H:i'
                     ),
 
                     'status' => $campaign->status,
 
-                    'status_code' =>
-                    $category === 'today'
+                    'status_code' => $category === 'today'
                         ? 'yellow'
                         : 'green',
 
@@ -480,29 +478,25 @@ class DashboardRepository
 
                         'type' => 'Task',
 
-                        'title' =>
-                        $task->name
+                        'title' => $task->name
                             ?? 'Untitled Task',
 
                         /*
                          * Task may be personal and therefore
                          * not associated with a Brand.
                          */
-                        'subtitle' =>
-                        $task->brand?->name
-                            ?? 'Personal Task',
+                        'subtitle' => $task->brand !== null
+                            ? $task->brand->name
+                            : 'Personal Task',
 
-                        'deadline' =>
-                        $task->deadline?->format(
+                        'deadline' => $task->deadline?->format(
                             'Y-m-d H:i'
                         ),
 
-                        'status' =>
-                        $task->progress_status
+                        'status' => $task->progress_status
                             ?? 'unknown',
 
-                        'status_code' =>
-                        $isUrgent
+                        'status_code' => $isUrgent
                             ? 'red'
                             : (
                                 $category === 'today'
@@ -544,8 +538,7 @@ class DashboardRepository
 
                     'type' => 'Promotion',
 
-                    'title' =>
-                    trim(
+                    'title' => trim(
                         ($promotion->code ?? '')
                             . ' - '
                             . ($promotion->name ?? 'Promotion'),
@@ -556,27 +549,26 @@ class DashboardRepository
                      * Prefer direct Brand relationship.
                      * Fall back to Campaign name if Brand is null.
                      */
-                    'subtitle' =>
-                    $promotion->brand?->name
-                        ?? $promotion->campaign?->name
-                        ?? 'Standalone',
+                    'subtitle' => $promotion->brand !== null
+                        ? $promotion->brand->name
+                        : (
+                            $promotion->campaign !== null
+                            ? $promotion->campaign->name
+                            : 'Standalone'
+                        ),
 
-                    'deadline' =>
-                    $promotion->end_date?->format(
+                    'deadline' => $promotion->end_date?->format(
                         'Y-m-d'
                     ),
 
-                    'status' =>
-                    $promotion->status
+                    'status' => $promotion->status
                         ?? 'unknown',
 
-                    'status_code' =>
-                    $category === 'today'
+                    'status_code' => $category === 'today'
                         ? 'yellow'
                         : 'green',
 
-                    'url' =>
-                    "/promotions/{$promotion->id}",
+                    'url' => "/promotions/{$promotion->id}",
                 ];
             });
 
@@ -629,30 +621,26 @@ class DashboardRepository
 
                     'type' => 'Campaign',
 
-                    'title' =>
-                    $campaign->name
+                    'title' => $campaign->name
                         ?? 'Untitled Campaign',
 
                     /*
                      * Brand relation may be null.
                      */
-                    'subtitle' =>
-                    $campaign->brand?->name
-                        ?? 'Standalone',
+                    'subtitle' => $campaign->brand !== null
+                        ? $campaign->brand->name
+                        : 'Standalone',
 
-                    'deadline' =>
-                    $campaign->deadline?->format(
+                    'deadline' => $campaign->deadline?->format(
                         'Y-m-d H:i'
                     ),
 
-                    'status' =>
-                    $campaign->status
+                    'status' => $campaign->status
                         ?? 'unknown',
 
                     'status_code' => 'red',
 
-                    'url' =>
-                    "/campaigns/{$campaign->id}",
+                    'url' => "/campaigns/{$campaign->id}",
                 ];
             });
 
@@ -684,31 +672,27 @@ class DashboardRepository
 
                     'type' => 'Task',
 
-                    'title' =>
-                    $task->name
+                    'title' => $task->name
                         ?? 'Untitled Task',
 
                     /*
                      * Personal Tasks may legitimately have
                      * no Brand relationship.
                      */
-                    'subtitle' =>
-                    $task->brand?->name
-                        ?? 'Personal Task',
+                    'subtitle' => $task->brand !== null
+                        ? $task->brand->name
+                        : 'Personal Task',
 
-                    'deadline' =>
-                    $task->deadline?->format(
+                    'deadline' => $task->deadline?->format(
                         'Y-m-d H:i'
                     ),
 
-                    'status' =>
-                    $task->progress_status
+                    'status' => $task->progress_status
                         ?? 'unknown',
 
                     'status_code' => 'red',
 
-                    'url' =>
-                    "/tasks?task={$task->id}",
+                    'url' => "/tasks?task={$task->id}",
                 ];
             });
 
@@ -745,25 +729,21 @@ class DashboardRepository
                 return [
                     'id' => $link->id,
 
-                    'type' =>
-                    'Secure Link ('
+                    'type' => 'Secure Link ('
                         . class_basename(
                             $link->linkable_type
                         )
                         . ')',
 
-                    'title' =>
-                    $this->secureLinkTitle($link),
+                    'title' => $this->secureLinkTitle($link),
 
-                    'subtitle' =>
-                    $link->expires_at
+                    'subtitle' => $link->expires_at
                         ? 'Expires in '
                         . $link->expires_at
                         ->diffForHumans()
                         : 'Expiration unavailable',
 
-                    'deadline' =>
-                    $link->expires_at?->format(
+                    'deadline' => $link->expires_at?->format(
                         'Y-m-d H:i'
                     ),
 
@@ -771,8 +751,7 @@ class DashboardRepository
 
                     'status_code' => 'yellow',
 
-                    'url' =>
-                    $this->secureLinkUrl($link),
+                    'url' => $this->secureLinkUrl($link),
                 ];
             });
     }
@@ -782,7 +761,7 @@ class DashboardRepository
      *
      * @template TModel of \Illuminate\Database\Eloquent\Model
      *
-     * @param Builder<TModel> $query
+     * @param  Builder<TModel>  $query
      * @return Builder<TModel>
      */
     private function scoped(
