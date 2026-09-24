@@ -561,7 +561,7 @@
             </h2>
 
             <p class="text-xs text-[#98A19E] mt-1">
-              Pantau status persetujuan seluruh variant produk
+              Pantau status persetujuan seluruh produk
             </p>
           </div>
 
@@ -607,7 +607,7 @@
             <span
               class="text-[10px] font-bold text-[#98A19E] uppercase tracking-wider mt-1 block"
             >
-              Total Variant
+              Total Produk
             </span>
           </div>
 
@@ -727,7 +727,7 @@
               />
             </span>
 
-              <span>Daftar Produk & Variant</span>
+              <span>Daftar Produk Promosi</span>
             </h2>
 
             <p class="text-xs text-[#98A19E] mt-1">
@@ -755,7 +755,7 @@
           <div class="flex items-center gap-2 text-xs font-bold text-[#687370]">
             <span>
               {{ selectedVariantIds.length }} dari
-              {{ reviewData.variants.length }} variant terpilih
+              {{ reviewData.variants.length }} produk terpilih
             </span>
 
             <button
@@ -820,7 +820,7 @@
                   />
                 </th>
 
-                <th class="py-4 px-4">Produk & Variant</th>
+                <th class="py-4 px-4">Produk & Variasi</th>
                 <th class="py-4 px-4">Harga Normal</th>
                 <th class="py-4 px-4">Harga Promo</th>
                 <th class="py-4 px-4">Stok / Limit</th>
@@ -831,7 +831,7 @@
 
             <tbody class="divide-y divide-[#EDF1EF] text-sm">
               <tr
-                v-for="variant in reviewData.variants"
+                v-for="variant in paginatedPromotionVariants"
                 :key="variant.id"
                 class="hover:bg-[#FCFBF8] transition"
                 :class="{
@@ -954,11 +954,74 @@
                   colspan="7"
                   class="py-12 text-center text-[#98A19E] text-sm"
                 >
-                  Belum ada variant yang dipetakan ke promosi ini.
+                  Belum ada produk pada promosi ini.
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div
+          v-if="promotionVariants.length"
+          class="mt-4 flex flex-col gap-3 rounded-2xl border border-[#ECEEEC] bg-[#FCFBF8] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p class="text-xs font-semibold text-[#77817E]">
+            Menampilkan
+            <span class="font-bold text-[#46504D]">{{ promotionPageStart }}</span>
+            sampai
+            <span class="font-bold text-[#46504D]">{{ promotionPageEnd }}</span>
+            dari
+            <span class="font-bold text-[#46504D]">{{ promotionVariants.length }}</span>
+            produk
+          </p>
+
+          <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+            <label class="flex items-center gap-2 text-xs font-semibold text-[#77817E]">
+              Tampilkan
+              <select
+                v-model.number="promotionPageSize"
+                @change="handlePromotionPageSizeChange"
+                class="rounded-xl border border-[#DDE3E0] bg-white px-3 py-2 text-xs font-bold text-[#46504D] outline-none transition focus:border-[#FFA240] focus:ring-2 focus:ring-[#FFA240]/20"
+              >
+                <option
+                  v-for="size in promotionPageSizeOptions"
+                  :key="size"
+                  :value="size"
+                >
+                  {{ size }}
+                </option>
+              </select>
+              data
+            </label>
+
+            <div class="ml-auto flex items-center gap-2 sm:ml-2">
+              <button
+                type="button"
+                :disabled="promotionCurrentPage === 1"
+                @click="goToPromotionPage(promotionCurrentPage - 1)"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#DDE3E0] bg-white text-[#687370] transition hover:border-[#FFA240] hover:text-[#D73535] disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Halaman sebelumnya"
+                title="Halaman sebelumnya"
+              >
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+              </button>
+
+              <span class="min-w-[92px] text-center text-xs font-bold text-[#46504D]">
+                Halaman {{ promotionCurrentPage }} / {{ promotionTotalPages }}
+              </span>
+
+              <button
+                type="button"
+                :disabled="promotionCurrentPage === promotionTotalPages"
+                @click="goToPromotionPage(promotionCurrentPage + 1)"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#DDE3E0] bg-white text-[#687370] transition hover:border-[#FFA240] hover:text-[#D73535] disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Halaman berikutnya"
+                title="Halaman berikutnya"
+              >
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1642,7 +1705,7 @@
             </span>
 
             <h3 class="text-lg font-extrabold text-[#D73535] mt-1">
-              Tolak Variant Produk
+              Tolak Produk
             </h3>
           </div>
 
@@ -1655,7 +1718,7 @@
         </div>
 
         <p class="text-xs text-[#77817E] mb-4">
-          Anda akan menolak variant:
+          Anda akan menolak produk:
           <strong class="text-[#46504D]">
             {{ selectedVariant?.product_name }} -
             {{ selectedVariant?.name }}
@@ -1972,7 +2035,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import PublicLayout from '../layouts/PublicLayout.vue';
 import { usePublicReview } from '../composables/usePublicReview';
@@ -2008,6 +2071,27 @@ const newCommentBody = ref('');
 const selectedVariantIds = ref([]);
 const batchLoading = ref(false);
 const pendingAction = ref(null);
+const promotionPageSizeOptions = [10, 25, 50, 100];
+const promotionPageSize = ref(10);
+const promotionCurrentPage = ref(1);
+const promotionVariants = computed(() => reviewData.value?.variants || []);
+const promotionTotalPages = computed(() => Math.max(
+  1,
+  Math.ceil(promotionVariants.value.length / promotionPageSize.value)
+));
+const promotionPageStart = computed(() => (
+  promotionVariants.value.length
+    ? ((promotionCurrentPage.value - 1) * promotionPageSize.value) + 1
+    : 0
+));
+const promotionPageEnd = computed(() => Math.min(
+  promotionCurrentPage.value * promotionPageSize.value,
+  promotionVariants.value.length
+));
+const paginatedPromotionVariants = computed(() => {
+  const start = (promotionCurrentPage.value - 1) * promotionPageSize.value;
+  return promotionVariants.value.slice(start, start + promotionPageSize.value);
+});
 const MIN_MEDIA_ZOOM = 0.5;
 const MAX_MEDIA_ZOOM = 3;
 const MEDIA_ZOOM_STEP = 0.25;
@@ -2301,10 +2385,28 @@ const latestTimeline = computed(() => {
 
 const isAllSelected = computed(() => {
   return (
-    reviewData.value?.variants?.length > 0 &&
-    selectedVariantIds.value.length === reviewData.value.variants.length
+    paginatedPromotionVariants.value.length > 0 &&
+    paginatedPromotionVariants.value.every((variant) =>
+      selectedVariantIds.value.includes(variant.id)
+    )
   );
 });
+
+const goToPromotionPage = (page) => {
+  promotionCurrentPage.value = Math.min(
+    Math.max(Number(page) || 1, 1),
+    promotionTotalPages.value
+  );
+};
+
+const handlePromotionPageSizeChange = () => {
+  promotionCurrentPage.value = 1;
+};
+
+watch(
+  () => promotionVariants.value.length,
+  () => goToPromotionPage(promotionCurrentPage.value)
+);
 
 // Validate file (type and size)
 const validateFile = (file) => {
@@ -2422,9 +2524,19 @@ const promptCancel = () => {
 };
 
 const toggleSelectAll = (e) => {
-  selectedVariantIds.value = e.target.checked
-    ? reviewData.value.variants.map((v) => v.id)
-    : [];
+  const visibleIds = paginatedPromotionVariants.value.map((variant) => variant.id);
+
+  if (e.target.checked) {
+    selectedVariantIds.value = [...new Set([
+      ...selectedVariantIds.value,
+      ...visibleIds,
+    ])];
+    return;
+  }
+
+  selectedVariantIds.value = selectedVariantIds.value.filter(
+    (id) => !visibleIds.includes(id)
+  );
 };
 
 const identityForm = reactive({
@@ -2487,7 +2599,7 @@ const executeApprove = async (variantId) => {
   try {
     await submitApproval(token, variantId, 'Approved');
   } catch (err) {
-    showToast('error', err.message || 'Gagal menyetujui variant.');
+    showToast('error', err.message || 'Gagal menyetujui produk.');
   }
 };
 
@@ -2513,7 +2625,7 @@ const executeReject = async () => {
     selectedVariant.value = null;
     rejectionNoteInput.value = '';
   } catch (err) {
-    showToast('error', err.message || 'Gagal menolak variant.');
+    showToast('error', err.message || 'Gagal menolak produk.');
   }
 };
 

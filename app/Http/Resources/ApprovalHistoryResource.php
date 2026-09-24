@@ -15,7 +15,10 @@ class ApprovalHistoryResource extends JsonResource
             'id' => $this->id,
             'promotion_id' => $this->promotion_id,
             'variant_id' => $this->variant_id,
-            'variant_name' => $this->variant ? ($this->variant->product ? $this->variant->product->name.' - '.$this->variant->name : $this->variant->name) : 'Unknown Variant',
+            'promotion_item_id' => $this->promotion_item_id,
+            'variant_name' => $this->promotionItem
+                ? $this->promotionItem->product_name.($this->promotionItem->variant_name ? ' - '.$this->promotionItem->variant_name : '')
+                : ($this->variant ? ($this->variant->product ? $this->variant->product->name.' - '.$this->variant->name : $this->variant->name) : 'Produk tidak tersedia'),
             'variant_sku' => $this->variant ? $this->variant->sku : null,
             'reviewer_name' => $this->reviewer_name,
             'reviewer_position' => $this->reviewer_position,

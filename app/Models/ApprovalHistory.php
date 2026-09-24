@@ -14,6 +14,7 @@ class ApprovalHistory extends Model
     protected $fillable = [
         'promotion_id',
         'variant_id',
+        'promotion_item_id',
         'reviewer_name',
         'reviewer_position',
         'company_name',
@@ -33,5 +34,11 @@ class ApprovalHistory extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(Variant::class);
+    }
+
+    /** @return BelongsTo<PromotionItem, $this> */
+    public function promotionItem(): BelongsTo
+    {
+        return $this->belongsTo(PromotionItem::class);
     }
 }

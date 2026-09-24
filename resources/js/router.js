@@ -80,8 +80,7 @@ const routes = [
             {
                 path: 'promotions',
                 name: 'Promotions',
-                component: () => import('./pages/Promotions.vue'),
-                meta: { permission: 'promotion.view' },
+                redirect: { name: 'Campaigns' },
             },
             {
                 path: 'promotions/:id',

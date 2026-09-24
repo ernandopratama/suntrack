@@ -16,6 +16,7 @@ use App\Models\Campaign;
 use App\Models\Comment;
 use App\Models\PerformanceReport;
 use App\Models\Promotion;
+use App\Models\PromotionItem;
 use App\Models\SecureLink;
 use App\Models\Task;
 use App\Services\ActivityLogger;
@@ -136,10 +137,10 @@ class PublicReviewController extends Controller
 
         $linkableRelations = ['brand', 'comments', 'activityLogs'];
         if ($entity instanceof Promotion) {
-            $linkableRelations = array_merge($linkableRelations, ['campaign', 'variants']);
+            $linkableRelations = array_merge($linkableRelations, ['campaign', 'promotionItems', 'variants.product']);
         } else {
             // Campaign - load promotions with their variants, product info and campaign tasks for display
-            $linkableRelations = array_merge($linkableRelations, ['promotions.variants.product', 'tasks']);
+            $linkableRelations = array_merge($linkableRelations, ['promotions.promotionItems', 'promotions.variants.product', 'tasks']);
         }
         $entity->load($linkableRelations);
 
@@ -194,48 +195,31 @@ class PublicReviewController extends Controller
             abort(403, 'This delivery link does not support approval actions.');
         }
 
-        if ($entity instanceof Promotion) {
-            $variant = $entity->variants()->where('variant_id', $request->variant_id)->first();
-            if (! $variant) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Variant tidak ditemukan dalam promosi ini.',
-                ], 404);
-            }
-            $promotions = collect([$entity]);
-        } else {
-            // Campaign - locate all promotions inside the campaign that contain this variant
-            $campaign = $entity;
-            $promotions = $campaign->promotions()
-                ->whereHas('variants', fn ($q) => $q->where('variants.id', $request->variant_id))
-                ->with(['variants' => fn ($q) => $q->where('variants.id', $request->variant_id)])
-                ->get();
-
-            if ($promotions->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Variant tidak ditemukan dalam campaign ini.',
-                ], 404);
-            }
-            $entity = $campaign;
-        }
-
         $newStatus = $request->status;
-        $oldStatus = $promotions->first()->variants->first()->pivot->approval_status ?? 'Pending';
+        $promotionItem = PromotionItem::query()
+            ->whereKey($request->variant_id)
+            ->whereHas('promotion', function ($query) use ($entity): void {
+                if ($entity instanceof Promotion) {
+                    $query->whereKey($entity->id);
+                } else {
+                    $query->where('campaign_id', $entity->id);
+                }
+            })
+            ->with('promotion')
+            ->first();
 
-        foreach ($promotions as $promotion) {
-            $promotionVariant = $promotion->variants->first();
-
-            // Update pivot
-            $promotion->variants()->updateExistingPivot($promotionVariant->id, [
+        if ($promotionItem) {
+            $oldStatus = $promotionItem->approval_status;
+            $promotionItem->update([
                 'approval_status' => $newStatus,
                 'rejection_notes' => $request->rejection_notes,
             ]);
+            $promotions = collect([$promotionItem->promotion]);
 
-            // Create immutable approval history
             ApprovalHistory::create([
-                'promotion_id' => $promotion->id,
-                'variant_id' => $promotionVariant->id,
+                'promotion_id' => $promotionItem->promotion_id,
+                'promotion_item_id' => $promotionItem->id,
+                'variant_id' => null,
                 'reviewer_name' => $request->reviewer_name,
                 'reviewer_position' => $request->reviewer_position ?? 'External Reviewer',
                 'company_name' => $request->company_name,
@@ -244,8 +228,43 @@ class PublicReviewController extends Controller
                 'new_status' => $newStatus,
                 'notes' => $request->rejection_notes,
             ]);
+        } else {
+            if ($entity instanceof Promotion) {
+                $variant = $entity->variants()->where('variant_id', $request->variant_id)->first();
+                $promotions = $variant ? collect([$entity->setRelation('variants', collect([$variant]))]) : collect();
+            } else {
+                $promotions = $entity->promotions()
+                    ->whereHas('variants', fn ($query) => $query->where('variants.id', $request->variant_id))
+                    ->with(['variants' => fn ($query) => $query->where('variants.id', $request->variant_id)])
+                    ->get();
+            }
 
-            // Dynamic status recalculation
+            if ($promotions->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan.'], 404);
+            }
+
+            $oldStatus = $promotions->first()->variants->first()->pivot->approval_status ?? 'Pending';
+            foreach ($promotions as $promotion) {
+                $variant = $promotion->variants->first();
+                $promotion->variants()->updateExistingPivot($variant->id, [
+                    'approval_status' => $newStatus,
+                    'rejection_notes' => $request->rejection_notes,
+                ]);
+                ApprovalHistory::create([
+                    'promotion_id' => $promotion->id,
+                    'variant_id' => $variant->id,
+                    'reviewer_name' => $request->reviewer_name,
+                    'reviewer_position' => $request->reviewer_position ?? 'External Reviewer',
+                    'company_name' => $request->company_name,
+                    'whatsapp_number' => $request->whatsapp_number,
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus,
+                    'notes' => $request->rejection_notes,
+                ]);
+            }
+        }
+
+        foreach ($promotions as $promotion) {
             $promotion->recalculateApprovalStatus($request->reviewer_name, $request->reviewer_position ?? 'External Reviewer');
         }
 
@@ -269,9 +288,9 @@ class PublicReviewController extends Controller
         );
 
         if ($entity instanceof Promotion) {
-            $entity->load(['brand', 'campaign', 'variants', 'comments', 'activityLogs']);
+            $entity->load(['brand', 'campaign', 'promotionItems', 'variants.product', 'comments', 'activityLogs']);
         } else {
-            $entity->load(['brand', 'comments', 'activityLogs', 'promotions.variants.product', 'tasks']);
+            $entity->load(['brand', 'comments', 'activityLogs', 'promotions.promotionItems', 'promotions.variants.product', 'tasks']);
         }
 
         return response()->json([
@@ -404,16 +423,50 @@ class PublicReviewController extends Controller
         if ($entity instanceof Promotion) {
             $promotions = collect([$entity]);
         } else {
-            $promotions = $entity->promotions()->with('variants')->get();
+            $promotions = $entity->promotions()->with(['promotionItems', 'variants'])->get();
         }
 
         $updatedCount = 0;
         foreach ($promotions as $promotion) {
-            $variantsQuery = $promotion->variants();
-            if (in_array($action, ['approve_selected', 'reject_selected'])) {
-                $variantsQuery->whereIn('variants.id', $request->variant_ids);
+            $usesPromotionItems = $promotion->promotionItems()->exists();
+            $targetItems = collect();
+            if ($usesPromotionItems) {
+                $itemsQuery = $promotion->promotionItems();
+                if (in_array($action, ['approve_selected', 'reject_selected'])) {
+                    $itemsQuery->whereIn('id', $request->variant_ids);
+                }
+                $targetItems = $itemsQuery->get();
             }
-            $targetVariants = $variantsQuery->get();
+
+            foreach ($targetItems as $item) {
+                $oldStatus = $item->approval_status;
+                $item->update([
+                    'approval_status' => $targetStatus,
+                    'rejection_notes' => $notes ?: $item->rejection_notes,
+                ]);
+                ApprovalHistory::create([
+                    'promotion_id' => $promotion->id,
+                    'promotion_item_id' => $item->id,
+                    'variant_id' => null,
+                    'reviewer_name' => $request->reviewer_name,
+                    'reviewer_position' => $request->reviewer_position ?? 'External Reviewer',
+                    'company_name' => $request->company_name,
+                    'whatsapp_number' => $request->whatsapp_number,
+                    'old_status' => $oldStatus,
+                    'new_status' => $targetStatus,
+                    'notes' => $notes,
+                ]);
+                $updatedCount++;
+            }
+
+            $targetVariants = collect();
+            if (! $usesPromotionItems) {
+                $variantsQuery = $promotion->variants();
+                if (in_array($action, ['approve_selected', 'reject_selected'])) {
+                    $variantsQuery->whereIn('variants.id', $request->variant_ids);
+                }
+                $targetVariants = $variantsQuery->get();
+            }
 
             foreach ($targetVariants as $variant) {
                 $oldStatus = $variant->pivot->approval_status ?? 'Pending';
@@ -440,7 +493,7 @@ class PublicReviewController extends Controller
                 $updatedCount++;
             }
 
-            if ($targetVariants->isNotEmpty()) {
+            if ($targetItems->isNotEmpty() || $targetVariants->isNotEmpty()) {
                 $promotion->recalculateApprovalStatus($request->reviewer_name, $request->reviewer_position ?? 'External Reviewer');
             }
         }
@@ -473,9 +526,9 @@ class PublicReviewController extends Controller
         );
 
         if ($entity instanceof Promotion) {
-            $entity->load(['brand', 'campaign', 'variants', 'comments', 'activityLogs']);
+            $entity->load(['brand', 'campaign', 'promotionItems', 'variants.product', 'comments', 'activityLogs']);
         } else {
-            $entity->load(['brand', 'comments', 'activityLogs', 'promotions.variants.product', 'tasks']);
+            $entity->load(['brand', 'comments', 'activityLogs', 'promotions.promotionItems', 'promotions.variants.product', 'tasks']);
         }
 
         return response()->json([

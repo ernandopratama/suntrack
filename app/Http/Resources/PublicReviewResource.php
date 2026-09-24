@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Campaign;
 use App\Models\Promotion;
+use App\Models\PromotionItem;
 use App\Models\Variant;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\Request;
@@ -19,16 +20,18 @@ class PublicReviewResource extends JsonResource
     {
         $isPromotion = $this->resource instanceof Promotion;
 
-        $variants = $isPromotion ? $this->variants : $this->promotions->load('variants')->pluck('variants')->flatten();
-        $totalVariants = $variants->count();
-        $approved = $variants->where('pivot.approval_status', 'Approved')->count();
-        $rejected = $variants->where('pivot.approval_status', 'Rejected')->count();
-        $pending = $variants->where('pivot.approval_status', 'Pending')->count();
+        $reviewRows = $isPromotion
+            ? $this->reviewRowsForPromotion($this->resource, true)
+            : $this->promotions->flatMap(fn (Promotion $promotion) => $this->reviewRowsForPromotion($promotion, false));
+        $totalVariants = $reviewRows->count();
+        $approved = $reviewRows->where('approval_status', 'Approved')->count();
+        $rejected = $reviewRows->where('approval_status', 'Rejected')->count();
+        $pending = $reviewRows->where('approval_status', 'Pending')->count();
         $completionPercentage = $totalVariants > 0 ? round(($approved + $rejected) / $totalVariants * 100, 1) : 0;
 
         $lastHistory = $isPromotion ? $this->approvalHistories()->first() : null;
 
-        $variantsData = $variants->map(fn (Variant $variant) => $this->formatVariant($variant, true));
+        $variantsData = $reviewRows->values();
 
         $timeline = $this->activityLogs()->get()->map(function ($log) {
             return [
@@ -53,7 +56,7 @@ class PublicReviewResource extends JsonResource
                 'start_date' => $promo->start_date ? $promo->start_date->toIso8601String() : null,
                 'end_date' => $promo->end_date ? $promo->end_date->toIso8601String() : null,
                 'status' => $promo->status,
-                'variants' => $promo->variants->map(fn (Variant $variant) => $this->formatVariant($variant, false)),
+                'variants' => $this->reviewRowsForPromotion($promo, false)->values(),
             ];
         }) : collect([]);
 
@@ -141,6 +144,48 @@ class PublicReviewResource extends JsonResource
         }
 
         return $data;
+    }
+
+    /** @return array<string, mixed> */
+    private function formatPromotionItem(PromotionItem $item): array
+    {
+        return [
+            'id' => $item->id,
+            'product_id' => null,
+            'product_name' => $item->product_name,
+            'name' => $item->variant_name ?: 'Tanpa variasi',
+            'sku' => null,
+            'normal_price_snapshot' => (float) $item->normal_price,
+            'campaign_price' => (float) $item->discount_price,
+            'discount_price' => (float) $item->discount_price,
+            'bottom_price' => 0,
+            'discount_amount' => (float) $item->discount_amount,
+            'discount_percentage' => (float) $item->discount_percentage,
+            'promotion_stock' => $item->promotion_stock,
+            'purchase_limit' => $item->purchase_limit,
+            'approval_status' => $item->approval_status,
+            'rejection_notes' => $item->rejection_notes,
+            'source' => 'promotion_item',
+        ];
+    }
+
+    private function reviewRowsForPromotion(Promotion $promotion, bool $includeNotes)
+    {
+        if (! $promotion->relationLoaded('promotionItems')) {
+            $promotion->load('promotionItems');
+        }
+
+        if ($promotion->promotionItems->isNotEmpty()) {
+            return $promotion->promotionItems
+                ->sortBy(fn (PromotionItem $item) => mb_strtolower($item->product_name.' '.($item->variant_name ?? '')))
+                ->map(fn (PromotionItem $item) => $this->formatPromotionItem($item));
+        }
+
+        if (! $promotion->relationLoaded('variants')) {
+            $promotion->load('variants.product');
+        }
+
+        return $promotion->variants->map(fn (Variant $variant) => $this->formatVariant($variant, $includeNotes));
     }
 
     private function pivotValue(?Pivot $pivot, string $key, mixed $default = null): mixed

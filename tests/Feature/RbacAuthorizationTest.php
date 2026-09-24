@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\Company;
+use App\Models\Promotion;
 use App\Models\User;
 use App\Repositories\DashboardRepository;
 use App\Services\Authorization\DataScopeService;
@@ -133,6 +134,118 @@ class RbacAuthorizationTest extends TestCase
         $this->actingAs($this->admin)
             ->deleteJson("/api/v1/admin/users/{$this->team->id}")
             ->assertForbidden();
+    }
+
+    public function test_promotion_inherits_the_selected_campaign_brand(): void
+    {
+        $campaign = Campaign::create([
+            'brand_id' => $this->brandB1->id,
+            'name' => 'Brand B Campaign',
+            'start_date' => '2026-09-01',
+            'end_date' => '2026-09-30',
+            'status' => 'Draft',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->postJson('/api/v1/admin/promotions', [
+                'name' => 'Campaign Promotion',
+                'campaign_id' => $campaign->id,
+                'start_date' => '2026-10-01',
+                'end_date' => '2026-10-31',
+                'status' => 'Pending',
+            ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.promotion.campaign.id', $campaign->id)
+            ->assertJsonPath('data.promotion.brand.id', $this->brandB1->id);
+
+        $this->assertDatabaseHas('promotions', [
+            'name' => 'Campaign Promotion',
+            'campaign_id' => $campaign->id,
+            'brand_id' => $this->brandB1->id,
+            'start_date' => '2026-09-01 00:00:00',
+            'end_date' => '2026-09-30 00:00:00',
+        ]);
+    }
+
+    public function test_promotion_cannot_be_created_without_a_campaign(): void
+    {
+        $this->actingAs($this->admin)
+            ->postJson('/api/v1/admin/promotions', [
+                'name' => 'Standalone Promotion',
+                'status' => 'Pending',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('campaign_id');
+
+        $this->assertDatabaseMissing('promotions', [
+            'name' => 'Standalone Promotion',
+        ]);
+    }
+
+    public function test_campaign_can_have_only_one_active_promotion(): void
+    {
+        $campaign = Campaign::create([
+            'brand_id' => $this->brandB1->id,
+            'name' => 'Single Promotion Campaign',
+            'status' => 'Draft',
+        ]);
+
+        $payload = [
+            'campaign_id' => $campaign->id,
+            'status' => 'Pending',
+        ];
+
+        $firstPromotion = $this->actingAs($this->admin)
+            ->postJson('/api/v1/admin/promotions', $payload + ['name' => 'First Promotion'])
+            ->assertCreated();
+
+        $this->actingAs($this->admin)
+            ->putJson('/api/v1/admin/promotions/'.$firstPromotion->json('data.promotion.id'), [
+                'campaign_id' => $campaign->id,
+                'name' => 'Updated First Promotion',
+                'status' => 'Pending',
+            ])
+            ->assertOk();
+
+        $this->actingAs($this->admin)
+            ->postJson('/api/v1/admin/promotions', $payload + ['name' => 'Second Promotion'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('campaign_id')
+            ->assertJsonPath('errors.campaign_id.0', 'Kampanye ini sudah memiliki promosi.');
+
+        $this->assertDatabaseCount('promotions', 1);
+    }
+
+    public function test_soft_deleted_promotion_can_be_replaced_in_the_same_campaign(): void
+    {
+        $campaign = Campaign::create([
+            'brand_id' => $this->brandB1->id,
+            'name' => 'Replacement Promotion Campaign',
+            'status' => 'Draft',
+        ]);
+
+        $promotion = Promotion::create([
+            'brand_id' => $campaign->brand_id,
+            'campaign_id' => $campaign->id,
+            'name' => 'Old Promotion',
+            'status' => 'Pending',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->deleteJson("/api/v1/admin/promotions/{$promotion->id}")
+            ->assertOk();
+
+        $this->actingAs($this->admin)
+            ->postJson('/api/v1/admin/promotions', [
+                'campaign_id' => $campaign->id,
+                'name' => 'Replacement Promotion',
+                'status' => 'Pending',
+            ])
+            ->assertCreated();
+
+        $this->assertSame(1, Promotion::query()->where('campaign_id', $campaign->id)->count());
+        $this->assertSame(2, Promotion::withTrashed()->where('campaign_id', $campaign->id)->count());
     }
 
     public function test_admin_can_create_team_with_direct_default_permissions_only(): void
@@ -385,6 +498,7 @@ class RbacAuthorizationTest extends TestCase
         $this->actingAs($this->team)->postJson('/api/v1/admin/promotions', [
             'name' => 'Injected Promotion',
             'brand_id' => $this->brandB1->id,
+            'campaign_id' => $outsideCampaign->id,
             'status' => 'Pending',
         ])->assertNotFound();
 

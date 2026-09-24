@@ -308,42 +308,6 @@
           ></span>
         </router-link>
 
-        <!-- Promotions -->
-        <router-link
-          v-if="$can('promotion.view')"
-          to="/promotions"
-          data-sidebar-label="Promotions"
-          @click="closeOnMobile"
-          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
-          :class="
-            $route.path.startsWith('/promotions')
-              ? 'shadow-sm'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'
-          "
-          :style="
-            $route.path.startsWith('/promotions')
-              ? { background: '#D0E7E6', color: '#293681' }
-              : {}
-          "
-        >
-          <i
-            class="fa-solid fa-tags w-5 text-center"
-            :style="
-              $route.path.startsWith('/promotions')
-                ? { color: '#4274D9' }
-                : {}
-            "
-          ></i>
-
-          <span v-if="sidebarOpen" class="ml-3">Promotions</span>
-
-          <span
-            v-if="$route.path.startsWith('/promotions') && sidebarOpen"
-            class="ml-auto h-2 w-2 rounded-full"
-            style="background: #4274d9"
-          ></span>
-        </router-link>
-
         <!-- Tasks -->
         <router-link
           v-if="$can('task.view')"
@@ -844,11 +808,6 @@ const SIDEBAR_TOOLTIP_THEMES = {
         gradient: "linear-gradient(135deg, #3d160c, #c2410c, #f97316, #2b0f08)",
         border: "rgba(251, 146, 60, 0.7)",
         glow: "rgba(249, 115, 22, 0.65)",
-    },
-    Promotions: {
-        gradient: "linear-gradient(135deg, #37100e, #b91c1c, #ef4444, #260908)",
-        border: "rgba(248, 113, 113, 0.7)",
-        glow: "rgba(239, 68, 68, 0.65)",
     },
     Tasks: {
         gradient: "linear-gradient(135deg, #0e3440, #0e7490, #06b6d4, #08242c)",

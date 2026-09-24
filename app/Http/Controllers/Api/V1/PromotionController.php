@@ -8,7 +8,6 @@ use App\Http\Requests\StorePromotionRequest;
 use App\Http\Requests\UpdatePromotionRequest;
 use App\Http\Resources\PromotionResource;
 use App\Models\ApprovalHistory;
-use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\Promotion;
 use App\Repositories\PromotionRepository;
@@ -59,20 +58,14 @@ class PromotionController extends Controller
         $user = $request->user();
         $data = $request->validated();
 
-        if (empty($data['brand_id'])) {
-            $data['brand_id'] = $this->dataScope->scopeBrands(Brand::query(), $user)->value('id');
-        }
-
-        if (empty($data['brand_id']) || ! $this->dataScope->canAccessBrandId($user, $data['brand_id'])) {
+        $campaign = Campaign::findOrFail($data['campaign_id']);
+        if (! $this->dataScope->canAccess($user, $campaign)) {
             abort(404);
         }
 
-        if (! empty($data['campaign_id'])) {
-            $campaign = Campaign::findOrFail($data['campaign_id']);
-            if (! $this->dataScope->canAccess($user, $campaign) || $campaign->brand_id !== $data['brand_id']) {
-                abort(404);
-            }
-        }
+        $data['brand_id'] = $campaign->brand_id;
+        $data['start_date'] = $campaign->start_date;
+        $data['end_date'] = $campaign->end_date;
 
         $promotion = new Promotion;
         $promotion->fill($data);
@@ -100,7 +93,7 @@ class PromotionController extends Controller
     {
         $this->authorize('view', $promotion);
 
-        $promotion->load(['campaign', 'brand', 'variants', 'comments', 'approvalHistories', 'secureLinks']);
+        $promotion->load(['campaign', 'brand', 'promotionItems', 'variants', 'comments', 'approvalHistories', 'secureLinks']);
 
         return $this->success('Promotion retrieved successfully.', [
             'promotion' => new PromotionResource($promotion),
@@ -118,15 +111,20 @@ class PromotionController extends Controller
         $user = $request->user();
         $oldStatus = $promotion->status;
         $oldCampaignId = $promotion->campaign_id;
+        $data = $request->validated();
+        $campaign = Campaign::findOrFail($data['campaign_id'] ?? $promotion->campaign_id);
 
-        if ($request->filled('campaign_id')) {
-            $campaign = Campaign::findOrFail($request->input('campaign_id'));
-            if (! $this->dataScope->canAccess($user, $campaign) || $campaign->brand_id !== $promotion->brand_id) {
-                abort(404);
-            }
+        if (! $this->dataScope->canAccess($user, $campaign)) {
+            abort(404);
         }
 
-        $promotion->update($request->validated());
+        $data['campaign_id'] = $campaign->id;
+        $data['brand_id'] = $campaign->brand_id;
+        $data['start_date'] = $campaign->start_date;
+        $data['end_date'] = $campaign->end_date;
+
+        $promotion->fill($data);
+        $promotion->save();
 
         // Log status change if applicable
         if ($oldStatus !== $promotion->status) {
@@ -143,15 +141,9 @@ class PromotionController extends Controller
 
         // Log campaign link/unlink change
         if ($oldCampaignId !== $promotion->campaign_id) {
-            $action = $promotion->campaign_id
-                ? ActivityType::Created->value.' (Linked to Campaign)'
-                : ActivityType::Updated->value.' (Unlinked from Campaign)';
-
             ActivityLogger::log(
-                action: $action,
-                description: $promotion->campaign_id
-                    ? "Promotion '{$promotion->code}' was linked to a Campaign."
-                    : "Promotion '{$promotion->code}' was unlinked from its Campaign.",
+                action: ActivityType::Updated->value.' (Moved to Campaign)',
+                description: "Promotion '{$promotion->code}' was moved to another Campaign.",
                 actorType: 'Admin',
                 actorName: $user->name,
                 loggable: $promotion,
@@ -196,17 +188,49 @@ class PromotionController extends Controller
         $targetStatus = str_starts_with($action, 'approve') ? 'Approved' : 'Rejected';
         $notes = $targetStatus === 'Rejected' ? $request->rejection_notes : null;
 
-        $variantsQuery = $promotion->variants();
-        if (in_array($action, ['approve_selected', 'reject_selected'])) {
-            $variantsQuery->whereIn('variants.id', $request->variant_ids);
-        }
-        $targetVariants = $variantsQuery->get();
-
-        if ($targetVariants->isEmpty()) {
-            return $this->error('No matching variants found for batch operation.', [], 404);
+        $usesPromotionItems = $promotion->promotionItems()->exists();
+        $targetItems = collect();
+        if ($usesPromotionItems) {
+            $itemsQuery = $promotion->promotionItems();
+            if (in_array($action, ['approve_selected', 'reject_selected'])) {
+                $itemsQuery->whereIn('id', $request->variant_ids);
+            }
+            $targetItems = $itemsQuery->get();
         }
 
         $updatedCount = 0;
+        foreach ($targetItems as $item) {
+            $oldStatus = $item->approval_status;
+            $item->update([
+                'approval_status' => $targetStatus,
+                'rejection_notes' => $notes ?: $item->rejection_notes,
+            ]);
+            ApprovalHistory::create([
+                'promotion_id' => $promotion->id,
+                'promotion_item_id' => $item->id,
+                'variant_id' => null,
+                'reviewer_name' => $user->name.' (Admin)',
+                'reviewer_position' => 'Internal Admin',
+                'old_status' => $oldStatus,
+                'new_status' => $targetStatus,
+                'notes' => $notes,
+            ]);
+            $updatedCount++;
+        }
+
+        $targetVariants = collect();
+        if (! $usesPromotionItems) {
+            $variantsQuery = $promotion->variants();
+            if (in_array($action, ['approve_selected', 'reject_selected'])) {
+                $variantsQuery->whereIn('variants.id', $request->variant_ids);
+            }
+            $targetVariants = $variantsQuery->get();
+        }
+
+        if ($targetItems->isEmpty() && $targetVariants->isEmpty()) {
+            return $this->error('No matching variants found for batch operation.', [], 404);
+        }
+
         foreach ($targetVariants as $variant) {
             $oldStatus = $variant->pivot->approval_status ?? 'Pending';
 
@@ -248,7 +272,7 @@ class PromotionController extends Controller
             ]
         );
 
-        $promotion->load(['campaign', 'brand', 'variants', 'comments', 'approvalHistories', 'secureLinks']);
+        $promotion->load(['campaign', 'brand', 'promotionItems', 'variants', 'comments', 'approvalHistories', 'secureLinks']);
 
         return $this->success("Batch approval [{$action}] berhasil diproses untuk {$updatedCount} varian.", [
             'promotion' => new PromotionResource($promotion),

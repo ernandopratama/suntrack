@@ -255,6 +255,11 @@
             ></i>
 
             <i
+              v-else-if="tab.id === 'approval'"
+              class="fa-solid fa-circle-check text-[11px]"
+            ></i>
+
+            <i
               v-else-if="tab.id === 'products'"
               class="fa-solid fa-box text-[11px]"
             ></i>
@@ -515,118 +520,79 @@
              PROMOTIONS
         ========================== -->
         <div v-if="currentTab === 'promotions'" class="space-y-4">
-
-          <div
-            class="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <div class="flex items-center gap-3">
-                <div
-                  class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D0E7E6] text-[#293681]"
-                >
-                  <i class="fa-solid fa-tags text-sm"></i>
-                </div>
-
-                <div>
-                  <h3 class="text-sm font-extrabold text-[#293681]">
-                    Linked Promotions
-                  </h3>
-
-                  <p class="text-[11px] text-gray-400">
-                    Promotions linked to this campaign.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              @click="isPromotionModalOpen = true"
-              type="button"
-              class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4274D9] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#293681] hover:shadow-md"
-            >
-              <span
-                class="flex h-5 w-5 items-center justify-center rounded-md bg-white/15"
-              >
-                <i class="fa-solid fa-plus text-[9px]"></i>
-              </span>
-
-              <span>Add Promotion</span>
-            </button>
-          </div>
-
           <div
             v-if="promotionsLoading"
             class="rounded-2xl border border-gray-200 bg-white p-10 text-center"
           >
             <i class="fa-solid fa-spinner fa-spin text-[#4274D9]"></i>
             <p class="mt-2 text-xs font-semibold text-gray-400">
-              Loading promotions...
+              Memuat promosi...
             </p>
           </div>
 
           <div v-else-if="!linkedPromotions.length">
             <EmptyState
-              title="No promotions yet"
-              description="Add a promotion to this campaign to get started."
-            />
+              title="Promosi belum dibuat"
+              description="Buat satu promosi untuk kampanye ini."
+            >
+              <template #action>
+                <button
+                  type="button"
+                  @click="isPromotionModalOpen = true"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4274D9] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#293681] hover:shadow-md"
+                >
+                  <i class="fa-solid fa-plus text-[10px]"></i>
+                  Buat Promosi
+                </button>
+              </template>
+            </EmptyState>
           </div>
 
+          <PromotionDetail
+            v-else-if="selectedPromotionId"
+            :promotion-id="selectedPromotionId"
+            embedded
+            @updated="loadLinkedPromotions"
+            @deleted="handlePromotionDeleted"
+          />
+        </div>
+
+        <!-- =========================
+             APPROVAL
+        ========================== -->
+        <div v-else-if="currentTab === 'approval'">
           <div
-            v-else
-            class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+            v-if="promotionsLoading"
+            class="rounded-2xl border border-gray-200 bg-white p-10 text-center"
           >
-            <ul class="divide-y divide-gray-100">
-              <li
-                v-for="p in linkedPromotions"
-                :key="p.id"
-                class="flex flex-col gap-4 px-5 py-4 transition-colors hover:bg-[#D0E7E6]/20 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div class="flex min-w-0 items-center gap-3">
-                  <div
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#95CCDD]/20 text-[#293681]"
-                  >
-                    <i class="fa-solid fa-tag text-xs"></i>
-                  </div>
-
-                  <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <span
-                        class="rounded-md bg-[#D0E7E6] px-2 py-1 font-mono text-[10px] font-extrabold text-[#293681]"
-                      >
-                        {{ p.code }}
-                      </span>
-
-                      <span class="text-sm font-bold text-gray-800">
-                        {{ p.name }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2 sm:justify-end">
-                  <StatusBadge :status="p.status" />
-
-                  <router-link
-                    :to="`/promotions/${p.id}`"
-                    class="inline-flex items-center gap-1.5 rounded-lg border border-[#95CCDD] bg-[#D0E7E6]/30 px-3 py-2 text-[11px] font-bold text-[#293681] transition-all hover:bg-[#D0E7E6]"
-                  >
-                    <i class="fa-regular fa-eye text-[9px]"></i>
-                    View
-                  </router-link>
-
-                  <button
-                    v-if="$can('promotion.delete')"
-                    @click="deletePromotionAction(p)"
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-600 transition-all hover:bg-red-100"
-                  >
-                    <i class="fa-solid fa-trash text-[9px]"></i>
-                    Delete
-                  </button>
-                </div>
-              </li>
-            </ul>
+            <i class="fa-solid fa-spinner fa-spin text-[#4274D9]"></i>
+            <p class="mt-2 text-xs font-semibold text-gray-400">
+              Memuat approval...
+            </p>
           </div>
+
+          <PromotionApprovalPanel
+            v-else-if="selectedPromotionId"
+            :promotion-id="selectedPromotionId"
+            @updated="loadLinkedPromotions"
+          />
+
+          <EmptyState
+            v-else
+            title="Promosi belum dibuat"
+            description="Buat promosi terlebih dahulu sebelum membuka approval."
+          >
+            <template #action>
+              <button
+                type="button"
+                @click="currentTab = 'promotions'"
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4274D9] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#293681]"
+              >
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                Buka Promosi
+              </button>
+            </template>
+          </EmptyState>
         </div>
 
         <!-- =========================
@@ -951,6 +917,7 @@
             currentTab !== 'overview' &&
             currentTab !== 'tasks' &&
             currentTab !== 'promotions' &&
+            currentTab !== 'approval' &&
             currentTab !== 'products' &&
             currentTab !== 'comments'
           "
@@ -984,8 +951,9 @@
     <PromotionForm
       :is-open="isPromotionModalOpen"
       :default-campaign-id="campaign.id"
+      :default-campaign="campaign"
       @close="isPromotionModalOpen = false"
-      @saved="loadLinkedPromotions"
+      @saved="handlePromotionSaved"
     />
 
     <!-- =========================
@@ -1325,20 +1293,26 @@ import EmptyState from '../components/EmptyState.vue';
 import CampaignForm from '../components/CampaignForm.vue';
 import ModalForm from '../components/ModalForm.vue';
 import PromotionForm from '../components/PromotionForm.vue';
+import PromotionApprovalPanel from '../components/PromotionApprovalPanel.vue';
 import AddProductToCampaignForm from '../components/AddProductToCampaignForm.vue';
 import TaskForm from '../components/TaskForm.vue';
+import PromotionDetail from './PromotionDetail.vue';
 
 const route = useRoute();
 const { campaign, loading, error, fetchCampaign } = useCampaigns();
-const { promotions: linkedPromotions, loading: promotionsLoading, fetchPromotions, deletePromotion } = usePromotions();
+const { promotions: linkedPromotions, loading: promotionsLoading, fetchPromotions } = usePromotions();
 const { tasks, loading: tasksLoading, fetchTasks, deleteTask } = useTasks();
 
-const currentTab = ref('overview');
+const currentTab = ref(
+  route.query.tab === 'promotions' || route.query.promotion
+    ? 'promotions'
+    : 'overview'
+);
 const tabs = [
   { id: 'overview', name: 'Overview' },
   { id: 'tasks', name: 'Tasks' },
-  { id: 'promotions', name: 'Promotions' },
-  { id: 'products', name: 'Products' },
+  { id: 'promotions', name: 'Promosi' },
+  { id: 'approval', name: 'Approval' },
   { id: 'attachments', name: 'Attachments' },
   { id: 'comments', name: 'Comments' },
   { id: 'secure-link', name: 'Secure Link' },
@@ -1349,6 +1323,9 @@ const getTabName = (id) => tabs.find(t => t.id === id)?.name || 'Module';
 
 const isModalOpen = ref(false);
 const isPromotionModalOpen = ref(false);
+const selectedPromotionId = ref(
+  typeof route.query.promotion === 'string' ? route.query.promotion : null
+);
 const isTaskModalOpen = ref(false);
 const selectedTask = ref(null);
 const campaignProducts = ref([]);
@@ -1368,17 +1345,39 @@ const fetchCampaignTasks = () => {
 };
 
 // Load promotions for this campaign
-const loadLinkedPromotions = () => {
+const loadLinkedPromotions = async () => {
   if (campaign.value) {
-    fetchPromotions({ campaign_id: campaign.value.id, per_page: 100 });
+    await fetchPromotions({ campaign_id: campaign.value.id, per_page: 100 });
   }
+};
+
+const handlePromotionSaved = async (savedPromotion) => {
+  await loadLinkedPromotions();
+  if (savedPromotion?.id) selectedPromotionId.value = savedPromotion.id;
+};
+
+const handlePromotionDeleted = async () => {
+  selectedPromotionId.value = null;
+  await loadLinkedPromotions();
 };
 
 // Watch tab changes
 watch(currentTab, (tab) => {
-  if (tab === 'promotions') loadLinkedPromotions();
+  if (tab === 'promotions' || tab === 'approval') loadLinkedPromotions();
   if (tab === 'tasks') fetchCampaignTasks();
-  if (tab === 'products') loadCampaignProducts();
+});
+
+watch(linkedPromotions, (promotions) => {
+  if (!promotions.length) {
+    selectedPromotionId.value = null;
+    return;
+  }
+
+  const selectedExists = promotions.some(
+    (promotion) => promotion.id === selectedPromotionId.value
+  );
+
+  if (!selectedExists) selectedPromotionId.value = promotions[0].id;
 });
 
 onMounted(() => {
@@ -1389,7 +1388,9 @@ onMounted(() => {
 watch(campaign, (val) => {
   if (val?.id) {
     fetchCampaignTasks();
-    loadCampaignProducts();
+    if (currentTab.value === 'promotions' || currentTab.value === 'approval') {
+      loadLinkedPromotions();
+    }
   }
 });
 
@@ -1545,10 +1546,4 @@ const openAddProductModal = () => {
   isAddProductModalOpen.value = true;
 };
 
-const deletePromotionAction = async (promotion) => {
-  if (confirm(`Delete promotion "${promotion.name}"?`)) {
-    await deletePromotion(promotion.id);
-    loadLinkedPromotions();
-  }
-};
 </script>

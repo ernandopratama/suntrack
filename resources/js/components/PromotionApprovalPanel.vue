@@ -25,7 +25,7 @@
 
             <p class="mt-1 max-w-3xl text-xs leading-5 text-gray-500">
               Bagikan tautan ini kepada tim Brand untuk melakukan peninjauan
-              harga dan approval per variant tanpa perlu login.
+              harga dan approval per produk tanpa perlu login.
             </p>
           </div>
         </div>
@@ -284,11 +284,11 @@
 
           <div>
             <h3 class="text-base font-extrabold tracking-tight text-gray-900">
-              Variant Approval
+              Approval Produk
             </h3>
 
             <p class="mt-1 text-xs leading-5 text-gray-500">
-              Pantau dan kelola status approval setiap variant melalui batch
+              Pantau dan kelola status approval setiap produk melalui batch
               action.
             </p>
           </div>
@@ -335,7 +335,7 @@
 
                   <p class="mt-0.5 text-[11px] text-gray-500">
                     {{ selectedVariantIds.length }} dari
-                    {{ variants.length }} variant terpilih
+                    {{ variants.length }} produk terpilih
                   </p>
                 </div>
               </div>
@@ -431,7 +431,7 @@
                   </th>
 
                   <th class="px-4 py-3.5">
-                    Variant SKU / Nama
+                    Nama Produk / Variasi
                   </th>
 
                   <th class="px-4 py-3.5">
@@ -474,13 +474,13 @@
                     >
                       {{ variant.product_name || 'Product' }}
                       <span class="font-normal text-gray-400">—</span>
-                      {{ variant.name }}
+                      {{ variant.variant_name || 'Tanpa variasi' }}
                     </span>
 
                     <span
                       class="mt-1 block font-mono text-[11px] text-gray-400"
                     >
-                      {{ variant.sku }}
+                      {{ variant.variant_name ? 'Variasi produk' : '' }}
                     </span>
                   </td>
 
@@ -488,7 +488,7 @@
                     <span
                       class="font-mono text-sm font-extrabold text-[#4274D9]"
                     >
-                      {{ formatCurrency(variant.campaign_price) }}
+                      {{ formatCurrency(variant.discount_price) }}
                     </span>
                   </td>
 
@@ -545,11 +545,11 @@
                     </div>
 
                     <p class="mt-3 text-sm font-bold text-gray-700">
-                      Belum ada variant
+                      Belum ada produk
                     </p>
 
                     <p class="mt-1 text-xs text-gray-400">
-                      Belum ada variant produk pada promosi ini.
+                      Belum ada data produk pada promosi ini.
                     </p>
                   </td>
                 </tr>
@@ -795,10 +795,10 @@ const handleBatchApproval = async (action) => {
 
 const loadVariants = async () => {
   try {
-    const res = await axios.get(`/api/v1/admin/promotions/${props.promotionId}/variants`);
-    variants.value = res.data.data || [];
+    const res = await axios.get(`/api/v1/admin/promotions/${props.promotionId}/items`);
+    variants.value = res.data.data?.items || [];
   } catch (err) {
-    console.error('Failed to load variants:', err);
+    console.error('Failed to load promotion items:', err);
   }
 };
 

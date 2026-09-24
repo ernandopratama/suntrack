@@ -565,7 +565,7 @@
 
                 <!-- Active Promotions -->
                 <div
-                    @click="navigateTo('/promotions')"
+                    @click="navigateTo('/campaigns')"
                     class="group relative overflow-hidden bg-white rounded-2xl border border-gray-200 p-5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-emerald-300"
                 >
                     <!-- Decorative Background -->
@@ -639,7 +639,7 @@
 
                 <!-- Pending Approvals -->
                 <div
-                    @click="navigateTo('/promotions')"
+                    @click="navigateTo('/campaigns')"
                     class="group relative overflow-hidden bg-white rounded-2xl border border-amber-200 p-5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-amber-400 bg-gradient-to-br from-white to-amber-50/40"
                 >
                     <!-- Decorative Background -->
@@ -894,7 +894,7 @@
 
                         <!-- Approved Promotion -->
                         <div
-                            @click="navigateTo('/promotions')"
+                            @click="navigateTo('/campaigns')"
                             class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
                         >
                             <div class="flex items-center justify-between mb-4">
@@ -924,7 +924,7 @@
 
                         <!-- Partially Approved -->
                         <div
-                            @click="navigateTo('/promotions')"
+                            @click="navigateTo('/campaigns')"
                             class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md"
                         >
                             <div class="flex items-center justify-between mb-4">
@@ -954,7 +954,7 @@
 
                         <!-- Rejected Promotion -->
                         <div
-                            @click="navigateTo('/promotions')"
+                            @click="navigateTo('/campaigns')"
                             class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-md"
                         >
                             <div class="flex items-center justify-between mb-4">
@@ -1044,7 +1044,7 @@
 
                         <!-- Secure Links -->
                         <div
-                            @click="navigateTo('/promotions')"
+                            @click="navigateTo('/campaigns')"
                             class="group rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md"
                         >
                             <div class="flex items-center justify-between mb-4">

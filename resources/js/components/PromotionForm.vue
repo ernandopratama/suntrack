@@ -90,12 +90,31 @@
           class="mb-1.5 block text-xs font-bold text-[#293681]"
         >
           Link to Campaign
-          <span class="ml-1 text-[10px] font-semibold text-gray-400">
-            (Optional)
-          </span>
+          <span class="text-rose-500">*</span>
         </label>
 
-        <div class="relative">
+        <div
+          v-if="hasCampaignContext"
+          class="flex items-center gap-3 rounded-xl border border-[#95CCDD] bg-[#D0E7E6]/30 px-3.5 py-3"
+        >
+          <span
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#4274D9] shadow-sm"
+          >
+            <i class="fa-solid fa-bullhorn text-xs"></i>
+          </span>
+
+          <div class="min-w-0">
+            <p class="truncate text-sm font-bold text-[#293681]">
+              {{ campaignContext?.name || 'Campaign terpilih' }}
+            </p>
+
+            <p class="text-[11px] text-gray-500">
+              Terhubung otomatis dari Detail Kampanye.
+            </p>
+          </div>
+        </div>
+
+        <div v-else class="relative">
           <span
             class="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-10 items-center justify-center text-[#4274D9]"
           >
@@ -104,10 +123,12 @@
 
           <select
             v-model="form.campaign_id"
+            required
+            :disabled="hasCampaignContext"
             class="block w-full appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-10 text-sm font-medium text-gray-800 shadow-sm outline-none transition-all hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
           >
-            <option :value="null">
-              Standalone (No Campaign)
+            <option :value="null" disabled>
+              Pilih kampanye
             </option>
 
             <option
@@ -144,7 +165,11 @@
             </h3>
 
             <p class="text-[10px] text-gray-500">
-              Set the active period for this promotion.
+              {{
+                hasCampaignContext
+                  ? 'Mengikuti periode kampanye yang dipilih.'
+                  : 'Set the active period for this promotion.'
+              }}
             </p>
           </div>
         </div>
@@ -161,7 +186,8 @@
             <input
               type="date"
               v-model="form.start_date"
-              class="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
+              :disabled="hasCampaignContext"
+              class="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
             />
           </div>
 
@@ -176,7 +202,8 @@
             <input
               type="date"
               v-model="form.end_date"
-              class="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10"
+              :disabled="hasCampaignContext"
+              class="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm outline-none transition-all hover:border-[#95CCDD] focus:border-[#4274D9] focus:ring-4 focus:ring-[#4274D9]/10 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
             />
           </div>
         </div>
@@ -297,7 +324,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import ModalForm from './ModalForm.vue';
 import { usePromotions } from '../composables/usePromotions';
 import { useCampaigns } from '../composables/useCampaigns';
@@ -307,6 +334,10 @@ const props = defineProps({
   promotion: { type: Object, default: null },
   defaultCampaignId: {
     type: String,
+    default: null
+  },
+  defaultCampaign: {
+    type: Object,
     default: null
   },
 });
@@ -327,6 +358,12 @@ const {
 } = useCampaigns();
 
 const isEdit = ref(false);
+const hasCampaignContext = computed(() => Boolean(props.defaultCampaignId));
+const campaignContext = computed(() =>
+  props.defaultCampaign ||
+  campaigns.value.find((campaign) => campaign.id === props.defaultCampaignId) ||
+  null
+);
 
 const form = ref({
   name: '',
@@ -339,9 +376,11 @@ const form = ref({
 
 watch(() => props.isOpen, async (newVal) => {
   if (newVal) {
-    await fetchCampaigns({
-      per_page: 100
-    });
+    if (!props.defaultCampaign) {
+      await fetchCampaigns({
+        per_page: 100
+      });
+    }
 
     if (props.promotion) {
       isEdit.value = true;
@@ -356,13 +395,14 @@ watch(() => props.isOpen, async (newVal) => {
       };
     } else {
       isEdit.value = false;
+      const selectedCampaign = campaignContext.value;
 
       form.value = {
         name: '',
         description: '',
         campaign_id: props.defaultCampaignId || null,
-        start_date: '',
-        end_date: '',
+        start_date: selectedCampaign?.start_date || '',
+        end_date: selectedCampaign?.end_date || '',
         status: 'Pending',
       };
     }

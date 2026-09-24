@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\PerformanceReportMediaController;
 use App\Http\Controllers\Api\V1\PricingAnalyticsController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\PromotionController;
+use App\Http\Controllers\Api\V1\PromotionItemController;
 use App\Http\Controllers\Api\V1\PromotionVariantController;
 use App\Http\Controllers\Api\V1\PublicReviewController;
 use App\Http\Controllers\Api\V1\ReportController;
@@ -182,6 +183,21 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [PromotionVariantController::class, 'store'])
                 ->middleware('permission:promotion.update');
             Route::delete('/{variant}', [PromotionVariantController::class, 'destroy'])
+                ->middleware('permission:promotion.update');
+        });
+
+        Route::prefix('promotions/{promotion}/items')->group(function () {
+            Route::get('/', [PromotionItemController::class, 'index'])
+                ->middleware('permission:promotion.view');
+            Route::get('/template', [PromotionItemController::class, 'template'])
+                ->middleware('permission:promotion.update');
+            Route::post('/import/preview', [PromotionItemController::class, 'preview'])
+                ->middleware('permission:promotion.update');
+            Route::post('/import', [PromotionItemController::class, 'import'])
+                ->middleware('permission:promotion.update');
+            Route::put('/{promotionItem}', [PromotionItemController::class, 'update'])
+                ->middleware('permission:promotion.update');
+            Route::delete('/{promotionItem}', [PromotionItemController::class, 'destroy'])
                 ->middleware('permission:promotion.update');
         });
 

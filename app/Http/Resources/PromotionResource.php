@@ -22,27 +22,38 @@ class PromotionResource extends JsonResource
     public function toArray(Request $request): array
     {
         $hasVariants = $this->relationLoaded('variants');
+        $hasPromotionItems = $this->relationLoaded('promotionItems');
 
-        $totalProducts = $hasVariants
-            ? $this->variants->pluck('product_id')->unique()->count()
-            : ($this->variants_count ?? 0);
+        if ($hasPromotionItems && $this->promotionItems->isNotEmpty()) {
+            $totalProducts = $this->promotionItems->count();
+            $totalVariants = $this->promotionItems->whereNotNull('variant_name')->count();
+            $totalPromotionStock = (int) $this->promotionItems->sum('promotion_stock');
+            $totalEstimatedValue = (float) $this->promotionItems->sum(
+                fn ($item) => (float) $item->discount_price * (int) ($item->promotion_stock ?? 0)
+            );
+            $totalApprovedProducts = $this->promotionItems->where('approval_status', 'Approved')->count();
+        } else {
 
-        $totalVariants = $hasVariants
-            ? $this->variants->count()
-            : ($this->variants_count ?? 0);
+            $totalProducts = $hasVariants
+                ? $this->variants->pluck('product_id')->unique()->count()
+                : ($this->variants_count ?? 0);
 
-        $totalPromotionStock = $hasVariants
-            ? (int) $this->variants->sum('pivot.promotion_stock')
-            : 0;
+            $totalVariants = $hasVariants
+                ? $this->variants->count()
+                : ($this->variants_count ?? 0);
 
-        $totalEstimatedValue = $hasVariants
-            ? (float) $this->variants->sum(fn ($v) => ($v->pivot->campaign_price ?? 0) * ($v->pivot->promotion_stock ?? 0))
-            : 0.0;
+            $totalPromotionStock = $hasVariants
+                ? (int) $this->variants->sum('pivot.promotion_stock')
+                : 0;
 
-        // Approved products placeholder for future approval workflow sprint
-        $totalApprovedProducts = $hasVariants
-            ? $this->variants->where('pivot.approval_status', 'Approved')->count()
-            : 0;
+            $totalEstimatedValue = $hasVariants
+                ? (float) $this->variants->sum(fn ($v) => ($v->pivot->campaign_price ?? 0) * ($v->pivot->promotion_stock ?? 0))
+                : 0.0;
+
+            $totalApprovedProducts = $hasVariants
+                ? $this->variants->where('pivot.approval_status', 'Approved')->count()
+                : 0;
+        }
 
         return [
             'id' => $this->id,

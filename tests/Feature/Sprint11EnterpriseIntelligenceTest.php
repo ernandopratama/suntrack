@@ -116,8 +116,14 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
                 'bottom_price' => 50,
                 'current_stock' => 10,
             ]);
+            $campaign = Campaign::create([
+                'brand_id' => $brand->id,
+                'name' => "Pricing Campaign {$suffix}",
+                'status' => 'draft',
+            ]);
             $promotion = Promotion::create([
                 'brand_id' => $brand->id,
+                'campaign_id' => $campaign->id,
                 'name' => "Promotion {$suffix}",
             ]);
 
@@ -148,10 +154,16 @@ class Sprint11EnterpriseIntelligenceTest extends TestCase
         $user = User::factory()->create();
         $company = Company::create(['name' => 'Portable SQL Company']);
         $brand = Brand::create(['company_id' => $company->id, 'name' => 'Portable SQL Brand']);
-
         foreach (['Approved', 'Rejected', 'Pending'] as $status) {
+            $campaign = Campaign::create([
+                'brand_id' => $brand->id,
+                'name' => "{$status} Portable SQL Campaign",
+                'status' => 'draft',
+            ]);
+
             Promotion::create([
                 'brand_id' => $brand->id,
+                'campaign_id' => $campaign->id,
                 'name' => "{$status} Promotion",
                 'status' => $status,
             ]);

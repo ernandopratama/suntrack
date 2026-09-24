@@ -130,14 +130,20 @@ class BenchmarkDataSeederCommand extends Command
         });
 
         // Get sample campaign IDs for promotions
-        $campaignIds = DB::table('campaigns')->limit(5000)->pluck('id')->toArray();
-        if (empty($campaignIds)) {
-            $campaignIds = [null];
-        }
+        $campaignIds = DB::table('campaigns')
+            ->leftJoin('promotions', function ($join) {
+                $join->on('promotions.campaign_id', '=', 'campaigns.id')
+                    ->whereNull('promotions.deleted_at');
+            })
+            ->whereNull('promotions.id')
+            ->limit($perTableCount)
+            ->pluck('campaigns.id')
+            ->toArray();
+        $promotionCount = count($campaignIds);
 
         // 4. Seed Promotions
-        $this->info("4/5 Seeding ~{$perTableCount} Promotions...");
-        $this->seedTable('promotions', $perTableCount, $chunkSize, function ($index) use ($brandId, $campaignIds, $todayStr, $nextMonthStr, $now) {
+        $this->info("4/5 Seeding ~{$promotionCount} Promotions...");
+        $this->seedTable('promotions', $promotionCount, $chunkSize, function ($index) use ($brandId, $campaignIds, $todayStr, $nextMonthStr, $now) {
             $statuses = ['Pending', 'Approved', 'Rejected', 'Partially Approved'];
             $campId = $campaignIds[$index % count($campaignIds)];
 

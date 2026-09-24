@@ -103,6 +103,12 @@ class Promotion extends Model
             ->withTimestamps();
     }
 
+    /** @return HasMany<PromotionItem, $this> */
+    public function promotionItems(): HasMany
+    {
+        return $this->hasMany(PromotionItem::class);
+    }
+
     /** @return MorphMany<SecureLink, $this> */
     public function secureLinks(): MorphMany
     {
@@ -137,6 +143,30 @@ class Promotion extends Model
      */
     public function recalculateApprovalStatus(?string $actorName = null, ?string $actorPosition = null): string
     {
+        if ($this->promotionItems()->exists()) {
+            $items = $this->promotionItems()->get();
+            $total = $items->count();
+            $approved = $items->where('approval_status', 'Approved')->count();
+            $rejected = $items->where('approval_status', 'Rejected')->count();
+
+            if ($approved === $total) {
+                $newStatus = 'Approved';
+            } elseif ($rejected === $total) {
+                $newStatus = 'Rejected';
+            } elseif ($approved === 0 && $rejected === 0) {
+                $newStatus = 'Pending';
+            } else {
+                $newStatus = 'Partially Approved';
+            }
+
+            if ($this->status !== $newStatus) {
+                $this->status = $newStatus;
+                $this->saveQuietly();
+            }
+
+            return $newStatus;
+        }
+
         $variants = $this->variants()->get();
         $total = $variants->count();
 

@@ -43,7 +43,8 @@
 
               <!-- Back Button -->
               <router-link
-                to="/promotions"
+                v-if="!embedded"
+                to="/campaigns"
                 class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 shadow-sm transition-all duration-200 hover:border-[#95CCDD] hover:bg-[#D0E7E6]/30 hover:text-[#293681]"
               >
                 <svg
@@ -60,7 +61,7 @@
                   />
                 </svg>
 
-                <span>Back to Promotions</span>
+                <span>Kembali ke Kampanye</span>
               </router-link>
 
               <!-- Promotion Code -->
@@ -136,17 +137,15 @@
               </router-link>
             </div>
 
-            <p
-              v-else
-              class="mt-2 text-xs italic text-gray-400"
-            >
-              Standalone promotion · Not linked to a campaign
-            </p>
           </div>
 
-          <!-- Edit Button -->
-          <div v-if="$can('promotion.update')" class="shrink-0">
+          <!-- Actions -->
+          <div
+            v-if="$can('promotion.update') || $can('promotion.delete')"
+            class="flex shrink-0 flex-col gap-2 sm:flex-row"
+          >
             <button
+              v-if="$can('promotion.update')"
               type="button"
               @click="isModalOpen = true"
               class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#293681] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-[#4274D9] hover:shadow-md sm:w-auto"
@@ -170,6 +169,25 @@
               </span>
 
               <span>Edit Promotion</span>
+            </button>
+
+            <button
+              v-if="$can('promotion.delete')"
+              type="button"
+              :disabled="deleting"
+              @click="handleDelete"
+              class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-extrabold text-rose-600 shadow-sm transition-all duration-200 hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            >
+              <span
+                class="flex h-5 w-5 items-center justify-center rounded-md bg-rose-100"
+              >
+                <i
+                  class="fa-solid text-[10px]"
+                  :class="deleting ? 'fa-spinner fa-spin' : 'fa-trash'"
+                ></i>
+              </span>
+
+              <span>{{ deleting ? 'Menghapus...' : 'Hapus Promosi' }}</span>
             </button>
           </div>
         </div>
@@ -377,31 +395,7 @@
 
         <!-- Products -->
         <div v-else-if="currentTab === 'products'">
-          <PromotionProductPanel
-            :promotion-id="promotion.id"
-            @updated="onProductsUpdated"
-          />
-        </div>
-
-        <!-- Pricing -->
-        <div v-else-if="currentTab === 'pricing'">
-          <PromotionPricingPanel
-            :promotion-id="promotion.id"
-            @updated="onProductsUpdated"
-          />
-        </div>
-
-        <!-- Approval -->
-        <div v-else-if="currentTab === 'approval'">
-          <PromotionApprovalPanel
-            :promotion-id="promotion.id"
-            @updated="onProductsUpdated"
-          />
-        </div>
-
-        <!-- Comments -->
-        <div v-else-if="currentTab === 'comments'">
-          <PromotionCommentsPanel
+          <PromotionItemsPanel
             :promotion-id="promotion.id"
             @updated="onProductsUpdated"
           />
@@ -421,6 +415,8 @@
     <PromotionForm
       :is-open="isModalOpen"
       :promotion="promotion"
+      :default-campaign-id="promotion.campaign?.id"
+      :default-campaign="promotion.campaign"
       @close="isModalOpen = false"
       @saved="onSaved"
     />
@@ -428,36 +424,39 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import EmptyState from '../components/EmptyState.vue';
 import PromotionForm from '../components/PromotionForm.vue';
-import PromotionProductPanel from '../components/PromotionProductPanel.vue';
-import PromotionPricingPanel from '../components/PromotionPricingPanel.vue';
-import PromotionApprovalPanel from '../components/PromotionApprovalPanel.vue';
-import PromotionCommentsPanel from '../components/PromotionCommentsPanel.vue';
+import PromotionItemsPanel from '../components/PromotionItemsPanel.vue';
 import { usePromotions } from '../composables/usePromotions';
 
+const props = defineProps({
+  promotionId: { type: String, default: null },
+  embedded: { type: Boolean, default: false },
+});
+
+const emit = defineEmits(['updated', 'deleted']);
 const route = useRoute();
+const router = useRouter();
 
 const {
   promotion,
   loading,
   error,
-  fetchPromotion
+  fetchPromotion,
+  deletePromotion,
 } = usePromotions();
 
 const currentTab = ref('overview');
 const isModalOpen = ref(false);
+const deleting = ref(false);
+const targetPromotionId = computed(() => props.promotionId || route.params.id);
 
 const tabs = [
   { id: 'overview', name: 'Overview' },
-  { id: 'pricing', name: 'Pricing Information' },
   { id: 'campaign', name: 'Campaign Info' },
-  { id: 'products', name: 'Products' },
-  { id: 'approval', name: 'Approval' },
-  { id: 'attachments', name: 'Attachments' },
-  { id: 'comments', name: 'Comments' },
+  { id: 'products', name: 'Produk & Harga' },
   { id: 'timeline', name: 'Activity Timeline' },
 ];
 
@@ -474,16 +473,47 @@ const formatCurrency = (val) => {
   }).format(val);
 };
 
-onMounted(() => {
-  fetchPromotion(route.params.id);
-});
+const loadPromotion = async (id) => {
+  if (!id) return;
+
+  await fetchPromotion(id);
+
+  if (!props.embedded && promotion.value?.campaign?.id) {
+    router.replace({
+      name: 'CampaignDetail',
+      params: { id: promotion.value.campaign.id },
+      query: { tab: 'promotions', promotion: promotion.value.id },
+    });
+  }
+};
+
+watch(targetPromotionId, loadPromotion, { immediate: true });
 
 const onSaved = () => {
   isModalOpen.value = false;
-  fetchPromotion(route.params.id);
+  fetchPromotion(targetPromotionId.value);
+  emit('updated');
 };
 
 const onProductsUpdated = () => {
-  fetchPromotion(route.params.id);
+  fetchPromotion(targetPromotionId.value);
+  emit('updated');
+};
+
+const handleDelete = async () => {
+  if (!promotion.value || !confirm(`Hapus promosi "${promotion.value.name}"?`)) return;
+
+  deleting.value = true;
+  const deletedPromotionId = promotion.value.id;
+  const deleted = await deletePromotion(deletedPromotionId);
+  deleting.value = false;
+
+  if (!deleted) return;
+
+  emit('deleted', deletedPromotionId);
+
+  if (!props.embedded) {
+    router.push('/campaigns');
+  }
 };
 </script>
