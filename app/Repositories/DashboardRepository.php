@@ -18,6 +18,7 @@ use App\Services\Cache\CacheService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardRepository
 {
@@ -34,8 +35,9 @@ class DashboardRepository
     public function getKpiStats(string $todayStr, ?User $user = null): array
     {
         $scopeKey = $this->scopeKey($user);
+        $taskPriorityColumnExists = Schema::hasColumn('tasks', 'priority');
 
-        return $this->cache->remember(['dashboard', 'kpi'], "dashboard_kpi_{$scopeKey}_{$todayStr}", 300, function () use ($todayStr, $user) {
+        return $this->cache->remember(['dashboard', 'kpi'], "dashboard_kpi_{$scopeKey}_{$todayStr}", 300, function () use ($todayStr, $user, $taskPriorityColumnExists) {
             $campaigns = $this->scoped(Campaign::query(), $user);
             $promotions = $this->scoped(Promotion::query(), $user);
             $products = $this->scoped(Product::query(), $user);
@@ -72,7 +74,9 @@ class DashboardRepository
             $taskStats = [
                 'total' => (clone $tasks)->count(),
                 'open' => (clone $tasks)->whereNotIn('progress_status', ['completed', 'cancelled'])->count(),
-                'urgent' => (clone $tasks)->where('priority', 'urgent')->whereNotIn('progress_status', ['completed', 'cancelled'])->count(),
+                'urgent' => $taskPriorityColumnExists
+                    ? (clone $tasks)->where('priority', 'urgent')->whereNotIn('progress_status', ['completed', 'cancelled'])->count()
+                    : 0,
                 'waiting_review' => (clone $tasks)->where('progress_status', 'waiting_review')->count(),
                 'overdue' => (clone $tasks)->whereNotIn('progress_status', ['completed', 'cancelled'])
                     ->whereNotNull('deadline')->where('deadline', '<', now())->count(),
@@ -149,7 +153,7 @@ class DashboardRepository
     {
         $campaigns = $this->scoped(Campaign::with('brand'), $user)
             ->whereNotIn('status', ['completed', 'cancelled'])
-            ->whereBetween('deadline', [$startStr.' 00:00:00', $endStr.' 23:59:59'])
+            ->whereBetween('deadline', [$startStr . ' 00:00:00', $endStr . ' 23:59:59'])
             ->orderBy('deadline', 'asc')
             ->get()
             ->map(function ($c) use ($category) {
@@ -167,29 +171,29 @@ class DashboardRepository
 
         $tasks = $this->scoped(Task::with('brand'), $user)
             ->whereNotIn('progress_status', ['completed', 'cancelled'])
-            ->whereBetween('deadline', [$startStr.' 00:00:00', $endStr.' 23:59:59'])
+            ->whereBetween('deadline', [$startStr . ' 00:00:00', $endStr . ' 23:59:59'])
             ->orderBy('deadline')
             ->get()
-            ->map(fn (Task $task) => [
+            ->map(fn(Task $task) => [
                 'id' => $task->id,
                 'type' => 'Task',
                 'title' => $task->name,
                 'subtitle' => $task->brand->name,
                 'deadline' => $task->deadline?->format('Y-m-d H:i'),
                 'status' => $task->progress_status,
-                'status_code' => $task->priority === 'urgent' ? 'red' : ($category === 'today' ? 'yellow' : 'green'),
+                'status_code' => (($task->priority ?? null) === 'urgent' && Schema::hasColumn('tasks', 'priority')) ? 'red' : ($category === 'today' ? 'yellow' : 'green'),
                 'url' => "/tasks?task={$task->id}",
             ]);
 
         $promotions = $this->scoped(Promotion::with(['brand', 'campaign']), $user)
-            ->whereBetween('end_date', [$startStr.' 00:00:00', $endStr.' 23:59:59'])
+            ->whereBetween('end_date', [$startStr . ' 00:00:00', $endStr . ' 23:59:59'])
             ->orderBy('end_date', 'asc')
             ->get()
             ->map(function ($p) use ($category) {
                 return [
                     'id' => $p->id,
                     'type' => 'Promotion',
-                    'title' => $p->code.' - '.$p->name,
+                    'title' => $p->code . ' - ' . $p->name,
                     'subtitle' => $p->brand->name ?? ($p->campaign->name ?? 'Standalone'),
                     'deadline' => $p->end_date->format('Y-m-d'),
                     'status' => $p->status,
@@ -209,7 +213,7 @@ class DashboardRepository
             ->whereNotIn('status', ['completed', 'cancelled', 'Completed', 'Finished', 'Archived', 'Cancelled'])
             ->orderBy('deadline', 'asc')
             ->get()
-            ->map(fn ($c) => [
+            ->map(fn($c) => [
                 'id' => $c->id,
                 'type' => 'Campaign',
                 'title' => $c->name,
@@ -226,7 +230,7 @@ class DashboardRepository
             ->whereDate('deadline', '<', $todayStr)
             ->orderBy('deadline')
             ->get()
-            ->map(fn (Task $task) => [
+            ->map(fn(Task $task) => [
                 'id' => $task->id,
                 'type' => 'Task',
                 'title' => $task->name,
@@ -248,11 +252,11 @@ class DashboardRepository
             ->whereBetween('expires_at', [$now, $now->copy()->addDays(7)])
             ->orderBy('expires_at', 'asc')
             ->get()
-            ->map(fn ($l) => [
+            ->map(fn($l) => [
                 'id' => $l->id,
-                'type' => 'Secure Link ('.class_basename($l->linkable_type).')',
+                'type' => 'Secure Link (' . class_basename($l->linkable_type) . ')',
                 'title' => $this->secureLinkTitle($l),
-                'subtitle' => 'Expires in '.$l->expires_at->diffForHumans(),
+                'subtitle' => 'Expires in ' . $l->expires_at->diffForHumans(),
                 'deadline' => $l->expires_at->format('Y-m-d H:i'),
                 'status' => 'Expiring Soon',
                 'status_code' => 'yellow',
@@ -277,7 +281,7 @@ class DashboardRepository
             return 'global';
         }
 
-        return 'user_'.$user->id;
+        return 'user_' . $user->id;
     }
 
     private function secureLinkTitle(SecureLink $link): string

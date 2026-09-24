@@ -13,7 +13,9 @@ use App\Services\Authorization\DataScopeService;
 use App\Services\Reporting\ReportingService;
 use App\Support\Rbac\RbacRegistry;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class RbacAuthorizationTest extends TestCase
@@ -201,7 +203,7 @@ class RbacAuthorizationTest extends TestCase
             ->assertCreated();
 
         $this->actingAs($this->admin)
-            ->putJson('/api/v1/admin/promotions/'.$firstPromotion->json('data.promotion.id'), [
+            ->putJson('/api/v1/admin/promotions/' . $firstPromotion->json('data.promotion.id'), [
                 'campaign_id' => $campaign->id,
                 'name' => 'Updated First Promotion',
                 'status' => 'Pending',
@@ -338,6 +340,29 @@ class RbacAuthorizationTest extends TestCase
         $this->actingAs($superAdmin)
             ->deleteJson("/api/v1/admin/users/{$superAdmin->id}")
             ->assertForbidden();
+    }
+
+    public function test_dashboard_stats_does_not_crash_when_task_priority_column_is_missing(): void
+    {
+        Schema::dropIfExists('tasks');
+        Schema::create('tasks', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('brand_id')->nullable();
+            $table->uuid('campaign_id')->nullable();
+            $table->uuid('created_by')->nullable();
+            $table->string('name');
+            $table->string('progress_status')->default('pending');
+            $table->dateTime('deadline')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        $this->team->assignedCompanies()->attach($this->companyA->id, ['assigned_by' => $this->admin->id]);
+
+        $dashboard = app(DashboardRepository::class)->getKpiStats(now()->toDateString(), $this->team);
+
+        $this->assertArrayHasKey('tasks', $dashboard);
+        $this->assertSame(0, $dashboard['tasks']['urgent']);
     }
 
     public function test_dashboard_activity_and_export_cannot_escape_team_scope(): void
