@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Brand;
+use App\Models\BusinessProspect;
 use App\Models\Campaign;
 use App\Models\Company;
 use App\Models\PerformanceReport;
@@ -18,6 +19,7 @@ use App\Observers\PromotionObserver;
 use App\Observers\SystemSettingObserver;
 use App\Observers\VariantObserver;
 use App\Policies\BrandPolicy;
+use App\Policies\BusinessProspectPolicy;
 use App\Policies\CampaignPolicy;
 use App\Policies\CompanyPolicy;
 use App\Policies\PerformanceReportPolicy;
@@ -53,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Company::class, CompanyPolicy::class);
         Gate::policy(Brand::class, BrandPolicy::class);
         Gate::policy(Campaign::class, CampaignPolicy::class);
+        Gate::policy(BusinessProspect::class, BusinessProspectPolicy::class);
         Gate::policy(Promotion::class, PromotionPolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(Product::class, ProductPolicy::class);

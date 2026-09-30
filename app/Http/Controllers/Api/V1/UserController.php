@@ -93,7 +93,7 @@ class UserController extends Controller
         }
 
         unset($data['role'], $data['permissions'], $data['company_ids'], $data['brand_ids']);
-        $data['type'] = $role === RbacRegistry::TEAM ? 'team' : 'admin';
+        $data['type'] = in_array($role, [RbacRegistry::TEAM, RbacRegistry::BUSINESS_DEVELOPMENT], true) ? 'team' : 'admin';
 
         // Hash password hanya jika diisi
         if (! empty($data['password'])) {
@@ -189,7 +189,7 @@ class UserController extends Controller
                 return $this->error('The last active Super Admin cannot be demoted.', [], 422);
             }
 
-            $data['type'] = $role === RbacRegistry::TEAM ? 'team' : 'admin';
+            $data['type'] = in_array($role, [RbacRegistry::TEAM, RbacRegistry::BUSINESS_DEVELOPMENT], true) ? 'team' : 'admin';
         }
 
         if ($hasPermissions) {

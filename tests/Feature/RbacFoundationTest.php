@@ -21,16 +21,17 @@ class RbacFoundationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registry_contains_three_final_roles_and_valid_permission_sets(): void
+    public function test_registry_contains_final_roles_and_valid_permission_sets(): void
     {
         $this->assertSame(
-            [RbacRegistry::SUPER_ADMIN, RbacRegistry::ADMIN, RbacRegistry::TEAM],
+            [RbacRegistry::SUPER_ADMIN, RbacRegistry::ADMIN, RbacRegistry::TEAM, RbacRegistry::BUSINESS_DEVELOPMENT],
             RbacRegistry::ROLES
         );
         $this->assertCount(count(array_unique(RbacRegistry::PERMISSIONS)), RbacRegistry::PERMISSIONS);
         $this->assertEmpty(array_diff(RbacRegistry::ADMIN_PERMISSIONS, RbacRegistry::PERMISSIONS));
         $this->assertEmpty(array_diff(RbacRegistry::TEAM_DEFAULT_PERMISSIONS, RbacRegistry::TEAM_ALLOWED_PERMISSIONS));
         $this->assertEmpty(array_diff(RbacRegistry::TEAM_ALLOWED_PERMISSIONS, RbacRegistry::PERMISSIONS));
+        $this->assertEmpty(array_diff(RbacRegistry::BUSINESS_DEVELOPMENT_PERMISSIONS, RbacRegistry::PERMISSIONS));
         $this->assertNotContains('user.delete', RbacRegistry::ADMIN_PERMISSIONS);
         $this->assertNotContains('access.assign-role', RbacRegistry::ADMIN_PERMISSIONS);
         $this->assertNotContains('company.create', RbacRegistry::TEAM_ALLOWED_PERMISSIONS);
@@ -62,6 +63,10 @@ class RbacFoundationTest extends TestCase
             $this->assertSame(
                 [],
                 $this->rolePermissions(RbacRegistry::TEAM, $guard)
+            );
+            $this->assertSame(
+                $this->sorted(RbacRegistry::BUSINESS_DEVELOPMENT_PERMISSIONS),
+                $this->rolePermissions(RbacRegistry::BUSINESS_DEVELOPMENT, $guard)
             );
         }
     }

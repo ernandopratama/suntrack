@@ -19,6 +19,14 @@ class RolePermissionSeeder extends Seeder
         'performance-report.delete',
         'performance-report.review',
         'performance-report.publish',
+        'prospect.view',
+        'prospect.create',
+        'prospect.update',
+        'prospect.delete',
+        'prospect.assign',
+        'prospect.request-conversion',
+        'prospect.approve-conversion',
+        'prospect.restore',
     ];
 
     private const ENTERPRISE_TEAM_PERMISSIONS = [
@@ -57,6 +65,10 @@ class RolePermissionSeeder extends Seeder
                 'name' => RbacRegistry::TEAM,
                 'guard_name' => $guard,
             ]);
+            $businessDevelopment = Role::firstOrCreate([
+                'name' => RbacRegistry::BUSINESS_DEVELOPMENT,
+                'guard_name' => $guard,
+            ]);
 
             $guardPermissions = Permission::query()
                 ->where('guard_name', $guard)
@@ -76,6 +88,7 @@ class RolePermissionSeeder extends Seeder
             if ($team->wasRecentlyCreated) {
                 $team->syncPermissions([]);
             }
+            $businessDevelopment->syncPermissions(RbacRegistry::BUSINESS_DEVELOPMENT_PERMISSIONS);
             $newTeamPermissions = array_values(array_intersect(
                 $createdPermissions,
                 self::ENTERPRISE_TEAM_PERMISSIONS

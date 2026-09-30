@@ -290,7 +290,7 @@ const login = async () => {
     const success = await authStore.login(form.value);
 
     if (success) {
-      router.push('/dashboard');
+      router.push(authStore.can('campaign.view') ? '/dashboard' : '/business-prospects');
     } else {
       errorMsg.value =
         'Login failed. Please check your credentials.';

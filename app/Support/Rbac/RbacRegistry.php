@@ -10,6 +10,8 @@ final class RbacRegistry
 
     public const TEAM = 'Tim';
 
+    public const BUSINESS_DEVELOPMENT = 'Business Development';
+
     public const GUARDS = [
         'web',
         'api',
@@ -19,6 +21,7 @@ final class RbacRegistry
         self::SUPER_ADMIN,
         self::ADMIN,
         self::TEAM,
+        self::BUSINESS_DEVELOPMENT,
     ];
 
     public const PERMISSIONS = [
@@ -73,6 +76,14 @@ final class RbacRegistry
         'settings.update',
         'system.monitor',
         'audit.view',
+        'prospect.view',
+        'prospect.create',
+        'prospect.update',
+        'prospect.delete',
+        'prospect.assign',
+        'prospect.request-conversion',
+        'prospect.approve-conversion',
+        'prospect.restore',
     ];
 
     public const ADMIN_PERMISSIONS = [
@@ -121,6 +132,14 @@ final class RbacRegistry
         'variant.delete',
         'activity.view',
         'report.export',
+        'prospect.view',
+        'prospect.create',
+        'prospect.update',
+        'prospect.delete',
+        'prospect.assign',
+        'prospect.request-conversion',
+        'prospect.approve-conversion',
+        'prospect.restore',
     ];
 
     public const TEAM_DEFAULT_PERMISSIONS = [
@@ -156,6 +175,14 @@ final class RbacRegistry
 
     public const TEAM_ALLOWED_PERMISSIONS = self::TEAM_DEFAULT_PERMISSIONS;
 
+    public const BUSINESS_DEVELOPMENT_PERMISSIONS = [
+        'prospect.view',
+        'prospect.create',
+        'prospect.update',
+        'prospect.delete',
+        'prospect.request-conversion',
+    ];
+
     /** @return array<int, string> */
     public static function configurablePermissions(string $role): array
     {
@@ -163,6 +190,7 @@ final class RbacRegistry
             self::SUPER_ADMIN => self::PERMISSIONS,
             self::ADMIN => self::ADMIN_PERMISSIONS,
             self::TEAM => self::TEAM_ALLOWED_PERMISSIONS,
+            self::BUSINESS_DEVELOPMENT => self::BUSINESS_DEVELOPMENT_PERMISSIONS,
             default => [],
         };
     }
@@ -174,6 +202,6 @@ final class RbacRegistry
 
     public static function isEditableRole(string $role): bool
     {
-        return in_array($role, [self::ADMIN, self::TEAM], true);
+        return in_array($role, [self::ADMIN, self::TEAM, self::BUSINESS_DEVELOPMENT], true);
     }
 }

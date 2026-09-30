@@ -272,6 +272,21 @@
           ></span>
         </router-link>
 
+        <!-- Business Development Prospects -->
+        <router-link
+          v-if="$can('prospect.view')"
+          to="/business-prospects"
+          data-sidebar-label="Prospek BD"
+          @click="closeOnMobile"
+          class="group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+          :class="$route.path.startsWith('/business-prospects') ? 'shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-[#293681]'"
+          :style="$route.path.startsWith('/business-prospects') ? { background: '#D0E7E6', color: '#293681' } : {}"
+        >
+          <i class="fa-solid fa-handshake w-5 text-center" :style="$route.path.startsWith('/business-prospects') ? { color: '#4274D9' } : {}"></i>
+          <span v-if="sidebarOpen" class="ml-3">Prospek BD</span>
+          <span v-if="$route.path.startsWith('/business-prospects') && sidebarOpen" class="ml-auto h-2 w-2 rounded-full" style="background: #4274d9"></span>
+        </router-link>
+
         <!-- Campaigns -->
         <router-link
           v-if="$can('campaign.view')"
@@ -411,7 +426,7 @@
 
         <!-- Divider -->
         <div
-          v-if="$can('activity.view') || $can('report.export') || $hasRole('Super Admin') || $hasRole('Admin') || $hasRole('Tim')"
+          v-if="$can('activity.view') || $can('report.export') || $hasRole('Super Admin') || $hasRole('Admin') || $hasRole('Tim') || $hasRole('Business Development')"
           class="my-5 flex items-center gap-3 px-3"
         >
           <div class="h-px flex-1 bg-slate-100"></div>
@@ -493,7 +508,7 @@
 
         <!-- Settings -->
         <router-link
-          v-if="$hasRole('Super Admin') || $hasRole('Admin') || $hasRole('Tim')"
+          v-if="$hasRole('Super Admin') || $hasRole('Admin') || $hasRole('Tim') || $hasRole('Business Development')"
           to="/settings"
           data-sidebar-label="Settings"
           @click="closeOnMobile"
@@ -808,6 +823,11 @@ const SIDEBAR_TOOLTIP_THEMES = {
         gradient: "linear-gradient(135deg, #3d160c, #c2410c, #f97316, #2b0f08)",
         border: "rgba(251, 146, 60, 0.7)",
         glow: "rgba(249, 115, 22, 0.65)",
+    },
+    "Prospek BD": {
+        gradient: "linear-gradient(135deg, #172554, #4338ca, #6366f1, #111827)",
+        border: "rgba(129, 140, 248, 0.7)",
+        glow: "rgba(99, 102, 241, 0.65)",
     },
     Tasks: {
         gradient: "linear-gradient(135deg, #0e3440, #0e7490, #06b6d4, #08242c)",

@@ -194,12 +194,12 @@ class DashboardRepository
 
                     'urgent' => $taskPriorityColumnExists
                         ? (clone $tasks)
-                        ->where('priority', 'urgent')
-                        ->whereNotIn(
-                            'progress_status',
-                            ['completed', 'cancelled']
-                        )
-                        ->count()
+                            ->where('priority', 'urgent')
+                            ->whereNotIn(
+                                'progress_status',
+                                ['completed', 'cancelled']
+                            )
+                            ->count()
                         : 0,
 
                     'waiting_review' => (clone $tasks)
@@ -408,8 +408,8 @@ class DashboardRepository
             ->whereBetween(
                 'deadline',
                 [
-                    $startStr . ' 00:00:00',
-                    $endStr . ' 23:59:59',
+                    $startStr.' 00:00:00',
+                    $endStr.' 23:59:59',
                 ]
             )
             ->orderBy('deadline', 'asc')
@@ -458,8 +458,8 @@ class DashboardRepository
             ->whereBetween(
                 'deadline',
                 [
-                    $startStr . ' 00:00:00',
-                    $endStr . ' 23:59:59',
+                    $startStr.' 00:00:00',
+                    $endStr.' 23:59:59',
                 ]
             )
             ->orderBy('deadline', 'asc')
@@ -526,8 +526,8 @@ class DashboardRepository
             ->whereBetween(
                 'end_date',
                 [
-                    $startStr . ' 00:00:00',
-                    $endStr . ' 23:59:59',
+                    $startStr.' 00:00:00',
+                    $endStr.' 23:59:59',
                 ]
             )
             ->orderBy('end_date', 'asc')
@@ -540,8 +540,8 @@ class DashboardRepository
 
                     'title' => trim(
                         ($promotion->code ?? '')
-                            . ' - '
-                            . ($promotion->name ?? 'Promotion'),
+                            .' - '
+                            .($promotion->name ?? 'Promotion'),
                         ' -'
                     ),
 
@@ -730,17 +730,17 @@ class DashboardRepository
                     'id' => $link->id,
 
                     'type' => 'Secure Link ('
-                        . class_basename(
+                        .class_basename(
                             $link->linkable_type
                         )
-                        . ')',
+                        .')',
 
                     'title' => $this->secureLinkTitle($link),
 
                     'subtitle' => $link->expires_at
                         ? 'Expires in '
-                        . $link->expires_at
-                        ->diffForHumans()
+                        .$link->expires_at
+                            ->diffForHumans()
                         : 'Expiration unavailable',
 
                     'deadline' => $link->expires_at?->format(
@@ -790,7 +790,7 @@ class DashboardRepository
             return 'global';
         }
 
-        return 'user_' . $user->id;
+        return 'user_'.$user->id;
     }
 
     /**

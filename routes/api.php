@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\ActivityLogController;
 use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BrandController;
+use App\Http\Controllers\Api\V1\BusinessProspectController;
 use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\CollaborationController;
 use App\Http\Controllers\Api\V1\CompanyController;
@@ -88,6 +89,27 @@ Route::prefix('v1')->group(function () {
             ->middlewareFor('store', 'permission:brand.create')
             ->middlewareFor('update', 'permission:brand.update')
             ->middlewareFor('destroy', 'permission:brand.delete');
+
+        Route::get('business-prospects/options', [BusinessProspectController::class, 'options'])
+            ->middleware('permission:prospect.view');
+        Route::post('business-prospects/import/preview', [BusinessProspectController::class, 'importPreview'])
+            ->middleware('permission:prospect.create');
+        Route::post('business-prospects/import', [BusinessProspectController::class, 'import'])
+            ->middleware('permission:prospect.create');
+        Route::post('business-prospects/{businessProspect}/request-conversion', [BusinessProspectController::class, 'requestConversion'])
+            ->middleware('permission:prospect.request-conversion');
+        Route::post('business-prospects/{businessProspect}/approve-conversion', [BusinessProspectController::class, 'approveConversion'])
+            ->middleware('permission:prospect.approve-conversion');
+        Route::post('business-prospects/{businessProspect}/reject-conversion', [BusinessProspectController::class, 'rejectConversion'])
+            ->middleware('permission:prospect.approve-conversion');
+        Route::post('business-prospects/{id}/restore', [BusinessProspectController::class, 'restore'])
+            ->middleware('permission:prospect.restore');
+        Route::apiResource('business-prospects', BusinessProspectController::class)
+            ->parameters(['business-prospects' => 'businessProspect'])
+            ->middlewareFor(['index', 'show'], 'permission:prospect.view')
+            ->middlewareFor('store', 'permission:prospect.create')
+            ->middlewareFor('update', 'permission:prospect.update')
+            ->middlewareFor('destroy', 'permission:prospect.delete');
 
         Route::get('tasks/notifications', [TaskController::class, 'notifications'])
             ->middleware('permission:task.view');

@@ -36,6 +36,12 @@ const routes = [
                 meta: { permission: 'brand.view' },
             },
             {
+                path: 'business-prospects',
+                name: 'BusinessProspects',
+                component: () => import('./pages/BusinessProspects.vue'),
+                meta: { permission: 'prospect.view' },
+            },
+            {
                 path: 'users',
                 name: 'Users',
                 component: () => import('./pages/Users.vue'),
@@ -116,7 +122,7 @@ const routes = [
                 path: 'settings',
                 name: 'SystemSettings',
                 component: () => import('./pages/SystemSettings.vue'),
-                meta: { roles: ['Super Admin', 'Admin', 'Tim'] },
+                meta: { roles: ['Super Admin', 'Admin', 'Tim', 'Business Development'] },
             },
             {
                 path: 'forbidden',
@@ -156,7 +162,9 @@ router.beforeEach(async (to, from) => {
     }
 
     if (to.meta.guestOnly && authStore.isAuthenticated) {
-        return { name: 'Dashboard' };
+        return authStore.can('campaign.view')
+            ? { name: 'Dashboard' }
+            : { name: 'BusinessProspects' };
     }
 
     if (to.meta.permission && !authStore.can(to.meta.permission)) {

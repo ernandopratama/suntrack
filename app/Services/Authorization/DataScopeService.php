@@ -5,6 +5,7 @@ namespace App\Services\Authorization;
 use App\Models\ActivityLog;
 use App\Models\ApprovalHistory;
 use App\Models\Brand;
+use App\Models\BusinessProspect;
 use App\Models\Campaign;
 use App\Models\Comment;
 use App\Models\Company;
@@ -54,6 +55,7 @@ class DataScopeService
             ApprovalHistory::class => $this->scopeApprovalHistories($query, $user),
             SecureLink::class => $this->scopeSecureLinks($query, $user),
             Comment::class => $this->scopeComments($query, $user),
+            BusinessProspect::class => $this->scopeBusinessProspects($query, $user),
             default => $query->whereRaw('1 = 0'),
         };
 
@@ -150,6 +152,18 @@ class DataScopeService
         return $this->scopeThroughBrand($query, $user, 'brand');
     }
 
+    public function scopeBusinessProspects(Builder $query, User $user): Builder
+    {
+        if ($this->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $prospects) use ($user) {
+            $prospects->where('pic_id', $user->id)
+                ->orWhere('created_by', $user->id);
+        });
+    }
+
     public function scopeProducts(Builder $query, User $user): Builder
     {
         return $this->scopeThroughBrand($query, $user, 'brand');
@@ -179,6 +193,7 @@ class DataScopeService
             $this->addMorphScope($logs, PerformanceReport::class, $this->scopePerformanceReports(PerformanceReport::query(), $user), true);
             $this->addMorphScope($logs, Product::class, $this->scopeProducts(Product::query(), $user), true);
             $this->addMorphScope($logs, Variant::class, $this->scopeVariants(Variant::query(), $user), true);
+            $this->addMorphScope($logs, BusinessProspect::class, $this->scopeBusinessProspects(BusinessProspect::query(), $user), true);
         });
     }
 

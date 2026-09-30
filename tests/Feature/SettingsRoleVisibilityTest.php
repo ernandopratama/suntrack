@@ -13,11 +13,11 @@ class SettingsRoleVisibilityTest extends TestCase
         $router = File::get(resource_path('js/router.js'));
 
         $this->assertStringContainsString(
-            'v-if="$hasRole(\'Super Admin\') || $hasRole(\'Admin\') || $hasRole(\'Tim\')"',
+            'v-if="$hasRole(\'Super Admin\') || $hasRole(\'Admin\') || $hasRole(\'Tim\') || $hasRole(\'Business Development\')"',
             $layout
         );
         $this->assertStringContainsString(
-            "meta: { roles: ['Super Admin', 'Admin', 'Tim'] }",
+            "meta: { roles: ['Super Admin', 'Admin', 'Tim', 'Business Development'] }",
             $router
         );
         $this->assertStringContainsString(

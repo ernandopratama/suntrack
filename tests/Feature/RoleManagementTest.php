@@ -37,16 +37,17 @@ class RoleManagementTest extends TestCase
         $this->team->assignRole(RbacRegistry::TEAM);
     }
 
-    public function test_super_admin_can_list_only_three_final_roles_with_user_counts(): void
+    public function test_super_admin_can_list_all_final_roles_with_user_counts(): void
     {
         $response = $this->actingAs($this->superAdmin)
             ->getJson('/api/v1/admin/roles');
 
         $response->assertOk()
-            ->assertJsonCount(3, 'data.roles')
+            ->assertJsonCount(4, 'data.roles')
             ->assertJsonPath('data.roles.0.name', RbacRegistry::SUPER_ADMIN)
             ->assertJsonPath('data.roles.1.name', RbacRegistry::ADMIN)
             ->assertJsonPath('data.roles.2.name', RbacRegistry::TEAM)
+            ->assertJsonPath('data.roles.3.name', RbacRegistry::BUSINESS_DEVELOPMENT)
             ->assertJsonPath('data.roles.2.users_count', 1)
             ->assertJsonPath('data.roles.0.editable', false)
             ->assertJsonPath('data.roles.1.editable', true);
