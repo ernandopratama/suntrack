@@ -350,6 +350,7 @@ class RbacAuthorizationTest extends TestCase
             $table->uuid('brand_id')->nullable();
             $table->uuid('campaign_id')->nullable();
             $table->uuid('created_by')->nullable();
+            $table->boolean('is_personal')->default(false);
             $table->string('name');
             $table->string('progress_status')->default('pending');
             $table->dateTime('deadline')->nullable();
