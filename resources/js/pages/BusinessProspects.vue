@@ -96,6 +96,7 @@
                             <td class="p-4 text-sm text-gray-600">{{ formatDate(row.next_follow_up_at) }}</td>
                             <td class="p-4"><span class="badge" :class="row.conversion_status === 'pending' ? '!bg-amber-50 !text-amber-700' : ''">{{ row.conversion_status_label }}</span></td>
                             <td class="p-4"><div class="flex justify-end gap-1.5">
+                                <button class="icon-btn text-indigo-600" title="Lihat detail" @click="openDetail(row)"><i class="fa-solid fa-eye"></i></button>
                                 <button v-if="!row.deleted_at && $can('prospect.update')" class="icon-btn text-blue-600" title="Edit" @click="openEdit(row)"><i class="fa-solid fa-pen"></i></button>
                                 <button v-if="!row.deleted_at && row.status === 'won' && ['none','rejected'].includes(row.conversion_status) && $can('prospect.request-conversion')" class="icon-btn text-amber-600" title="Ajukan konversi" @click="askConversion(row)"><i class="fa-solid fa-paper-plane"></i></button>
                                 <button v-if="!row.deleted_at && row.conversion_status === 'pending' && $can('prospect.approve-conversion')" class="icon-btn text-emerald-600" title="Setujui konversi" @click="openApproval(row)"><i class="fa-solid fa-circle-check"></i></button>
@@ -113,12 +114,34 @@
             </footer>
         </section>
 
+        <div v-if="detailProspect" class="modal-wrap"><div class="modal-backdrop" @click="detailProspect=null"></div><section class="modal-card max-w-4xl" aria-modal="true" role="dialog" aria-label="Detail prospek">
+            <div class="modal-header bg-gradient-to-r from-indigo-50 via-white to-sky-50"><div class="flex min-w-0 items-center gap-3"><span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white"><i class="fa-solid fa-store"></i></span><div class="min-w-0"><p class="text-xs font-black uppercase tracking-widest text-indigo-600">Detail Prospek</p><h2 class="truncate text-xl font-black text-gray-900">{{ detailProspect.name }}</h2></div></div><button type="button" class="icon-btn shrink-0" title="Tutup" @click="detailProspect=null"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="max-h-[70vh] overflow-y-auto p-5 sm:p-6">
+                <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-5"><span class="badge">{{ detailProspect.status_label }}</span><span class="badge" :class="detailProspect.conversion_status === 'pending' ? '!bg-amber-50 !text-amber-700' : ''">Konversi: {{ detailProspect.conversion_status_label }}</span><span v-if="detailProspect.deleted_at" class="badge !bg-rose-50 !text-rose-700">Diarsipkan</span></div>
+
+                <div v-if="['not_interested', 'not_qualified'].includes(detailProspect.status)" class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4"><p class="text-xs font-black uppercase tracking-widest text-rose-600">Alasan tidak dilanjutkan</p><p class="mt-2 whitespace-pre-line text-sm leading-6 text-rose-950">{{ detailProspect.lost_reason || 'Alasan belum diisi.' }}</p></div>
+
+                <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="detail-card"><span>PIC</span><strong>{{ detailProspect.pic?.name || '-' }}</strong></div><div class="detail-card"><span>Tanggal Analisa</span><strong>{{ formatDate(detailProspect.analyzed_at) }}</strong></div><div class="detail-card"><span>Terakhir Dihubungi</span><strong>{{ formatDate(detailProspect.last_contact_at) }}</strong></div>
+                    <div class="detail-card"><span>Follow-up Berikutnya</span><strong>{{ formatDate(detailProspect.next_follow_up_at) }}</strong></div><div class="detail-card"><span>Kategori</span><strong>{{ detailProspect.category || '-' }}</strong></div><div class="detail-card"><span>Kota</span><strong>{{ detailProspect.city || '-' }}</strong></div>
+                    <div class="detail-card"><span>Nomor Kontak</span><strong>{{ detailProspect.phone || '-' }}</strong></div><div class="detail-card"><span>Dibuat Oleh</span><strong>{{ detailProspect.creator?.name || '-' }}</strong></div><div class="detail-card"><span>Terakhir Diperbarui</span><strong>{{ formatDate(detailProspect.updated_at) }}</strong></div>
+                </div>
+
+                <div class="mt-5 grid gap-4 lg:grid-cols-2"><article class="detail-section"><h3>Hasil Analisa</h3><p class="whitespace-pre-line">{{ detailProspect.analysis_summary || 'Belum ada hasil analisa.' }}</p><a v-if="detailProspect.analysis_link" :href="detailProspect.analysis_link" target="_blank" rel="noopener" class="detail-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka link analisa</a></article><article class="detail-section"><h3>Potensi / Alasan Prospek</h3><p class="whitespace-pre-line">{{ detailProspect.potential_reason || 'Belum ada keterangan potensi.' }}</p></article><article class="detail-section lg:col-span-2"><h3>Catatan</h3><p class="whitespace-pre-line">{{ detailProspect.notes || 'Tidak ada catatan.' }}</p></article></div>
+
+                <article class="detail-section mt-4"><h3>Link Marketplace</h3><div v-if="detailProspect.marketplace_links?.length" class="mt-3 flex flex-wrap gap-2"><a v-for="link in detailProspect.marketplace_links" :key="link.id" :href="link.url" target="_blank" rel="noopener" class="detail-link"><i class="fa-solid fa-shop"></i> {{ link.marketplace }}</a></div><p v-else>Tidak ada link marketplace.</p></article>
+
+                <article v-if="detailProspect.instagram_url || detailProspect.tiktok_url || detailProspect.facebook_or_website_url" class="detail-section mt-4"><h3>Link Sosial / Website</h3><div class="mt-3 flex flex-wrap gap-2"><a v-if="detailProspect.instagram_url" :href="detailProspect.instagram_url" target="_blank" rel="noopener" class="detail-link"><i class="fa-brands fa-instagram"></i> Instagram</a><a v-if="detailProspect.tiktok_url" :href="detailProspect.tiktok_url" target="_blank" rel="noopener" class="detail-link"><i class="fa-brands fa-tiktok"></i> TikTok</a><a v-if="detailProspect.facebook_or_website_url" :href="detailProspect.facebook_or_website_url" target="_blank" rel="noopener" class="detail-link"><i class="fa-solid fa-globe"></i> Website / Facebook</a></div></article>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn-secondary" @click="detailProspect=null">Tutup</button></div>
+        </section></div>
+
         <div v-if="showForm" class="modal-wrap"><div class="modal-backdrop" @click="showForm=false"></div><form class="modal-card max-w-4xl" @submit.prevent="save">
             <div class="modal-header"><div><p class="text-xs font-black uppercase tracking-widest text-indigo-600">Data Prospek</p><h2 class="text-xl font-black text-gray-900">{{ editingId ? 'Ubah Prospek' : 'Tambah Prospek' }}</h2></div><button type="button" class="icon-btn" @click="showForm=false"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="grid max-h-[68vh] gap-4 overflow-y-auto p-6 md:grid-cols-2">
                 <label class="label">Nama Toko *<input v-model="form.name" required class="field" /></label><label class="label">Kategori<input v-model="form.category" class="field" /></label>
                 <label class="label">Kota<input v-model="form.city" class="field" /></label><label class="label">Status<select v-model="form.status" class="field"><option v-for="item in options.statuses" :key="item.value" :value="item.value">{{ item.label }}</option></select></label>
-                <label v-if="$can('prospect.assign')" class="label">PIC<select v-model="form.pic_id" class="field"><option v-for="pic in options.pics" :key="pic.id" :value="pic.id">{{ pic.name }}</option></select></label><label class="label">Tanggal Analisa<input v-model="form.analyzed_at" type="date" class="field" /></label>
+                <label v-if="$can('prospect.assign')" class="label">PIC<select v-model="form.pic_id" class="field"><option v-for="pic in options.pics" :key="pic.id" :value="pic.id">{{ pic.name }}</option></select></label><label v-else class="label">PIC<input :value="authStore.user?.name || '-'" class="field bg-slate-50 text-slate-500" disabled /></label><label class="label">Tanggal Analisa<input v-model="form.analyzed_at" type="date" class="field" /></label>
                 <label class="label md:col-span-2">Hasil Analisa<textarea v-model="form.analysis_summary" rows="3" class="field"></textarea></label><label class="label md:col-span-2">Potensi / Alasan Prospek<textarea v-model="form.potential_reason" rows="3" class="field"></textarea></label>
                 <label class="label md:col-span-2">Link Hasil Analisa<input v-model="form.analysis_link" type="url" class="field" placeholder="https://..." /></label>
                 <label class="label">Nomor WhatsApp / Telepon<input v-model="form.phone" class="field" /></label><label class="label">Terakhir Dihubungi<input v-model="form.last_contact_at" type="datetime-local" class="field" /></label><label class="label">Follow-up Berikutnya<input v-model="form.next_follow_up_at" type="datetime-local" class="field" /></label>
@@ -136,10 +159,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useBusinessProspects } from '../composables/useBusinessProspects';
+import { useAuthStore } from '../stores/auth';
 
 const { prospects, options, loading, pagination, fetchProspects, fetchOptions, createProspect, updateProspect, deleteProspect, restoreProspect, requestConversion, approveConversion, rejectConversion, previewImport, confirmImport } = useBusinessProspects();
+const authStore = useAuthStore();
 const filters = reactive({ search: '', status: '', conversion_status: '', trashed: '', analysis_date: '', analysis_month: '', analysis_year: '' });
 const dateFilterType = ref('');
 const dateFilterTypes = [
@@ -151,8 +176,24 @@ const dateFilterTypes = [
 const yearOptions = computed(() => { const current = new Date().getFullYear(); return Array.from({ length: 12 }, (_, index) => current + 2 - index); });
 const activeFilterCount = computed(() => [filters.search, filters.status, filters.conversion_status, filters.trashed, dateFilterType.value && (filters.analysis_date || filters.analysis_month || filters.analysis_year)].filter(Boolean).length);
 const hasActiveFilters = computed(() => activeFilterCount.value > 0);
-const blank = () => ({ name:'', category:'', city:'', analysis_summary:'', analysis_link:'', potential_reason:'', phone:'', instagram_url:'', tiktok_url:'', facebook_or_website_url:'', analyzed_at:'', last_contact_at:'', next_follow_up_at:'', status:'new', notes:'', lost_reason:'', pic_id:'', marketplace_links:[{marketplace:'Shopee',url:''}] });
-const form = reactive(blank()); const showForm=ref(false); const editingId=ref(null); const saving=ref(false); const showImport=ref(false); const importPreview=ref(null); const importing=ref(false); const approvalProspect=ref(null); const approval=reactive({company_id:'',company_name:'',brand_id:'',brand_name:''});
+const localDate = (value = new Date()) => {
+    const pad = (number) => String(number).padStart(2, '0');
+
+    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+};
+const followUpOneDayLater = (value) => {
+    if (! value) return '';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    date.setDate(date.getDate() + 1);
+    const pad = (number) => String(number).padStart(2, '0');
+
+    return `${localDate(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+const blank = () => ({ name:'', category:'', city:'', analysis_summary:'', analysis_link:'', potential_reason:'', phone:'', instagram_url:'', tiktok_url:'', facebook_or_website_url:'', analyzed_at:localDate(), last_contact_at:'', next_follow_up_at:'', status:'new', notes:'', lost_reason:'', pic_id:authStore.user?.id || '', marketplace_links:[{marketplace:'Shopee',url:''}] });
+const form = reactive(blank()); const showForm=ref(false); const editingId=ref(null); const saving=ref(false); const showImport=ref(false); const importPreview=ref(null); const importing=ref(false); const detailProspect=ref(null); const approvalProspect=ref(null); const approval=reactive({company_id:'',company_name:'',brand_id:'',brand_name:''});
 let timer;
 const load=()=>fetchProspects(filters); const resetAndLoad=()=>{pagination.current_page=1;load();}; const debouncedLoad=()=>{clearTimeout(timer);timer=setTimeout(resetAndLoad,300);};
 const clearDateValues=()=>{filters.analysis_date='';filters.analysis_month='';filters.analysis_year='';};
@@ -160,8 +201,9 @@ const selectDateFilterType=(type)=>{dateFilterType.value=type;clearDateValues();
 const clearDateFilter=()=>{dateFilterType.value='';clearDateValues();resetAndLoad();};
 const clearSearch=()=>{filters.search='';resetAndLoad();};
 const resetAllFilters=()=>{filters.search='';filters.status='';filters.conversion_status='';filters.trashed='';dateFilterType.value='';clearDateValues();resetAndLoad();};
-const openCreate=()=>{Object.assign(form,blank());editingId.value=null;showForm.value=true;};
-const openEdit=(row)=>{Object.assign(form,blank(),JSON.parse(JSON.stringify(row)));form.marketplace_links=row.marketplace_links?.length?JSON.parse(JSON.stringify(row.marketplace_links)):[{marketplace:'Shopee',url:''}];editingId.value=row.id;showForm.value=true;};
+const openDetail=(row)=>{detailProspect.value=row;};
+const openCreate=()=>{editingId.value=null;Object.assign(form,blank());showForm.value=true;};
+const openEdit=(row)=>{editingId.value=row.id;Object.assign(form,blank(),JSON.parse(JSON.stringify(row)));form.marketplace_links=row.marketplace_links?.length?JSON.parse(JSON.stringify(row.marketplace_links)):[{marketplace:'Shopee',url:''}];showForm.value=true;};
 const save=async()=>{saving.value=true;try{editingId.value?await updateProspect(editingId.value,form):await createProspect(form);showForm.value=false;await load();}catch(e){alert(e.response?.data?.message||Object.values(e.response?.data?.errors||{}).flat()[0]||'Data tidak dapat disimpan.');}finally{saving.value=false;}};
 const remove=async(row)=>{if(confirm(`Hapus prospek ${row.name}?`)){await deleteProspect(row.id);await load();}}; const restore=async(row)=>{await restoreProspect(row.id);await load();};
 const askConversion=async(row)=>{if(confirm(`Ajukan ${row.name} menjadi client?`)){await requestConversion(row.id);await load();}};
@@ -171,9 +213,12 @@ const reject=async(row)=>{const reason=prompt('Alasan penolakan konversi:');if(r
 const inspectFile=async(event)=>{const file=event.target.files?.[0];if(!file)return;const response=await previewImport(file);importPreview.value=response.data.data.preview;};
 const runImport=async()=>{importing.value=true;try{await confirmImport(importPreview.value.rows);closeImport();await load();}finally{importing.value=false;}}; const closeImport=()=>{showImport.value=false;importPreview.value=null;};
 const changePage=(step)=>{pagination.current_page+=step;load();}; const formatDate=(value)=>value?new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value)):'-';
+watch(() => form.last_contact_at, (value) => {
+    if (! editingId.value) form.next_follow_up_at = followUpOneDayLater(value);
+});
 onMounted(async()=>{await Promise.all([fetchOptions(),load()]);});
 </script>
 
 <style scoped>
-.filter-label{display:block;font-size:.72rem;font-weight:800;color:var(--ui-content-soft)}.filter-control{width:100%;min-height:44px;border:1px solid var(--ui-border);border-radius:.8rem;background:var(--ui-surface);padding:.68rem .85rem;font-size:.85rem;font-weight:500;color:var(--ui-content);outline:none;transition:border-color .2s,box-shadow .2s,background .2s}.filter-control::placeholder{color:var(--ui-content-muted)}.filter-control:focus{border-color:var(--ui-brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-brand) 16%,transparent)}.period-button{display:inline-flex;min-height:38px;align-items:center;justify-content:center;gap:.45rem;border:1px solid var(--ui-border);border-radius:.7rem;background:var(--ui-surface);padding:.5rem .8rem;font-size:.72rem;font-weight:800;color:var(--ui-content-soft);transition:all .2s}.period-button:hover{border-color:color-mix(in srgb,var(--ui-brand) 45%,var(--ui-border));color:var(--ui-brand)}.period-button-active{border-color:var(--ui-brand);background:var(--ui-brand);color:#fff;box-shadow:0 5px 14px color-mix(in srgb,var(--ui-brand) 25%,transparent)}.field{width:100%;border:1px solid #dbe1ea;border-radius:.75rem;background:#fff;padding:.7rem .85rem;font-size:.875rem;color:#182033;outline:none}.field:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}.label{display:block;font-size:.75rem;font-weight:800;color:#475569}.label .field{margin-top:.4rem;font-weight:500}.btn-primary,.btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.75rem;padding:.7rem 1rem;font-size:.8rem;font-weight:800;transition:.2s}.btn-primary{background:#293681;color:#fff}.btn-primary:hover{background:#202b6b}.btn-secondary{border:1px solid #dbe1ea;background:#fff;color:#334155}.icon-btn{display:inline-flex;height:2.25rem;width:2.25rem;align-items:center;justify-content:center;border-radius:.65rem;border:1px solid #e2e8f0;background:#fff;transition:.2s}.icon-btn:hover{background:#f8fafc}.badge{display:inline-flex;border-radius:999px;background:#eef2ff;padding:.3rem .65rem;font-size:.7rem;font-weight:800;color:#3730a3}.pager{height:2rem;width:2rem;border:1px solid #e2e8f0;border-radius:.55rem}.pager:disabled{opacity:.35}.modal-wrap{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem}.modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(4px)}.modal-card{position:relative;width:100%;overflow:hidden;border-radius:1.25rem;background:#fff;box-shadow:0 25px 70px rgba(15,23,42,.3)}.modal-header,.modal-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.5rem;border-bottom:1px solid #eef2f7}.modal-footer{justify-content:flex-end;border-top:1px solid #eef2f7;border-bottom:0}
+.filter-label{display:block;font-size:.72rem;font-weight:800;color:var(--ui-content-soft)}.filter-control{width:100%;min-height:44px;border:1px solid var(--ui-border);border-radius:.8rem;background:var(--ui-surface);padding:.68rem .85rem;font-size:.85rem;font-weight:500;color:var(--ui-content);outline:none;transition:border-color .2s,box-shadow .2s,background .2s}.filter-control::placeholder{color:var(--ui-content-muted)}.filter-control:focus{border-color:var(--ui-brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-brand) 16%,transparent)}.period-button{display:inline-flex;min-height:38px;align-items:center;justify-content:center;gap:.45rem;border:1px solid var(--ui-border);border-radius:.7rem;background:var(--ui-surface);padding:.5rem .8rem;font-size:.72rem;font-weight:800;color:var(--ui-content-soft);transition:all .2s}.period-button:hover{border-color:color-mix(in srgb,var(--ui-brand) 45%,var(--ui-border));color:var(--ui-brand)}.period-button-active{border-color:var(--ui-brand);background:var(--ui-brand);color:#fff;box-shadow:0 5px 14px color-mix(in srgb,var(--ui-brand) 25%,transparent)}.field{width:100%;border:1px solid #dbe1ea;border-radius:.75rem;background:#fff;padding:.7rem .85rem;font-size:.875rem;color:#182033;outline:none}.field:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}.label{display:block;font-size:.75rem;font-weight:800;color:#475569}.label .field{margin-top:.4rem;font-weight:500}.btn-primary,.btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.75rem;padding:.7rem 1rem;font-size:.8rem;font-weight:800;transition:.2s}.btn-primary{background:#293681;color:#fff}.btn-primary:hover{background:#202b6b}.btn-secondary{border:1px solid #dbe1ea;background:#fff;color:#334155}.icon-btn{display:inline-flex;height:2.25rem;width:2.25rem;align-items:center;justify-content:center;border-radius:.65rem;border:1px solid #e2e8f0;background:#fff;transition:.2s}.icon-btn:hover{background:#f8fafc}.badge{display:inline-flex;border-radius:999px;background:#eef2ff;padding:.3rem .65rem;font-size:.7rem;font-weight:800;color:#3730a3}.pager{height:2rem;width:2rem;border:1px solid #e2e8f0;border-radius:.55rem}.pager:disabled{opacity:.35}.modal-wrap{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem}.modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(4px)}.modal-card{position:relative;width:100%;overflow:hidden;border-radius:1.25rem;background:#fff;box-shadow:0 25px 70px rgba(15,23,42,.3)}.modal-header,.modal-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.5rem;border-bottom:1px solid #eef2f7}.modal-footer{justify-content:flex-end;border-top:1px solid #eef2f7;border-bottom:0}.detail-card{min-height:82px;border:1px solid #e2e8f0;border-radius:1rem;background:#f8fafc;padding:.85rem 1rem}.detail-card span{display:block;font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#64748b}.detail-card strong{display:block;margin-top:.38rem;overflow-wrap:anywhere;font-size:.85rem;color:#1e293b}.detail-section{border:1px solid #e2e8f0;border-radius:1rem;background:#fff;padding:1rem}.detail-section h3{font-size:.75rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#334155}.detail-section p{margin-top:.65rem;font-size:.875rem;line-height:1.6;color:#475569}.detail-link{display:inline-flex;align-items:center;gap:.45rem;border-radius:.65rem;background:#eef2ff;padding:.5rem .7rem;font-size:.75rem;font-weight:800;color:#3730a3;transition:.2s}.detail-link:hover{background:#e0e7ff}
 </style>
