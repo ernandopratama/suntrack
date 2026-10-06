@@ -6,6 +6,7 @@
                 <div><h1 class="text-2xl font-black text-gray-900">Prospek Business Development</h1><p class="mt-1 text-sm text-gray-500">Kelola riset toko, tindak lanjut, dan konversi menjadi client.</p></div>
             </div>
             <div class="flex gap-2">
+                <button type="button" class="icon-btn template-trigger" title="Template pesan" aria-label="Buka template pesan" @click="openMessageTemplates"><i class="fa-regular fa-message"></i></button>
                 <button v-if="$can('prospect.create')" class="btn-secondary" @click="showImport = true"><i class="fa-solid fa-file-import"></i> Import Excel</button>
                 <button v-if="$can('prospect.create')" class="btn-primary" @click="openCreate"><i class="fa-solid fa-plus"></i> Tambah Prospek</button>
             </div>
@@ -34,8 +35,8 @@
                 <label class="filter-label lg:col-span-5">
                     <span>Pencarian</span>
                     <span class="relative mt-1.5 block">
-                        <i class="fa-solid fa-magnifying-glass pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-xs text-content-muted"></i>
-                        <input v-model="filters.search" class="filter-control pl-10 pr-10" placeholder="Nama toko, kota, atau link marketplace" @input="debouncedLoad" />
+                        <i class="search-icon fa-solid fa-magnifying-glass pointer-events-none absolute left-0 flex items-center pl-4 text-xs text-content-muted"></i>
+                        <input v-model="filters.search" class="filter-control search-input" placeholder="Nama toko, kota, atau link marketplace" @input="debouncedLoad" />
                         <button v-if="filters.search" type="button" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-content-muted transition hover:text-content" title="Hapus pencarian" @click="clearSearch"><i class="fa-solid fa-xmark"></i></button>
                     </span>
                 </label>
@@ -114,6 +115,26 @@
             </footer>
         </section>
 
+        <div v-if="showMessageTemplates" class="modal-wrap"><div class="modal-backdrop" @click="closeMessageTemplates"></div><section class="modal-card theme-modal max-w-3xl" role="dialog" aria-modal="true" aria-labelledby="message-templates-title">
+            <div class="modal-header"><div><p class="text-xs font-black uppercase tracking-widest text-brand">Business Development</p><h2 id="message-templates-title" class="text-xl font-black text-content">Template Pesan</h2></div><button type="button" class="icon-btn" title="Tutup" @click="closeMessageTemplates"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="max-h-[68vh] space-y-4 overflow-y-auto p-5">
+                <p v-if="templateNotice" class="rounded-xl border border-default bg-surface-muted px-3 py-2 text-sm font-semibold text-content-soft" role="status">{{ templateNotice }}</p>
+                <form class="rounded-xl border border-gray-200 bg-gray-50 p-4" @submit.prevent="saveMessageTemplate">
+                    <h3 class="mb-3 text-sm font-black text-content">{{ editingTemplateId ? 'Ubah template' : 'Tambah template' }}</h3>
+                    <label class="label">Nama template<input v-model="templateForm.name" required maxlength="80" class="field" placeholder="Contoh: Perkenalan awal" /></label>
+                    <label class="label mt-3">Isi pesan<textarea v-model="templateForm.content" required rows="5" class="field" placeholder="Tulis pesan yang ingin digunakan..."></textarea></label>
+                    <div class="mt-3 flex justify-end gap-2"><button v-if="editingTemplateId" type="button" class="btn-secondary" @click="resetTemplateForm">Batal edit</button><button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i>{{ editingTemplateId ? 'Simpan perubahan' : 'Tambah template' }}</button></div>
+                </form>
+                <div v-if="messageTemplates.length" class="divide-y divide-gray-200 rounded-xl border border-gray-200">
+                    <article v-for="template in messageTemplates" :key="template.id" class="p-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3"><h3 class="font-bold text-gray-900">{{ template.name }}</h3><div class="flex gap-1.5"><button type="button" class="icon-btn text-emerald-700" :title="copiedTemplateId === template.id ? 'Tersalin' : 'Salin pesan'" :aria-label="copiedTemplateId === template.id ? 'Pesan tersalin' : 'Salin pesan'" @click="copyMessageTemplate(template)"><i :class="copiedTemplateId === template.id ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i></button><button type="button" class="icon-btn text-blue-600" title="Edit template" @click="editMessageTemplate(template)"><i class="fa-solid fa-pen"></i></button><button type="button" class="icon-btn text-rose-600" title="Hapus template" @click="deleteMessageTemplate(template.id)"><i class="fa-solid fa-trash"></i></button></div></div>
+                        <p class="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600">{{ template.content }}</p>
+                    </article>
+                </div>
+                <p v-else class="rounded-xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">Belum ada template pesan. Tambahkan template melalui formulir di atas.</p>
+            </div>
+        </section></div>
+
         <div v-if="detailProspect" class="modal-wrap"><div class="modal-backdrop" @click="detailProspect=null"></div><section class="modal-card max-w-4xl" aria-modal="true" role="dialog" aria-label="Detail prospek">
             <div class="modal-header bg-gradient-to-r from-indigo-50 via-white to-sky-50"><div class="flex min-w-0 items-center gap-3"><span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white"><i class="fa-solid fa-store"></i></span><div class="min-w-0"><p class="text-xs font-black uppercase tracking-widest text-indigo-600">Detail Prospek</p><h2 class="truncate text-xl font-black text-gray-900">{{ detailProspect.name }}</h2></div></div><button type="button" class="icon-btn shrink-0" title="Tutup" @click="detailProspect=null"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="max-h-[70vh] overflow-y-auto p-5 sm:p-6">
@@ -136,8 +157,8 @@
             <div class="modal-footer"><button type="button" class="btn-secondary" @click="detailProspect=null">Tutup</button></div>
         </section></div>
 
-        <div v-if="showForm" class="modal-wrap"><div class="modal-backdrop" @click="showForm=false"></div><form class="modal-card max-w-4xl" @submit.prevent="save">
-            <div class="modal-header"><div><p class="text-xs font-black uppercase tracking-widest text-indigo-600">Data Prospek</p><h2 class="text-xl font-black text-gray-900">{{ editingId ? 'Ubah Prospek' : 'Tambah Prospek' }}</h2></div><button type="button" class="icon-btn" @click="showForm=false"><i class="fa-solid fa-xmark"></i></button></div>
+        <div v-if="showForm" class="modal-wrap"><div class="modal-backdrop" @click="showForm=false"></div><form class="modal-card theme-modal max-w-4xl" @submit.prevent="save">
+            <div class="modal-header"><div><p class="text-xs font-black uppercase tracking-widest text-brand">Data Prospek</p><h2 class="text-xl font-black text-content">{{ editingId ? 'Ubah Prospek' : 'Tambah Prospek' }}</h2></div><button type="button" class="icon-btn" @click="showForm=false"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="grid max-h-[68vh] gap-4 overflow-y-auto p-6 md:grid-cols-2">
                 <label class="label">Nama Toko *<input v-model="form.name" required class="field" /></label><label class="label">Kategori<input v-model="form.category" class="field" /></label>
                 <label class="label">Kota<input v-model="form.city" class="field" /></label><label class="label">Status<select v-model="form.status" class="field"><option v-for="item in options.statuses" :key="item.value" :value="item.value">{{ item.label }}</option></select></label>
@@ -165,6 +186,66 @@ import { useAuthStore } from '../stores/auth';
 
 const { prospects, options, loading, pagination, fetchProspects, fetchOptions, createProspect, updateProspect, deleteProspect, restoreProspect, requestConversion, approveConversion, rejectConversion, previewImport, confirmImport } = useBusinessProspects();
 const authStore = useAuthStore();
+const messageTemplateStorageKey = 'suntrack-business-prospect-message-templates';
+const defaultMessageTemplates = [
+    { id: 'intro', name: 'Perkenalan awal', content: 'Halo, Kak! Saya [Nama] dari Suntrack. Kami tertarik mengenal bisnis [Nama Toko] lebih jauh dan ingin berbagi informasi tentang layanan kami. Apakah berkenan jika kita berdiskusi sebentar?' },
+    { id: 'follow-up', name: 'Tindak lanjut', content: 'Halo, Kak! Saya ingin menindaklanjuti pesan sebelumnya terkait [Topik]. Apakah ada waktu yang nyaman untuk berdiskusi? Terima kasih.' },
+];
+const readMessageTemplates = () => {
+    try {
+        const saved = JSON.parse(localStorage.getItem(messageTemplateStorageKey) || 'null');
+        return Array.isArray(saved) ? saved : defaultMessageTemplates.map((template) => ({ ...template }));
+    } catch {
+        return defaultMessageTemplates.map((template) => ({ ...template }));
+    }
+};
+const messageTemplates = ref(readMessageTemplates());
+const showMessageTemplates = ref(false);
+const templateForm = reactive({ name: '', content: '' });
+const editingTemplateId = ref(null);
+const copiedTemplateId = ref(null);
+const templateNotice = ref('');
+let templateNoticeTimer;
+const persistMessageTemplates = () => localStorage.setItem(messageTemplateStorageKey, JSON.stringify(messageTemplates.value));
+const openMessageTemplates = () => { showMessageTemplates.value = true; templateNotice.value = ''; };
+const closeMessageTemplates = () => { showMessageTemplates.value = false; resetTemplateForm(); };
+const resetTemplateForm = () => { editingTemplateId.value = null; templateForm.name = ''; templateForm.content = ''; };
+const saveMessageTemplate = () => {
+    const values = { name: templateForm.name.trim(), content: templateForm.content.trim() };
+    if (!values.name || !values.content) return;
+    if (editingTemplateId.value) {
+        const template = messageTemplates.value.find((item) => item.id === editingTemplateId.value);
+        if (template) Object.assign(template, values);
+    } else {
+        messageTemplates.value.unshift({ id: crypto.randomUUID(), ...values });
+    }
+    persistMessageTemplates();
+    resetTemplateForm();
+    templateNotice.value = 'Template berhasil disimpan.';
+};
+const editMessageTemplate = (template) => {
+    editingTemplateId.value = template.id;
+    templateForm.name = template.name;
+    templateForm.content = template.content;
+    templateNotice.value = '';
+};
+const deleteMessageTemplate = (id) => {
+    messageTemplates.value = messageTemplates.value.filter((template) => template.id !== id);
+    persistMessageTemplates();
+    if (editingTemplateId.value === id) resetTemplateForm();
+    templateNotice.value = 'Template berhasil dihapus.';
+};
+const copyMessageTemplate = async (template) => {
+    try {
+        await navigator.clipboard.writeText(template.content);
+        copiedTemplateId.value = template.id;
+        templateNotice.value = `Pesan "${template.name}" berhasil disalin.`;
+        clearTimeout(templateNoticeTimer);
+        templateNoticeTimer = setTimeout(() => { copiedTemplateId.value = null; }, 1800);
+    } catch {
+        templateNotice.value = 'Tidak dapat menyalin pesan. Periksa izin clipboard browser.';
+    }
+};
 const filters = reactive({ search: '', status: '', conversion_status: '', trashed: '', analysis_date: '', analysis_month: '', analysis_year: '' });
 const dateFilterType = ref('');
 const dateFilterTypes = [
@@ -221,4 +302,6 @@ onMounted(async()=>{await Promise.all([fetchOptions(),load()]);});
 
 <style scoped>
 .filter-label{display:block;font-size:.72rem;font-weight:800;color:var(--ui-content-soft)}.filter-control{width:100%;min-height:44px;border:1px solid var(--ui-border);border-radius:.8rem;background:var(--ui-surface);padding:.68rem .85rem;font-size:.85rem;font-weight:500;color:var(--ui-content);outline:none;transition:border-color .2s,box-shadow .2s,background .2s}.filter-control::placeholder{color:var(--ui-content-muted)}.filter-control:focus{border-color:var(--ui-brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-brand) 16%,transparent)}.period-button{display:inline-flex;min-height:38px;align-items:center;justify-content:center;gap:.45rem;border:1px solid var(--ui-border);border-radius:.7rem;background:var(--ui-surface);padding:.5rem .8rem;font-size:.72rem;font-weight:800;color:var(--ui-content-soft);transition:all .2s}.period-button:hover{border-color:color-mix(in srgb,var(--ui-brand) 45%,var(--ui-border));color:var(--ui-brand)}.period-button-active{border-color:var(--ui-brand);background:var(--ui-brand);color:#fff;box-shadow:0 5px 14px color-mix(in srgb,var(--ui-brand) 25%,transparent)}.field{width:100%;border:1px solid #dbe1ea;border-radius:.75rem;background:#fff;padding:.7rem .85rem;font-size:.875rem;color:#182033;outline:none}.field:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}.label{display:block;font-size:.75rem;font-weight:800;color:#475569}.label .field{margin-top:.4rem;font-weight:500}.btn-primary,.btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.75rem;padding:.7rem 1rem;font-size:.8rem;font-weight:800;transition:.2s}.btn-primary{background:#293681;color:#fff}.btn-primary:hover{background:#202b6b}.btn-secondary{border:1px solid #dbe1ea;background:#fff;color:#334155}.icon-btn{display:inline-flex;height:2.25rem;width:2.25rem;align-items:center;justify-content:center;border-radius:.65rem;border:1px solid #e2e8f0;background:#fff;transition:.2s}.icon-btn:hover{background:#f8fafc}.badge{display:inline-flex;border-radius:999px;background:#eef2ff;padding:.3rem .65rem;font-size:.7rem;font-weight:800;color:#3730a3}.pager{height:2rem;width:2rem;border:1px solid #e2e8f0;border-radius:.55rem}.pager:disabled{opacity:.35}.modal-wrap{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem}.modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(4px)}.modal-card{position:relative;width:100%;overflow:hidden;border-radius:1.25rem;background:#fff;box-shadow:0 25px 70px rgba(15,23,42,.3)}.modal-header,.modal-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.5rem;border-bottom:1px solid #eef2f7}.modal-footer{justify-content:flex-end;border-top:1px solid #eef2f7;border-bottom:0}.detail-card{min-height:82px;border:1px solid #e2e8f0;border-radius:1rem;background:#f8fafc;padding:.85rem 1rem}.detail-card span{display:block;font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#64748b}.detail-card strong{display:block;margin-top:.38rem;overflow-wrap:anywhere;font-size:.85rem;color:#1e293b}.detail-section{border:1px solid #e2e8f0;border-radius:1rem;background:#fff;padding:1rem}.detail-section h3{font-size:.75rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#334155}.detail-section p{margin-top:.65rem;font-size:.875rem;line-height:1.6;color:#475569}.detail-link{display:inline-flex;align-items:center;gap:.45rem;border-radius:.65rem;background:#eef2ff;padding:.5rem .7rem;font-size:.75rem;font-weight:800;color:#3730a3;transition:.2s}.detail-link:hover{background:#e0e7ff}
+.theme-modal{border-color:var(--ui-border);background:var(--ui-surface);color:var(--ui-content)}.theme-modal .modal-header,.theme-modal .modal-footer{border-color:var(--ui-border)}.theme-modal .field{border-color:var(--ui-border);background:var(--ui-surface);color:var(--ui-content)}.theme-modal .field:focus{border-color:var(--ui-brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-brand) 20%,transparent)}.theme-modal .label{color:var(--ui-content-soft)}.theme-modal .icon-btn,.theme-modal .btn-secondary{border-color:var(--ui-border);background:var(--ui-surface);color:var(--ui-content-soft)}.theme-modal .icon-btn:hover,.theme-modal .btn-secondary:hover{background:var(--ui-surface-muted)}.theme-modal .btn-primary{background:var(--ui-brand-strong);color:var(--ui-page)}.theme-modal .btn-primary:hover{filter:brightness(.92)}
+.template-trigger{border-color:var(--ui-border);background:var(--ui-surface);color:var(--ui-brand)}.template-trigger:hover{background:var(--ui-surface-muted)}.search-icon{top:50%;bottom:auto;transform:translateY(-50%)}.filter-control.search-input{padding-left:2.75rem;padding-right:2.75rem}
 </style>
