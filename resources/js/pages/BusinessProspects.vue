@@ -85,7 +85,7 @@
         <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[1050px] text-left">
-                    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th class="p-4">Toko</th><th class="p-4">Marketplace</th><th class="p-4">PIC</th><th class="p-4">Status</th><th class="p-4">Follow-up</th><th class="p-4">Konversi</th><th class="p-4 text-right">Aksi</th></tr></thead>
+                    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th class="p-4">Toko</th><th class="p-4">Marketplace</th><th class="p-4">PIC</th><th class="p-4">Status</th><th class="p-4">Last Contact</th><th class="p-4">Konversi</th><th class="p-4 text-right">Aksi</th></tr></thead>
                     <tbody class="divide-y divide-gray-100">
                         <tr v-if="loading"><td colspan="7" class="p-10 text-center text-gray-500">Memuat data...</td></tr>
                         <tr v-else-if="!prospects.length"><td colspan="7" class="p-10 text-center text-gray-500">Belum ada data prospek.</td></tr>
@@ -94,7 +94,7 @@
                             <td class="p-4"><div class="flex flex-wrap gap-1.5"><a v-for="link in row.marketplace_links" :key="link.id" :href="link.url" target="_blank" class="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100">{{ link.marketplace }} <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i></a></div></td>
                             <td class="p-4 text-sm text-gray-700">{{ row.pic?.name || '-' }}</td>
                             <td class="p-4"><span class="badge">{{ row.status_label }}</span></td>
-                            <td class="p-4 text-sm text-gray-600">{{ formatDate(row.next_follow_up_at) }}</td>
+                            <td class="p-4 text-sm text-gray-600">{{ formatDate(row.last_contact_at) }}</td>
                             <td class="p-4"><span class="badge" :class="row.conversion_status === 'pending' ? '!bg-amber-50 !text-amber-700' : ''">{{ row.conversion_status_label }}</span></td>
                             <td class="p-4"><div class="flex justify-end gap-1.5">
                                 <button class="icon-btn text-indigo-600" title="Lihat detail" @click="openDetail(row)"><i class="fa-solid fa-eye"></i></button>
