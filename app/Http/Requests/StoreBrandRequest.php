@@ -16,6 +16,7 @@ class StoreBrandRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'company_id' => ['required', 'uuid', 'exists:companies,id'],
+            'category' => ['nullable', 'string', 'in:Cold,Warm,Hot'],
         ];
     }
 }

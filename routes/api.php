@@ -96,6 +96,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:prospect.create');
         Route::post('business-prospects/import', [BusinessProspectController::class, 'import'])
             ->middleware('permission:prospect.create');
+        Route::post('business-prospects/bulk-update-temperature', [BusinessProspectController::class, 'bulkUpdateTemperature'])
+            ->middleware('permission:prospect.update');
         Route::post('business-prospects/{businessProspect}/request-conversion', [BusinessProspectController::class, 'requestConversion'])
             ->middleware('permission:prospect.request-conversion');
         Route::post('business-prospects/{businessProspect}/approve-conversion', [BusinessProspectController::class, 'approveConversion'])

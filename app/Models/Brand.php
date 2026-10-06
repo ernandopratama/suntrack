@@ -16,7 +16,7 @@ class Brand extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
-    protected $fillable = ['company_id', 'name'];
+    protected $fillable = ['company_id', 'name', 'category'];
 
     /** @return BelongsTo<Company, $this> */
     public function company(): BelongsTo

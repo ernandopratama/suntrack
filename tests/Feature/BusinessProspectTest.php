@@ -123,11 +123,13 @@ class BusinessProspectTest extends TestCase
 
     public function test_prospects_can_be_filtered_by_analysis_date_month_and_year(): void
     {
-        foreach ([
-            ['name' => 'Prospek Januari', 'analyzed_at' => '2026-01-15'],
-            ['name' => 'Prospek September', 'analyzed_at' => '2026-09-28'],
-            ['name' => 'Prospek Tahun Lain', 'analyzed_at' => '2025-09-28'],
-        ] as $data) {
+        foreach (
+            [
+                ['name' => 'Prospek Januari', 'analyzed_at' => '2026-01-15'],
+                ['name' => 'Prospek September', 'analyzed_at' => '2026-09-28'],
+                ['name' => 'Prospek Tahun Lain', 'analyzed_at' => '2025-09-28'],
+            ] as $data
+        ) {
             BusinessProspect::create($data + [
                 'status' => BusinessProspectStatus::New,
                 'pic_id' => $this->businessDevelopment->id,
@@ -147,5 +149,44 @@ class BusinessProspectTest extends TestCase
         $this->actingAs($this->businessDevelopment)
             ->getJson('/api/v1/admin/business-prospects?analysis_year=2026')
             ->assertOk()->assertJsonCount(2, 'data.prospects.data');
+    }
+
+    public function test_prospects_can_be_filtered_by_category_and_sorted_by_analysis_or_last_contact(): void
+    {
+        foreach (
+            [
+                ['name' => 'Toko Zebra', 'category' => 'Fashion Wanita', 'lead_temperature' => 'Cold', 'analysis_summary' => 'Zebra result', 'last_contact_at' => '2026-01-01 10:00:00'],
+                ['name' => 'Toko Alpha', 'category' => 'Fashion Pria', 'lead_temperature' => 'Hot', 'analysis_summary' => 'Alpha result', 'last_contact_at' => '2026-03-01 10:00:00'],
+                ['name' => 'Toko Beta', 'category' => 'Beauty', 'lead_temperature' => 'Warm', 'analysis_summary' => 'Beta result', 'last_contact_at' => '2026-05-01 10:00:00'],
+            ] as $data
+        ) {
+            BusinessProspect::create($data + [
+                'status' => BusinessProspectStatus::New,
+                'pic_id' => $this->businessDevelopment->id,
+                'created_by' => $this->businessDevelopment->id,
+            ]);
+        }
+
+        $this->actingAs($this->businessDevelopment)
+            ->getJson('/api/v1/admin/business-prospects?category=Fashion')
+            ->assertOk()
+            ->assertJsonCount(2, 'data.prospects.data');
+
+        $this->actingAs($this->businessDevelopment)
+            ->getJson('/api/v1/admin/business-prospects?lead_temperature=Hot')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.prospects.data')
+            ->assertJsonPath('data.prospects.data.0.name', 'Toko Alpha');
+
+        $this->actingAs($this->businessDevelopment)
+            ->getJson('/api/v1/admin/business-prospects?sort_by=analysis_summary')
+            ->assertOk()
+            ->assertJsonPath('data.prospects.data.0.name', 'Toko Alpha')
+            ->assertJsonPath('data.prospects.data.2.name', 'Toko Zebra');
+
+        $this->actingAs($this->businessDevelopment)
+            ->getJson('/api/v1/admin/business-prospects?sort_by=last_contact_at')
+            ->assertOk()
+            ->assertJsonPath('data.prospects.data.0.name', 'Toko Beta');
     }
 }

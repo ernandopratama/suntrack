@@ -36,6 +36,7 @@ class BusinessProspect extends Model
         'next_follow_up_at',
         'notes',
         'lost_reason',
+        'lead_temperature',
     ];
 
     protected function casts(): array

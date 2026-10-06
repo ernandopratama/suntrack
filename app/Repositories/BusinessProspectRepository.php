@@ -34,8 +34,12 @@ class BusinessProspectRepository extends BaseRepository
                 $builder->where('name', 'like', "%{$search}%")
                     ->orWhere('category', 'like', "%{$search}%")
                     ->orWhere('city', 'like', "%{$search}%")
-                    ->orWhereHas('marketplaceLinks', fn (Builder $links) => $links->where('url', 'like', "%{$search}%"));
+                    ->orWhereHas('marketplaceLinks', fn(Builder $links) => $links->where('url', 'like', "%{$search}%"));
             });
+        }
+
+        if (! empty($filters['category'])) {
+            $query->where('category', 'like', '%' . $filters['category'] . '%');
         }
 
         if (! empty($filters['status'])) {
@@ -62,6 +66,19 @@ class BusinessProspectRepository extends BaseRepository
             $query->whereYear('analyzed_at', (int) $filters['analysis_year']);
         }
 
-        return $query->orderBy('name')->paginate($perPage);
+        if (! empty($filters['lead_temperature'])) {
+            $query->where('lead_temperature', $filters['lead_temperature']);
+        }
+
+        $sortBy = match ($filters['sort_by'] ?? 'name') {
+            'analyzed_at' => 'analyzed_at',
+            'analysis_summary' => 'analysis_summary',
+            'last_contact_at' => 'last_contact_at',
+            default => 'name',
+        };
+        $defaultSortDir = $sortBy === 'last_contact_at' ? 'desc' : 'asc';
+        $sortDir = ($filters['sort_dir'] ?? $defaultSortDir) === 'desc' ? 'desc' : 'asc';
+
+        return $query->orderBy($sortBy, $sortDir)->paginate($perPage);
     }
 }

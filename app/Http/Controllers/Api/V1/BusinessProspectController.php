@@ -43,7 +43,7 @@ class BusinessProspectController extends Controller
             : 10;
         $prospects = $this->repository->getFilteredPaginated(
             $request->user(),
-            $request->only(['search', 'status', 'conversion_status', 'pic_id', 'trashed', 'analysis_date', 'analysis_month', 'analysis_year']),
+            $request->only(['search', 'category', 'status', 'conversion_status', 'pic_id', 'trashed', 'analysis_date', 'analysis_month', 'analysis_year', 'lead_temperature', 'sort_by', 'sort_dir']),
             $perPage,
         );
         $prospects->setCollection(BusinessProspectResource::collection($prospects->getCollection())->collection);
@@ -58,11 +58,11 @@ class BusinessProspectController extends Controller
         $global = $this->dataScope->hasGlobalScope($user);
 
         return $this->success('Pilihan prospek berhasil dimuat.', [
-            'statuses' => collect(BusinessProspectStatus::cases())->map(fn ($status) => ['value' => $status->value, 'label' => $status->label()]),
-            'conversion_statuses' => collect(ProspectConversionStatus::cases())->map(fn ($status) => ['value' => $status->value, 'label' => $status->label()]),
+            'statuses' => collect(BusinessProspectStatus::cases())->map(fn($status) => ['value' => $status->value, 'label' => $status->label()]),
+            'conversion_statuses' => collect(ProspectConversionStatus::cases())->map(fn($status) => ['value' => $status->value, 'label' => $status->label()]),
             'pics' => $global ? User::role([RbacRegistry::BUSINESS_DEVELOPMENT, RbacRegistry::ADMIN, RbacRegistry::SUPER_ADMIN])->orderBy('name')->get(['id', 'name']) : collect([['id' => $user->id, 'name' => $user->name]]),
             'companies' => $global ? Company::orderBy('name')->get(['id', 'name']) : [],
-            'brands' => $global ? Brand::with('company:id,name')->orderBy('name')->get(['id', 'company_id', 'name']) : [],
+            'brands' => $global ? Brand::with('company:id,name')->orderBy('name')->get(['id', 'company_id', 'name', 'category']) : [],
         ]);
     }
 
@@ -179,13 +179,21 @@ class BusinessProspectController extends Controller
                 continue;
             }
             $prospect = BusinessProspect::create([
-                'name' => $row['name'], 'category' => $row['category'] ?? null, 'city' => $row['city'] ?? null,
-                'analysis_summary' => $row['analysis_summary'] ?? null, 'analysis_link' => $row['analysis_link'] ?? null,
-                'potential_reason' => $row['potential_reason'] ?? null, 'instagram_url' => $row['instagram_url'] ?? null,
-                'tiktok_url' => $row['tiktok_url'] ?? null, 'facebook_or_website_url' => $row['facebook_or_website_url'] ?? null,
-                'phone' => $row['phone'] ?? null, 'analyzed_at' => $row['analyzed_at'] ?? null,
-                'status' => $row['status'] ?? BusinessProspectStatus::New->value, 'notes' => $row['notes'] ?? null,
-                'pic_id' => $request->user()->id, 'created_by' => $request->user()->id,
+                'name' => $row['name'],
+                'category' => $row['category'] ?? null,
+                'city' => $row['city'] ?? null,
+                'analysis_summary' => $row['analysis_summary'] ?? null,
+                'analysis_link' => $row['analysis_link'] ?? null,
+                'potential_reason' => $row['potential_reason'] ?? null,
+                'instagram_url' => $row['instagram_url'] ?? null,
+                'tiktok_url' => $row['tiktok_url'] ?? null,
+                'facebook_or_website_url' => $row['facebook_or_website_url'] ?? null,
+                'phone' => $row['phone'] ?? null,
+                'analyzed_at' => $row['analyzed_at'] ?? null,
+                'status' => $row['status'] ?? BusinessProspectStatus::New->value,
+                'notes' => $row['notes'] ?? null,
+                'pic_id' => $request->user()->id,
+                'created_by' => $request->user()->id,
             ]);
             foreach ($row['marketplace_links'] as $link) {
                 $hash = ProspectMarketplaceLink::urlHash($link['url']);
@@ -197,6 +205,20 @@ class BusinessProspectController extends Controller
         }
 
         return $this->success('Import prospek selesai.', compact('created', 'merged', 'skipped'));
+    }
+
+    public function bulkUpdateTemperature(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['uuid', 'exists:business_prospects,id'],
+            'lead_temperature' => ['nullable', 'string', 'in:Cold,Warm,Hot'],
+        ]);
+
+        BusinessProspect::whereIn('id', $validated['ids'])
+            ->update(['lead_temperature' => $validated['lead_temperature']]);
+
+        return $this->success('Kategori prospek berhasil diperbarui.');
     }
 
     public function requestConversion(Request $request, BusinessProspect $businessProspect): JsonResponse
@@ -222,8 +244,10 @@ class BusinessProspectController extends Controller
             return $this->error('Hanya permintaan konversi yang menunggu persetujuan yang dapat diproses.', [], 422);
         }
         $validated = $request->validate([
-            'company_id' => ['nullable', 'uuid', 'exists:companies,id'], 'company_name' => ['nullable', 'string', 'max:255'],
-            'brand_id' => ['nullable', 'uuid', 'exists:brands,id'], 'brand_name' => ['nullable', 'string', 'max:255'],
+            'company_id' => ['nullable', 'uuid', 'exists:companies,id'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'brand_id' => ['nullable', 'uuid', 'exists:brands,id'],
+            'brand_name' => ['nullable', 'string', 'max:255'],
         ]);
         if (empty($validated['brand_id']) && empty($validated['brand_name'])) {
             return $this->error('Pilih brand atau isi nama brand baru.', [], 422);
@@ -239,9 +263,12 @@ class BusinessProspectController extends Controller
                 $brand = Brand::firstOrCreate(['company_id' => $company->id, 'name' => $validated['brand_name']]);
             }
             $businessProspect->forceFill([
-                'conversion_status' => ProspectConversionStatus::Approved, 'conversion_reviewed_by' => $request->user()->id,
-                'conversion_reviewed_at' => now(), 'conversion_rejection_reason' => null,
-                'converted_company_id' => $company->id, 'converted_brand_id' => $brand->id,
+                'conversion_status' => ProspectConversionStatus::Approved,
+                'conversion_reviewed_by' => $request->user()->id,
+                'conversion_reviewed_at' => now(),
+                'conversion_rejection_reason' => null,
+                'converted_company_id' => $company->id,
+                'converted_brand_id' => $brand->id,
             ])->save();
         });
         $this->log($request, $businessProspect, ActivityType::StatusChanged, "Konversi prospek '{$businessProspect->name}' disetujui.");

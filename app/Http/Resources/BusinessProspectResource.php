@@ -19,6 +19,7 @@ class BusinessProspectResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'category' => $this->category,
+            'lead_temperature' => $this->lead_temperature,
             'city' => $this->city,
             'analysis_summary' => $this->analysis_summary,
             'analysis_link' => $this->analysis_link,
